@@ -1,36 +1,32 @@
 import { createColumnHelper } from "@tanstack/react-table"
+import { useMemo, useState } from "react"
 import {
   Archive,
   ArrowDownToLine,
   ArrowUpFromLine,
   ChevronDown,
   ClipboardCheck,
+  Funnel,
   Package,
   RotateCcw,
   UserRound,
   Warehouse,
   type LucideIcon,
 } from "lucide-react"
-import { Link } from "react-router-dom"
-
 import {
   DataTable,
   DataTableColumnHeader,
 } from "@/components/data-table/data-table"
 import { type DataTableFeatures } from "@/components/data-table/data-table-features"
+import { DatePicker } from "@/components/general"
 import { Badge } from "@/components/ui/badge"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -41,8 +37,10 @@ import type {
   MovementTransaction,
 } from "@/features/interface/traceability/types"
 import { InventoryPageHeader } from "../../components"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   TRACEABILITY_PAGE_SIZE_OPTIONS,
+  type TraceabilityFilterValues,
   useTraceabilityPage,
 } from "../hooks/useTraceabilityPage"
 
@@ -222,20 +220,119 @@ function ModelsCell({ transaction }: { transaction: MovementTransaction }) {
         <ChevronDown />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Modelos asociados</DropdownMenuLabel>
-        {models.map((model) => (
-          <DropdownMenuItem key={model.name} className="items-start">
-            <Package className="mt-0.5" />
-            <span className="grid min-w-0 gap-0.5">
-              <strong className="truncate font-medium">{model.name}</strong>
-              <span className="truncate text-muted-foreground">
-                {model.provider ?? "Proveedor no disponible"}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Modelos asociados</DropdownMenuLabel>
+          {models.map((model) => (
+            <DropdownMenuItem key={model.name} className="items-start">
+              <Package className="mt-0.5" />
+              <span className="grid min-w-0 gap-0.5">
+                <strong className="truncate font-medium">{model.name}</strong>
+                <span className="truncate text-muted-foreground">
+                  {model.provider ?? "Proveedor no disponible"}
+                </span>
               </span>
-            </span>
-          </DropdownMenuItem>
-        ))}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+type TraceabilityFiltersProps = {
+  values: TraceabilityFilterValues
+  onApply: (filters: TraceabilityFilterValues) => void
+  onReset: () => TraceabilityFilterValues
+}
+
+function TraceabilityFilters({
+  values,
+  onApply,
+  onReset,
+}: TraceabilityFiltersProps) {
+  const [draft, setDraft] = useState(values)
+
+  return (
+    <section aria-label="Filtros de trazabilidad">
+      <form
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        onSubmit={(event) => {
+          event.preventDefault()
+          onApply(draft)
+        }}
+      >
+        <DatePicker
+          id="traceability-start-date"
+          label="Fecha inicial"
+          value={draft.startDate}
+          maxDate={draft.endDate}
+          onChange={(startDate) =>
+            setDraft((current) => ({ ...current, startDate }))
+          }
+        />
+
+        <DatePicker
+          id="traceability-end-date"
+          label="Fecha final"
+          value={draft.endDate}
+          minDate={draft.startDate}
+          onChange={(endDate) =>
+            setDraft((current) => ({ ...current, endDate }))
+          }
+        />
+
+        <Field>
+          <FieldLabel htmlFor="traceability-responsible">
+            Responsable
+          </FieldLabel>
+          <Input
+            id="traceability-responsible"
+            name="performedByAccountUsername"
+            placeholder="Nombre del responsable"
+            value={draft.performedByAccountUsername}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                performedByAccountUsername: event.target.value,
+              }))
+            }
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="traceability-warehouse">Almacén</FieldLabel>
+          <Input
+            id="traceability-warehouse"
+            name="fromWarehouseName"
+            placeholder="Nombre del almacén"
+            value={draft.fromWarehouseName}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                fromWarehouseName: event.target.value,
+              }))
+            }
+          />
+        </Field>
+
+        <div className="flex flex-wrap justify-end gap-3 sm:col-span-2 lg:col-span-4">
+          <Button type="submit">
+            <Funnel />
+            Aplicar filtros
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setDraft(onReset())
+            }}
+          >
+            <RotateCcw />
+            Limpiar
+          </Button>
+        </div>
+      </form>
+    </section>
   )
 }
 
@@ -244,55 +341,62 @@ const columnHelper = createColumnHelper<
   MovementTransaction
 >()
 
-const traceabilityColumns = columnHelper.columns([
-  columnHelper.accessor("inventoryMovementType", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Evento" />
-    ),
-    cell: ({ row }) => <EventCell transaction={row.original} />,
-    size: 220,
-    minSize: 200,
-  }),
-  columnHelper.display({
-    id: "accounts",
-    header: "Responsable / Asignado",
-    cell: ({ row }) => <AccountsCell transaction={row.original} />,
-    size: 390,
-    minSize: 300,
-  }),
-  columnHelper.accessor("warehouseName", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Almacén" />
-    ),
-    cell: ({ row }) => (
-      <Badge variant="secondary">
-        <Warehouse />
-        {row.original.warehouseName ??
-          row.original.fromWarehouseName ??
-          "Sin almacén"}
-      </Badge>
-    ),
-    size: 220,
-    minSize: 180,
-  }),
-  columnHelper.display({
-    id: "content",
-    header: "Contenido",
-    cell: ({ row }) => <ContentCell transaction={row.original} />,
-    size: 260,
-    minSize: 210,
-  }),
-  columnHelper.display({
-    id: "models",
-    header: "Modelos",
-    cell: ({ row }) => <ModelsCell transaction={row.original} />,
-    size: 160,
-    minSize: 140,
-  }),
-])
+function createTraceabilityColumns(isMobile: boolean) {
+  return columnHelper.columns([
+    columnHelper.accessor("inventoryMovementType", {
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title="Evento"
+          className="ml-0"
+        />
+      ),
+      cell: ({ row }) => <EventCell transaction={row.original} />,
+      size: 180,
+      minSize: 160,
+    }),
+    columnHelper.display({
+      id: "accounts",
+      header: "Responsable / Asignado",
+      cell: ({ row }) => <AccountsCell transaction={row.original} />,
+      size: isMobile ? 340 : 220,
+      minSize: isMobile ? 280 : 180,
+    }),
+    columnHelper.accessor("warehouseName", {
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Almacén" />
+      ),
+      cell: ({ row }) => (
+        <Badge variant="outline" className="px-2 py-1">
+          <Warehouse />
+          {row.original.warehouseName ??
+            row.original.fromWarehouseName ??
+            "Sin almacén"}
+        </Badge>
+      ),
+    }),
+    columnHelper.display({
+      id: "content",
+      header: "Contenido",
+      cell: ({ row }) => <ContentCell transaction={row.original} />,
+    }),
+    columnHelper.display({
+      id: "models",
+      header: "Modelos",
+      cell: ({ row }) => <ModelsCell transaction={row.original} />,
+      size: 160,
+      minSize: 140,
+    }),
+  ])
+}
 
 export function TraceabilityPage() {
-  const { rows, isLoading, isFetching, isError, pagination } =
+  const isMobile = useIsMobile()
+  const traceabilityColumns = useMemo(
+    () => createTraceabilityColumns(isMobile),
+    [isMobile]
+  )
+  const { rows, isLoading, isFetching, isError, filters, pagination } =
     useTraceabilityPage()
 
   const emptyMessage = isLoading
@@ -303,23 +407,15 @@ export function TraceabilityPage() {
 
   return (
     <section className="flex flex-col gap-6" aria-label="Trazabilidad">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link to="/inventory" />}>
-              Inventario
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Trazabilidad</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <InventoryPageHeader
         title="Trazabilidad"
         description="Auditoría y trazabilidad de movimientos del inventario."
+      />
+
+      <TraceabilityFilters
+        values={filters.values}
+        onApply={filters.apply}
+        onReset={filters.reset}
       />
 
       <p className="sr-only" role="status" aria-live="polite">
@@ -330,6 +426,7 @@ export function TraceabilityPage() {
         <DataTable
           data={rows}
           columns={traceabilityColumns}
+          isLoading={isLoading}
           getRowId={(transaction) => String(transaction.id)}
           serverPagination={{
             page: pagination.page,

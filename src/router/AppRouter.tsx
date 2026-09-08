@@ -31,7 +31,6 @@ export const AppRouter = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        path: "traceability",
                         element: <TraceabilityPage />,
                     },
                 ]

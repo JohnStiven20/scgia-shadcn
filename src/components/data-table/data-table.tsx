@@ -34,6 +34,8 @@ import { ChevronsUpDown, GripVertical } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import {
   Select,
   SelectContent,
@@ -75,6 +77,8 @@ interface DataTableProps<TData extends RowData> {
   onDataChange?: (data: TData[]) => void
   onRowClick?: (row: TData) => void
   serverPagination?: DataTableServerPagination
+  fitColumns?: boolean
+  isLoading?: boolean
 }
 
 export interface DataTableServerPagination {
@@ -90,6 +94,7 @@ export interface DataTableServerPagination {
 interface DataTableColumnHeaderProps<TData extends RowData, TValue> {
   column: Column<DataTableFeatures, TData, TValue>
   title: string
+  className?: string
 }
 
 function getPageItems(currentPage: number, totalPages: number) {
@@ -120,6 +125,7 @@ const DragHandleContext = React.createContext<DragHandleContextValue | null>(
 export function DataTableColumnHeader<TData extends RowData, TValue>({
   column,
   title,
+  className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) return <span>{title}</span>
 
@@ -127,11 +133,14 @@ export function DataTableColumnHeader<TData extends RowData, TValue>({
     <Button
       variant="ghost"
       size="sm"
-      className="-ml-3 h-8"
+      className={cn(
+        "h-8 max-w-full min-w-0 justify-start gap-1 overflow-hidden px-1",
+        className ?? "ml-0"
+      )}
       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
     >
-      {title}
-      <ChevronsUpDown />
+      <span className="min-w-0 truncate">{title}</span>
+      <ChevronsUpDown className="shrink-0" />
     </Button>
   )
 }
@@ -157,12 +166,21 @@ function DragHandle() {
 function RowCell<TData extends RowData>({
   cell,
   width,
+  fitColumns,
 }: {
   cell: Cell<DataTableFeatures, TData>
   width: number
+  fitColumns: boolean
 }) {
   return (
-    <TableCell className="px-1 sm:px-2" style={{ width, minWidth: width }}>
+    <TableCell
+      className={
+        fitColumns
+          ? "px-1 break-words whitespace-normal sm:px-2"
+          : "px-1 sm:px-2"
+      }
+      style={{ width, minWidth: fitColumns ? 0 : width }}
+    >
       <FlexRender cell={cell} />
     </TableCell>
   )
@@ -173,11 +191,13 @@ function DataTableRow<TData extends RowData>({
   orderingEnabled,
   columnWidths,
   onRowClick,
+  fitColumns,
 }: {
   row: Row<DataTableFeatures, TData>
   orderingEnabled: boolean
   columnWidths: Record<string, number>
   onRowClick?: (row: TData) => void
+  fitColumns: boolean
 }) {
   const {
     attributes,
@@ -221,6 +241,7 @@ function DataTableRow<TData extends RowData>({
             key={cell.id}
             cell={cell}
             width={columnWidths[cell.column.id] ?? cell.column.getSize()}
+            fitColumns={fitColumns}
           />
         ))}
       </TableRow>
@@ -239,6 +260,8 @@ export function DataTable<TData extends RowData>({
   onDataChange,
   onRowClick,
   serverPagination,
+  fitColumns = false,
+  isLoading = false,
 }: DataTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const tableContainerRef = React.useRef<HTMLDivElement>(null)
@@ -322,19 +345,23 @@ export function DataTable<TData extends RowData>({
     )
     const scale =
       containerWidth > 0 && containerWidth < totalWidth
-        ? Math.max(minimumWidth / totalWidth, containerWidth / totalWidth)
+        ? fitColumns
+          ? containerWidth / totalWidth
+          : Math.max(minimumWidth / totalWidth, containerWidth / totalWidth)
         : 1
 
     return Object.fromEntries(
       visibleColumns.map((column) => [
         column.id,
-        Math.max(
-          column.columnDef.minSize ?? 80,
-          Math.round(column.getSize() * scale)
-        ),
+        fitColumns
+          ? Math.round(column.getSize() * scale)
+          : Math.max(
+              column.columnDef.minSize ?? 80,
+              Math.round(column.getSize() * scale)
+            ),
       ])
     )
-  }, [containerWidth, table])
+  }, [containerWidth, fitColumns, table])
 
   const renderedTableWidth = Object.values(columnWidths).reduce(
     (total, width) => total + width,
@@ -362,7 +389,11 @@ export function DataTable<TData extends RowData>({
     serverPagination?.totalElements ?? table.getFilteredRowModel().rows.length
 
   return (
-    <section className="flex flex-col gap-4" aria-label={ariaLabel}>
+    <section
+      className="flex flex-col gap-4"
+      aria-label={ariaLabel}
+      aria-busy={isLoading}
+    >
       <div
         ref={tableContainerRef}
         className="overflow-hidden rounded-md border"
@@ -375,7 +406,10 @@ export function DataTable<TData extends RowData>({
           sensors={sensors}
         >
           <Table
-            style={{ width: renderedTableWidth, minWidth: "100%" }}
+            style={{
+              width: fitColumns ? "100%" : renderedTableWidth,
+              minWidth: "100%",
+            }}
           >
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -387,8 +421,12 @@ export function DataTable<TData extends RowData>({
                     return (
                       <TableHead
                         key={header.id}
-                        className="px-1 sm:px-2"
-                        style={{ width, minWidth: width }}
+                        className={
+                          fitColumns
+                            ? "px-1 whitespace-normal sm:px-2"
+                            : "px-1 sm:px-2"
+                        }
+                        style={{ width, minWidth: fitColumns ? 0 : width }}
                       >
                         {header.isPlaceholder ? null : (
                           <table.FlexRender header={header} />
@@ -400,7 +438,32 @@ export function DataTable<TData extends RowData>({
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.length ? (
+              {isLoading ? (
+                Array.from({ length: 5 }, (_, rowIndex) => (
+                  <TableRow key={`loading-row-${rowIndex}`}>
+                    {table.getVisibleLeafColumns().map((column) => {
+                      const width = columnWidths[column.id] ?? column.getSize()
+
+                      return (
+                        <TableCell
+                          key={`loading-cell-${rowIndex}-${column.id}`}
+                          className={
+                            fitColumns
+                              ? "px-1 whitespace-normal sm:px-2"
+                              : "px-1 sm:px-2"
+                          }
+                          style={{
+                            width,
+                            minWidth: fitColumns ? 0 : width,
+                          }}
+                        >
+                          <Skeleton className="h-4 w-full max-w-56" />
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))
+              ) : table.getRowModel().rows.length ? (
                 <SortableContext
                   items={dataIds}
                   strategy={verticalListSortingStrategy}
@@ -412,6 +475,7 @@ export function DataTable<TData extends RowData>({
                       orderingEnabled={enableRowOrdering}
                       columnWidths={columnWidths}
                       onRowClick={onRowClick}
+                      fitColumns={fitColumns}
                     />
                   ))}
                 </SortableContext>
@@ -432,10 +496,11 @@ export function DataTable<TData extends RowData>({
 
       <footer className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex flex-wrap items-center gap-3">
+          <span>{totalElements} registros.</span>
           {serverPagination?.pageSizeOptions &&
           serverPagination.onPageSizeChange ? (
             <Field orientation="horizontal" className="w-fit">
-              <span className="text-sm fw-semibold">Filas por página</span>
+              <span className="fw-semibold text-sm">Filas por página</span>
               <Select
                 value={String(serverPagination.pageSize)}
                 onValueChange={(value) =>

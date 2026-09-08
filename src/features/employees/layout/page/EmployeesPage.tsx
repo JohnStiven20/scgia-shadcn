@@ -29,13 +29,7 @@ import {
 } from "../hooks/useEmployeesPage"
 
 type EmployeeTextFilterField = {
-  key:
-  | "firstName"
-  | "surname"
-  | "dni"
-  | "email"
-  | "phone"
-  | "employeeCode"
+  key: "firstName" | "surname" | "dni" | "email" | "phone" | "employeeCode"
   label: string
   placeholder: string
   type?: string
@@ -245,12 +239,10 @@ function EmployeesFilters({
 }
 
 export function EmployeesPage() {
-
   const { filters, pagination, navigation, data } = useEmployeesPage()
 
   return (
     <section className="flex flex-col gap-6" aria-label="Empleados">
-
       <EmployeesPageHeader
         title="Empleados"
         description="Gestiona y supervisa todos los empleados de tu organización."
@@ -273,6 +265,7 @@ export function EmployeesPage() {
         <DataTable
           data={data.rows}
           columns={employeeColumns}
+          isLoading={data.isLoading}
           getRowId={(worker) => String(worker.id)}
           onRowClick={(worker) => navigation.goToWorker(worker.id)}
           serverPagination={{

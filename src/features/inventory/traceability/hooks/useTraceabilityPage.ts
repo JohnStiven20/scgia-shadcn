@@ -4,6 +4,13 @@ import { useSearchTraceabilityEventsQuery } from "../api/traceabilityApi"
 
 export const TRACEABILITY_PAGE_SIZE_OPTIONS = [10, 25, 50]
 
+export type TraceabilityFilterValues = {
+  startDate: Date
+  endDate: Date
+  performedByAccountUsername: string
+  fromWarehouseName: string
+}
+
 function formatApiDate(date: Date, endOfDay = false) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, "0")
@@ -13,14 +20,16 @@ function formatApiDate(date: Date, endOfDay = false) {
   return `${year}-${month}-${day}T${time}Z`
 }
 
-function getDefaultDateRange() {
+function getDefaultFilters(): TraceabilityFilterValues {
   const endDate = new Date()
   const startDate = new Date(endDate)
   startDate.setDate(startDate.getDate() - 7)
 
   return {
-    startDate: formatApiDate(startDate),
-    endDate: formatApiDate(endDate, true),
+    startDate,
+    endDate,
+    performedByAccountUsername: "",
+    fromWarehouseName: "",
   }
 }
 
@@ -29,7 +38,8 @@ export function useTraceabilityPage() {
   const [pageSize, setPageSizeState] = useState(
     TRACEABILITY_PAGE_SIZE_OPTIONS[0]
   )
-  const dateRange = useMemo(() => getDefaultDateRange(), [])
+  const [filters, setFilters] =
+    useState<TraceabilityFilterValues>(getDefaultFilters)
 
   const request = useMemo(
     () => ({
@@ -37,9 +47,21 @@ export function useTraceabilityPage() {
       pageSize,
       sortBy: "movementDate",
       sortOrder: "DESC" as const,
-      object: dateRange,
+      object: {
+        startDate: formatApiDate(filters.startDate),
+        endDate: formatApiDate(filters.endDate, true),
+        ...(filters.performedByAccountUsername.trim()
+          ? {
+              performedByAccountUsername:
+                filters.performedByAccountUsername.trim(),
+            }
+          : {}),
+        ...(filters.fromWarehouseName.trim()
+          ? { fromWarehouseName: filters.fromWarehouseName.trim() }
+          : {}),
+      },
     }),
-    [dateRange, page, pageSize]
+    [filters, page, pageSize]
   )
 
   const { data, isLoading, isFetching, isError } =
@@ -55,12 +77,29 @@ export function useTraceabilityPage() {
     setPage(1)
   }
 
+  const applyFilters = (nextFilters: TraceabilityFilterValues) => {
+    setFilters(nextFilters)
+    setPage(1)
+  }
+
+  const resetFilters = () => {
+    const defaultFilters = getDefaultFilters()
+    setFilters(defaultFilters)
+    setPage(1)
+
+    return defaultFilters
+  }
+
   return {
     rows: data?.content ?? [],
-    dateRange,
     isLoading,
     isFetching,
     isError,
+    filters: {
+      values: filters,
+      apply: applyFilters,
+      reset: resetFilters,
+    },
     pagination: {
       page: currentPage,
       pageSize,
