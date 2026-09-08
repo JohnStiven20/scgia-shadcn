@@ -60,6 +60,7 @@ interface DataTableProps<TData extends RowData> {
   ariaLabel?: string
   emptyMessage?: string
   onDataChange?: (data: TData[]) => void
+  onRowClick?: (row: TData) => void
 }
 
 interface DataTableColumnHeaderProps<TData extends RowData, TValue> {
@@ -106,6 +107,7 @@ function DragHandle() {
       size="icon"
       className="size-7"
       aria-label="Reordenar fila"
+      onClick={(event) => event.stopPropagation()}
     >
       <GripVertical className="size-4 text-muted-foreground" />
     </Button>
@@ -130,10 +132,12 @@ function DataTableRow<TData extends RowData>({
   row,
   orderingEnabled,
   columnWidths,
+  onRowClick,
 }: {
   row: Row<DataTableFeatures, TData>
   orderingEnabled: boolean
   columnWidths: Record<string, number>
+  onRowClick?: (row: TData) => void
 }) {
   const {
     attributes,
@@ -151,8 +155,26 @@ function DataTableRow<TData extends RowData>({
     <DragHandleContext.Provider value={{ attributes, listeners }}>
       <TableRow
         ref={setNodeRef}
-        className={isDragging ? "relative z-10 opacity-80" : undefined}
+        tabIndex={onRowClick ? 0 : undefined}
+        className={
+          [
+            isDragging && "relative z-10 opacity-80",
+            onRowClick &&
+              "cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none",
+          ]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
         style={{ transform: CSS.Transform.toString(transform), transition }}
+        onClick={() => onRowClick?.(row.original)}
+        onKeyDown={(event) => {
+          if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) {
+            return
+          }
+
+          event.preventDefault()
+          onRowClick(row.original)
+        }}
       >
         {row.getVisibleCells().map((cell) => (
           <RowCell<TData>
@@ -175,6 +197,7 @@ export function DataTable<TData extends RowData>({
   ariaLabel = "Tabla de datos",
   emptyMessage = "No hay resultados.",
   onDataChange,
+  onRowClick,
 }: DataTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const tableContainerRef = React.useRef<HTMLDivElement>(null)
@@ -338,6 +361,7 @@ export function DataTable<TData extends RowData>({
                       row={row}
                       orderingEnabled={enableRowOrdering}
                       columnWidths={columnWidths}
+                      onRowClick={onRowClick}
                     />
                   ))}
                 </SortableContext>

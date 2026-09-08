@@ -19,7 +19,8 @@ import {
   SidebarProvider,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { Outlet } from "react-router-dom"
+import { useEffect } from "react"
+import { Outlet, useLocation } from "react-router-dom"
 
 const workspaceMenus = [
   { title: "Resumen", icon: LayoutDashboard },
@@ -33,10 +34,21 @@ const supportMenus = [
   { title: "Configuración", icon: Settings },
 ]
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 export const AppLayout = () => {
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon" variant="floating" >
+      <ScrollToTop />
+      <Sidebar collapsible="icon" variant="floating">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Espacio de trabajo</SidebarGroupLabel>

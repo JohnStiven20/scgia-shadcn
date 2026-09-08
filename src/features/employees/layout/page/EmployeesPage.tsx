@@ -1,5 +1,6 @@
 import { Funnel, Plus, RotateCcw, Search } from "lucide-react"
 import { createColumnHelper } from "@tanstack/react-table"
+import { useNavigate } from "react-router-dom"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -282,6 +283,8 @@ function EmployeesFilters() {
 }
 
 export function EmployeesPage() {
+  const navigate = useNavigate()
+
   return (
     <section className="flex flex-col gap-6" aria-label="Empleados">
       <EmployeesFilters />
@@ -293,6 +296,9 @@ export function EmployeesPage() {
           columns={employeeColumns}
           getRowId={(employee) => employee.id}
           enableRowOrdering
+          onRowClick={(employee) =>
+            navigate(`/employees/worker/${employee.id}`)
+          }
           ariaLabel="Listado de empleados"
           emptyMessage="No hay empleados que coincidan."
         />

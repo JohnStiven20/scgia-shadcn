@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom"
 import { EmployeesLayout } from "@/features/employees/layout/EmployeesLayout";
 import { AppLayout } from "@/layout/Layout";
 import { EmployeesPage } from "@/features/employees/layout/page/EmployeesPage";
+import { WorkerPage } from "@/features/employees/worker/page/WorkerPage";
 
 
 
@@ -12,13 +13,18 @@ export const AppRouter = createBrowserRouter([
         element: <AppLayout/>,
         children: [
             {
-                path: "admin",
+                path: "employees",
                 element: <EmployeesLayout/>,
                 children: [
                     {
-                        path: "users",
+                        index: true,
                         element: <EmployeesPage/>
+                    },
+                    {
+                        path: "worker/:id",
+                        element: <WorkerPage/>
                     }
+                   
                 ]
             }
         ]
