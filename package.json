@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.5",
     "date-fns": "^4.4.0",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.41.0",
     "maplibre-gl": "^6.8.0",
     "onscan.js": "^1.5.2",

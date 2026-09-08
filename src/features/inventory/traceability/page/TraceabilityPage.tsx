@@ -2,16 +2,12 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
 import {
   Archive,
-  ArrowDownToLine,
-  ArrowUpFromLine,
   ChevronDown,
-  ClipboardCheck,
   Funnel,
   Package,
   RotateCcw,
   UserRound,
   Warehouse,
-  type LucideIcon,
 } from "lucide-react"
 import {
   DataTable,
@@ -21,7 +17,7 @@ import { type DataTableFeatures } from "@/components/data-table/data-table-featu
 import { DatePicker } from "@/components/general"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -32,51 +28,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
-import type {
-  InventoryMovementType,
-  MovementTransaction,
-} from "@/features/interface/traceability/types"
+import type { MovementTransaction } from "@/features/interface/traceability/types"
 import { InventoryPageHeader } from "../../components"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { TraceabilityEventDetailPanel } from "../components/TraceabilityEventDetailPanel"
 import {
   TRACEABILITY_PAGE_SIZE_OPTIONS,
   type TraceabilityFilterValues,
   useTraceabilityPage,
 } from "../hooks/useTraceabilityPage"
-
-type EventStyle = {
-  label: string
-  icon: LucideIcon
-  badgeClassName: string
-  iconClassName: string
-}
-
-const eventStyles: Record<InventoryMovementType, EventStyle> = {
-  ENTRY: {
-    label: "Entrada",
-    icon: ArrowDownToLine,
-    badgeClassName: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    iconClassName: "bg-emerald-100 text-emerald-700",
-  },
-  ASSIGNMENT: {
-    label: "Asignación",
-    icon: ClipboardCheck,
-    badgeClassName: "border-blue-200 bg-blue-50 text-blue-700",
-    iconClassName: "bg-blue-100 text-blue-700",
-  },
-  RETURN: {
-    label: "Devolución",
-    icon: RotateCcw,
-    badgeClassName: "border-amber-200 bg-amber-50 text-amber-700",
-    iconClassName: "bg-amber-100 text-amber-700",
-  },
-  EXIT: {
-    label: "Salida",
-    icon: ArrowUpFromLine,
-    badgeClassName: "border-red-200 bg-red-50 text-red-700",
-    iconClassName: "bg-red-100 text-red-700",
-  },
-}
+import { traceabilityEventStyles } from "../components/traceability-event-styles"
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-ES", {
   day: "2-digit",
@@ -92,7 +53,7 @@ function formatMovementDate(value: string) {
 }
 
 function EventCell({ transaction }: { transaction: MovementTransaction }) {
-  const style = eventStyles[transaction.inventoryMovementType]
+  const style = traceabilityEventStyles[transaction.inventoryMovementType]
   const EventIcon = style.icon
 
   return (
@@ -341,7 +302,10 @@ const columnHelper = createColumnHelper<
   MovementTransaction
 >()
 
-function createTraceabilityColumns(isMobile: boolean) {
+function createTraceabilityColumns(
+  isMobile: boolean,
+  showModelsColumn: boolean
+) {
   return columnHelper.columns([
     columnHelper.accessor("inventoryMovementType", {
       header: ({ column }) => (
@@ -380,24 +344,31 @@ function createTraceabilityColumns(isMobile: boolean) {
       header: "Contenido",
       cell: ({ row }) => <ContentCell transaction={row.original} />,
     }),
-    columnHelper.display({
-      id: "models",
-      header: "Modelos",
-      cell: ({ row }) => <ModelsCell transaction={row.original} />,
-      size: 160,
-      minSize: 140,
-    }),
+    ...(showModelsColumn
+      ? [
+          columnHelper.display({
+            id: "models",
+            header: "Modelos",
+            cell: ({ row }) => <ModelsCell transaction={row.original} />,
+            size: 160,
+            minSize: 140,
+          }),
+        ]
+      : []),
   ])
 }
 
 export function TraceabilityPage() {
   const isMobile = useIsMobile()
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null)
   const traceabilityColumns = useMemo(
-    () => createTraceabilityColumns(isMobile),
-    [isMobile]
+    () => createTraceabilityColumns(isMobile, selectedEventId === null),
+    [isMobile, selectedEventId]
   )
   const { rows, isLoading, isFetching, isError, filters, pagination } =
     useTraceabilityPage()
+  const selectedEvent =
+    rows.find((event) => event.id === selectedEventId) ?? null
 
   const emptyMessage = isLoading
     ? "Cargando movimientos..."
@@ -414,33 +385,67 @@ export function TraceabilityPage() {
 
       <TraceabilityFilters
         values={filters.values}
-        onApply={filters.apply}
-        onReset={filters.reset}
+        onApply={(nextFilters) => {
+          setSelectedEventId(null)
+          filters.apply(nextFilters)
+        }}
+        onReset={() => {
+          setSelectedEventId(null)
+          return filters.reset()
+        }}
       />
 
       <p className="sr-only" role="status" aria-live="polite">
         {isFetching ? "Actualizando movimientos" : "Movimientos actualizados"}
       </p>
 
-      <section aria-label="Movimientos de inventario">
-        <DataTable
-          data={rows}
-          columns={traceabilityColumns}
-          isLoading={isLoading}
-          getRowId={(transaction) => String(transaction.id)}
-          serverPagination={{
-            page: pagination.page,
-            pageSize: pagination.pageSize,
-            totalPages: pagination.totalPages,
-            totalElements: pagination.totalElements,
-            onPageChange: pagination.setPage,
-            pageSizeOptions: TRACEABILITY_PAGE_SIZE_OPTIONS,
-            onPageSizeChange: pagination.setPageSize,
-          }}
-          ariaLabel="Trazabilidad de movimientos de inventario"
-          emptyMessage={emptyMessage}
+      <div
+        className={`grid items-start gap-4 ${
+          selectedEvent
+            ? "lg:grid-cols-[minmax(0,1fr)_minmax(22rem,26rem)]"
+            : "grid-cols-1"
+        }`}
+      >
+        <section className="min-w-0" aria-label="Movimientos de inventario">
+          <DataTable
+            data={rows}
+            columns={traceabilityColumns}
+            isLoading={isLoading}
+            getRowId={(transaction) => String(transaction.id)}
+            selectedRowId={
+              selectedEventId === null ? undefined : String(selectedEventId)
+            }
+            onRowClick={(transaction) => {
+              setSelectedEventId((current) =>
+                current === transaction.id ? null : transaction.id
+              )
+            }}
+            serverPagination={{
+              page: pagination.page,
+              pageSize: pagination.pageSize,
+              totalPages: pagination.totalPages,
+              totalElements: pagination.totalElements,
+              onPageChange: (page) => {
+                setSelectedEventId(null)
+                pagination.setPage(page)
+              },
+              pageSizeOptions: TRACEABILITY_PAGE_SIZE_OPTIONS,
+              onPageSizeChange: (pageSize) => {
+                setSelectedEventId(null)
+                pagination.setPageSize(pageSize)
+              },
+            }}
+            ariaLabel="Trazabilidad de movimientos de inventario"
+            emptyMessage={emptyMessage}
+          />
+        </section>
+
+        <TraceabilityEventDetailPanel
+          event={selectedEvent}
+          open={selectedEvent !== null}
+          onClose={() => setSelectedEventId(null)}
         />
-      </section>
+      </div>
     </section>
   )
 }
