@@ -30,14 +30,18 @@ import {
   type RowData,
   type SortingState,
 } from "@tanstack/react-table"
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsUpDown,
-  GripVertical,
-} from "lucide-react"
+import { ChevronsUpDown, GripVertical } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Field } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -50,6 +54,15 @@ import {
   dataTableFeatures,
   type DataTableFeatures,
 } from "./data-table-features"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
 interface DataTableProps<TData extends RowData> {
   columns: ColumnDef<DataTableFeatures, TData>[]
@@ -61,11 +74,38 @@ interface DataTableProps<TData extends RowData> {
   emptyMessage?: string
   onDataChange?: (data: TData[]) => void
   onRowClick?: (row: TData) => void
+  serverPagination?: DataTableServerPagination
+}
+
+export interface DataTableServerPagination {
+  page: number
+  pageSize: number
+  totalPages: number
+  totalElements: number
+  onPageChange: (page: number) => void
+  pageSizeOptions?: number[]
+  onPageSizeChange?: (pageSize: number) => void
 }
 
 interface DataTableColumnHeaderProps<TData extends RowData, TValue> {
   column: Column<DataTableFeatures, TData, TValue>
   title: string
+}
+
+function getPageItems(currentPage: number, totalPages: number) {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, "ellipsis", totalPages] as const
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages] as const
+  }
+
+  return [1, "ellipsis", currentPage, "ellipsis", totalPages] as const
 }
 
 type DragHandleContextValue = Pick<
@@ -198,6 +238,7 @@ export function DataTable<TData extends RowData>({
   emptyMessage = "No hay resultados.",
   onDataChange,
   onRowClick,
+  serverPagination,
 }: DataTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const tableContainerRef = React.useRef<HTMLDivElement>(null)
@@ -216,6 +257,10 @@ export function DataTable<TData extends RowData>({
     useSensor(KeyboardSensor)
   )
   const sortableId = React.useId()
+  const tablePagination = serverPagination
+    ? { pageIndex: 0, pageSize: serverPagination.pageSize }
+    : pagination
+  const tableData = serverPagination ? initialData : data
 
   const resolvedColumns = React.useMemo(() => {
     if (!enableRowOrdering) return columns
@@ -236,18 +281,18 @@ export function DataTable<TData extends RowData>({
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () =>
-      data.map((row, index) =>
+      tableData.map((row, index) =>
         getRowId ? getRowId(row, index) : String(index)
       ),
-    [data, getRowId]
+    [tableData, getRowId]
   )
 
   const table = useTable({
     features: dataTableFeatures,
-    data,
+    data: tableData,
     columns: resolvedColumns,
     getRowId,
-    state: { sorting, columnFilters, pagination },
+    state: { sorting, columnFilters, pagination: tablePagination },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
@@ -310,6 +355,12 @@ export function DataTable<TData extends RowData>({
     })
   }
 
+  const currentPage =
+    serverPagination?.page ?? table.state.pagination.pageIndex + 1
+  const totalPages = serverPagination?.totalPages ?? table.getPageCount()
+  const totalElements =
+    serverPagination?.totalElements ?? table.getFilteredRowModel().rows.length
+
   return (
     <section className="flex flex-col gap-4" aria-label={ariaLabel}>
       <div
@@ -324,7 +375,6 @@ export function DataTable<TData extends RowData>({
           sensors={sensors}
         >
           <Table
-            className="table-fixed"
             style={{ width: renderedTableWidth, minWidth: "100%" }}
           >
             <TableHeader>
@@ -381,31 +431,110 @@ export function DataTable<TData extends RowData>({
       </div>
 
       <footer className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
-        <span>{table.getFilteredRowModel().rows.length} registros.</span>
-        <div className="flex items-center gap-2">
-          <span>
-            Página {table.state.pagination.pageIndex + 1} de{" "}
-            {table.getPageCount()}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="Página anterior"
-          >
-            <ChevronLeft />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            aria-label="Página siguiente"
-          >
-            <ChevronRight />
-          </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          {serverPagination?.pageSizeOptions &&
+          serverPagination.onPageSizeChange ? (
+            <Field orientation="horizontal" className="w-fit">
+              <span className="text-sm fw-semibold">Filas por página</span>
+              <Select
+                value={String(serverPagination.pageSize)}
+                onValueChange={(value) =>
+                  serverPagination.onPageSizeChange?.(Number(value))
+                }
+              >
+                <SelectTrigger className="w-20" id="select-rows-per-page">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="start">
+                  <SelectGroup>
+                    {serverPagination.pageSizeOptions.map((option) => (
+                      <SelectItem key={option} value={String(option)}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          ) : null}
         </div>
+        <Pagination className="mx-0 w-auto justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                text="Anterior"
+                href={currentPage > 1 ? `?page=${currentPage - 1}` : undefined}
+                aria-disabled={currentPage <= 1}
+                className={
+                  currentPage <= 1
+                    ? "pointer-events-none opacity-50"
+                    : undefined
+                }
+                onClick={(event) => {
+                  event.preventDefault()
+                  if (currentPage <= 1) return
+
+                  if (serverPagination) {
+                    serverPagination.onPageChange(currentPage - 1)
+                  } else {
+                    table.setPageIndex(currentPage - 2)
+                  }
+                }}
+              />
+            </PaginationItem>
+            {getPageItems(currentPage, totalPages).map((page, index) => (
+              <PaginationItem key={`${page}-${index}`}>
+                {page === "ellipsis" ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    href={`?page=${page}`}
+                    isActive={page === currentPage}
+                    aria-label={`Ir a la página ${page}`}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      if (page === currentPage) return
+
+                      if (serverPagination) {
+                        serverPagination.onPageChange(page)
+                      } else {
+                        table.setPageIndex(page - 1)
+                      }
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                text="Siguiente"
+                href={
+                  currentPage < totalPages
+                    ? `?page=${currentPage + 1}`
+                    : undefined
+                }
+                aria-disabled={currentPage >= totalPages}
+                className={
+                  currentPage >= totalPages
+                    ? "pointer-events-none opacity-50"
+                    : undefined
+                }
+                onClick={(event) => {
+                  event.preventDefault()
+                  if (currentPage >= totalPages) return
+
+                  if (serverPagination) {
+                    serverPagination.onPageChange(currentPage + 1)
+                  } else {
+                    table.setPageIndex(currentPage)
+                  }
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </footer>
     </section>
   )

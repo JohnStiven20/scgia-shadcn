@@ -1,6 +1,6 @@
-import { Funnel, Plus, RotateCcw, Search } from "lucide-react"
+import { useState } from "react"
 import { createColumnHelper } from "@tanstack/react-table"
-import { useNavigate } from "react-router-dom"
+import { Funnel, Plus, RotateCcw, Search } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -8,115 +8,53 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   DataTable,
   DataTableColumnHeader,
 } from "@/components/data-table/data-table"
 import { type DataTableFeatures } from "@/components/data-table/data-table-features"
+import type { Worker } from "@/features/interface/worker/type/worker.inteface"
+import type { SearchWorkersParams } from "@/features/interface/worker/request/create-worker-request"
 import { EmployeesPageHeader } from "../../components"
+import {
+  CARD_PAGE_SIZE_OPTIONS,
+  employeeFiltersDefaultValues,
+  useEmployeesPage,
+} from "../hooks/useEmployeesPage"
 
-type Employee = {
-  id: string
-  name: string
-  initials: string
-  type: string
-  dni: string
-  email: string
-  phone: string
-  code: string
-  status: "Activo" | "Inactivo"
+type EmployeeTextFilterField = {
+  key:
+  | "firstName"
+  | "surname"
+  | "dni"
+  | "email"
+  | "phone"
+  | "employeeCode"
+  label: string
+  placeholder: string
+  type?: string
 }
-const employees: Employee[] = [
+
+const employeeTextFilterFields: EmployeeTextFilterField[] = [
+  { key: "firstName", label: "Nombre", placeholder: "Nombre" },
+  { key: "surname", label: "Apellidos", placeholder: "Apellidos" },
+  { key: "dni", label: "DNI", placeholder: "DNI" },
+  { key: "email", label: "Email", placeholder: "Email", type: "email" },
+  { key: "phone", label: "Teléfono", placeholder: "Teléfono", type: "tel" },
   {
-    id: "92038475",
-    name: "Cristofer234 Macase",
-    initials: "CM",
-    type: "Prueba",
-    dni: "486429651",
-    email: "solanomacascristofer@example.com",
-    phone: "+34622304138",
-    code: "92038475",
-    status: "Activo",
-  },
-  {
-    id: "EMP-0115",
-    name: "Cristoferrr Macas",
-    initials: "CM",
-    type: "Casa de papel",
-    dni: "48642965N",
-    email: "solanomacascristofer@example.com",
-    phone: "+34622304133",
-    code: "EMP-0115",
-    status: "Activo",
-  },
-  {
-    id: "9203847562",
-    name: "Pepee Solano",
-    initials: "PS",
-    type: "Casa de papelII",
-    dni: "48642965P",
-    email: "solanom@gmail.com",
-    phone: "",
-    code: "9203847562",
-    status: "Inactivo",
-  },
-  {
-    id: "EMP-0118",
-    name: "Mario Solano Macas",
-    initials: "MS",
-    type: "Prueba",
-    dni: "48642965M",
-    email: "solono@gmail.com",
-    phone: "+34622304131",
-    code: "EMP-0118",
-    status: "Activo",
-  },
-  {
-    id: "EMP-0120",
-    name: "Lucía Fernández",
-    initials: "LF",
-    type: "Operaciones",
-    dni: "48642965T",
-    email: "lucia.fernandez@example.com",
-    phone: "+34622304132",
-    code: "EMP-0120",
-    status: "Activo",
-  },
-  {
-    id: "EMP-0121",
-    name: "Daniel Romero",
-    initials: "DR",
-    type: "Administración",
-    dni: "48642965R",
-    email: "daniel.romero@example.com",
-    phone: "+34622304139",
-    code: "EMP-0121",
-    status: "Inactivo",
-  },
-  {
-    id: "EMP-0122",
-    name: "Sofía Navarro",
-    initials: "SN",
-    type: "Soporte técnico",
-    dni: "48642965S",
-    email: "sofia.navarro@example.com",
-    phone: "+34622304135",
-    code: "EMP-0122",
-    status: "Activo",
-  },
-  {
-    id: "EMP-0123",
-    name: "Javier Martín",
-    initials: "JM",
-    type: "Logística",
-    dni: "48642965J",
-    email: "javier.martin@example.com",
-    phone: "+34622304136",
-    code: "EMP-0123",
-    status: "Activo",
+    key: "employeeCode",
+    label: "Código de empleado",
+    placeholder: "Código de empleado",
   },
 ]
 
-const columnHelper = createColumnHelper<DataTableFeatures, Employee>()
+const columnHelper = createColumnHelper<DataTableFeatures, Worker>()
 
 const employeeColumns = columnHelper.columns([
   columnHelper.accessor("name", {
@@ -126,31 +64,38 @@ const employeeColumns = columnHelper.columns([
     size: 300,
     minSize: 220,
     cell: ({ row }) => {
-      const employee = row.original
+      const worker = row.original
 
       return (
         <div className="flex items-center gap-3">
           <Avatar>
             <AvatarImage
-              src={`https://i.pravatar.cc/80?u=${employee.code}`}
-              alt={`Avatar de ${employee.name}`}
+              src={`https://i.pravatar.cc/80?u=${worker.id}`}
+              alt={`Avatar de ${worker.name} ${worker.surname}`}
             />
-            <AvatarFallback>{employee.initials}</AvatarFallback>
+            <AvatarFallback>
+              {worker.name.charAt(0)}
+              {worker.surname.charAt(0)}
+            </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{employee.name}</p>
-            <p className="text-xs text-muted-foreground">ID: {employee.code}</p>
+            <p className="font-medium">
+              {worker.name} {worker.surname}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              ID: {worker.employeeCode}
+            </p>
           </div>
         </div>
       )
     },
   }),
-  columnHelper.accessor("type", {
+  columnHelper.accessor("workerTypeName", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Tipo de trabajador" />
     ),
     size: 210,
-    minSize: 100,
+    minSize: 150,
   }),
   columnHelper.accessor("dni", {
     header: ({ column }) => (
@@ -159,14 +104,14 @@ const employeeColumns = columnHelper.columns([
     size: 150,
     minSize: 120,
   }),
-  columnHelper.accessor("code", {
+  columnHelper.accessor("employeeCode", {
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Código" />
     ),
     size: 150,
     minSize: 120,
   }),
-  columnHelper.accessor("status", {
+  columnHelper.accessor("active", {
     header: "Estado",
     size: 150,
     minSize: 110,
@@ -174,101 +119,118 @@ const employeeColumns = columnHelper.columns([
     cell: ({ row }) => (
       <Badge
         variant="outline"
-        className={
-          row.original.status === "Activo" ? "text-emerald-600" : "text-red-600"
-        }
+        className={row.original.active ? "text-emerald-600" : "text-red-600"}
       >
-        {row.original.status}
+        {row.original.active ? "Activo" : "Inactivo"}
       </Badge>
     ),
   }),
 ])
 
-function EmployeesFilters() {
+type EmployeesFiltersProps = {
+  values: SearchWorkersParams
+  workerTypes: { id: number; name: string }[]
+  onApply: (values: SearchWorkersParams) => Promise<void>
+  onReset: () => void
+}
+
+function EmployeesFilters({
+  values,
+  workerTypes,
+  onApply,
+  onReset,
+}: EmployeesFiltersProps) {
+  const [draft, setDraft] = useState<SearchWorkersParams>(values)
+
+  const updateDraft = (key: keyof SearchWorkersParams, value: string) => {
+    setDraft((current) => ({ ...current, [key]: value }))
+  }
+
   return (
     <section className="flex flex-col gap-6" aria-label="Filtros de empleados">
-      <EmployeesPageHeader
-        title="Empleados"
-        description="Gestiona y supervisa todos los empleados de tu organización."
-        action={
-          <Button>
-            <Plus />
-            Nuevo empleado
-          </Button>
-        }
-      />
-
       <form
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
-        onSubmit={(event) => event.preventDefault()}
+        onSubmit={(event) => {
+          event.preventDefault()
+          void onApply(draft)
+        }}
       >
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-name">Nombre</Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="employee-name"
-              name="name"
-              placeholder="Nombre"
-              className="h-8 pl-8"
-            />
+        {employeeTextFilterFields.map((field) => (
+          <div className="grid gap-1.5" key={field.key}>
+            <Label htmlFor={`employee-${field.key}`}>{field.label}</Label>
+            <div className="relative">
+              {field.key === "firstName" ? (
+                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              ) : null}
+              <Input
+                id={`employee-${field.key}`}
+                name={field.key}
+                type={field.type ?? "text"}
+                placeholder={field.placeholder}
+                value={String(draft[field.key] ?? "")}
+                onChange={(event) => updateDraft(field.key, event.target.value)}
+                className={field.key === "firstName" ? "h-8 pl-8" : "h-8"}
+              />
+            </div>
           </div>
+        ))}
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="employee-worker-type">Tipo de trabajador</Label>
+          <Select
+            value={draft.workerTypeId ? String(draft.workerTypeId) : "all"}
+            onValueChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                workerTypeId: value === "all" ? undefined : Number(value),
+              }))
+            }
+          >
+            <SelectTrigger id="employee-worker-type" className="h-8 w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {workerTypes.map((workerType) => (
+                <SelectItem key={workerType.id} value={String(workerType.id)}>
+                  {workerType.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="employee-lastname">Apellidos</Label>
-          <Input
-            id="employee-lastname"
-            name="lastname"
-            placeholder="Apellidos"
-            className="h-8"
-          />
+          <Label htmlFor="employee-status">Estado</Label>
+          <Select
+            value={draft.active === undefined ? "all" : String(draft.active)}
+            onValueChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                active: value === "all" ? undefined : value === "true",
+              }))
+            }
+          >
+            <SelectTrigger id="employee-status" className="h-8 w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="true">Activo</SelectItem>
+              <SelectItem value="false">Inactivo</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-dni">DNI</Label>
-          <Input
-            id="employee-dni"
-            name="dni"
-            placeholder="DNI"
-            className="h-8"
-          />
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-email">Email</Label>
-          <Input
-            id="employee-email"
-            name="email"
-            type="email"
-            placeholder="Email"
-            className="h-8"
-          />
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-phone">Teléfono</Label>
-          <Input
-            id="employee-phone"
-            name="phone"
-            type="tel"
-            placeholder="Teléfono"
-            className="h-8"
-          />
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-code">Código de empleado</Label>
-          <Input
-            id="employee-code"
-            name="code"
-            placeholder="Código de empleado"
-            className="h-8"
-          />
-        </div>
-
-        <div className="flex flex-wrap items-end justify-end gap-3 sm:col-span-2 lg:col-span-2">
-          <Button type="reset" variant="outline">
+        <div className="flex flex-wrap items-end justify-end gap-3 sm:col-span-2 lg:col-span-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setDraft(employeeFiltersDefaultValues)
+              onReset()
+            }}
+          >
             <RotateCcw />
             Limpiar
           </Button>
@@ -283,24 +245,51 @@ function EmployeesFilters() {
 }
 
 export function EmployeesPage() {
-  const navigate = useNavigate()
+
+  const { filters, pagination, navigation, data } = useEmployeesPage()
 
   return (
     <section className="flex flex-col gap-6" aria-label="Empleados">
-      <EmployeesFilters />
 
-      <section className="rounded-xl" aria-label="Herramientas de empleados">
+      <EmployeesPageHeader
+        title="Empleados"
+        description="Gestiona y supervisa todos los empleados de tu organización."
+        action={
+          <Button type="button">
+            <Plus />
+            Nuevo empleado
+          </Button>
+        }
+      />
+
+      <EmployeesFilters
+        values={filters.values}
+        workerTypes={filters.workerTypes}
+        onApply={filters.apply}
+        onReset={filters.reset}
+      />
+
+      <section aria-label="Listado de empleados">
         <DataTable
-          data={employees}
-          pageSize={10}
+          data={data.rows}
           columns={employeeColumns}
-          getRowId={(employee) => employee.id}
-          enableRowOrdering
-          onRowClick={(employee) =>
-            navigate(`/employees/worker/${employee.id}`)
-          }
+          getRowId={(worker) => String(worker.id)}
+          onRowClick={(worker) => navigation.goToWorker(worker.id)}
+          serverPagination={{
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            totalPages: pagination.totalPages,
+            totalElements: pagination.totalElements,
+            onPageChange: pagination.setPage,
+            pageSizeOptions: CARD_PAGE_SIZE_OPTIONS,
+            onPageSizeChange: pagination.setPageSize,
+          }}
           ariaLabel="Listado de empleados"
-          emptyMessage="No hay empleados que coincidan."
+          emptyMessage={
+            data.isLoading
+              ? "Cargando empleados..."
+              : "No hay empleados que coincidan."
+          }
         />
       </section>
     </section>

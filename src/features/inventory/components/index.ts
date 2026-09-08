@@ -1,0 +1,1 @@
+export { InventoryPageHeader } from "./InventoryPageHeader"

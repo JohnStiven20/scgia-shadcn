@@ -1,9 +1,11 @@
 import {
   BarChart3,
   Boxes,
-  FolderKanban,
+  CalendarX2,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
+  Truck,
   Users,
 } from "lucide-react"
 import {
@@ -20,13 +22,15 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { useEffect } from "react"
-import { Outlet, useLocation } from "react-router-dom"
+import { Link, Outlet, useLocation } from "react-router-dom"
 
 const workspaceMenus = [
-  { title: "Resumen", icon: LayoutDashboard },
-  { title: "Empleados", icon: Users },
-  { title: "Proyectos", icon: FolderKanban },
-  { title: "Inventario", icon: Boxes },
+  { title: "Dashboard", icon: LayoutDashboard, href: undefined },
+  { title: "Admin", icon: ShieldCheck, href: undefined },
+  { title: "Inventario", icon: Boxes, href: undefined },
+  { title: "Trabajadores", icon: Users, href: "/employees" },
+  { title: "Ausencias", icon: CalendarX2, href: undefined },
+  { title: "Flota", icon: Truck, href: undefined },
 ]
 
 const supportMenus = [
@@ -45,6 +49,8 @@ function ScrollToTop() {
 }
 
 export const AppLayout = () => {
+  const location = useLocation()
+
   return (
     <SidebarProvider>
       <ScrollToTop />
@@ -56,7 +62,15 @@ export const AppLayout = () => {
               <SidebarMenu>
                 {workspaceMenus.map((menu) => (
                   <SidebarMenuItem key={menu.title}>
-                    <SidebarMenuButton tooltip={menu.title}>
+                    <SidebarMenuButton
+                      tooltip={menu.title}
+                      isActive={
+                        menu.href
+                          ? location.pathname.startsWith(menu.href)
+                          : false
+                      }
+                      render={menu.href ? <Link to={menu.href} /> : undefined}
+                    >
                       <menu.icon />
                       <span>{menu.title}</span>
                     </SidebarMenuButton>
