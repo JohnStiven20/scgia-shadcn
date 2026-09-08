@@ -36,7 +36,7 @@ const supportMenus = [
 export const AppLayout = () => {
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon" variant="floating">
+      <Sidebar collapsible="icon" variant="floating" >
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Espacio de trabajo</SidebarGroupLabel>
