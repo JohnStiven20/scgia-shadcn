@@ -1,4 +1,4 @@
-import type { WorkerTypeInterface } from "../../../../../../../../scgia/src/features/interface/worker-type/type/worker-type-interface";
+import type { WorkerTypeInterface } from "@/features/interface/worker-type/type/worker-type-interface";
 
 export const workerTabs = ["Datos personales", "Contratos", "Documentos", "Ajustes"] as const;
 
@@ -28,21 +28,6 @@ export type WorkerDetailViewModel = {
   workerType: WorkerTypeInterface;
 };
 
-export type WorkerContract = {
-  id: number;
-  title?: string;
-  period?: string;
-  workerType?: string;
-  reference?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  salaryType: string;
-  salary?: string;
-  employerCost?: string;
-  payrollCategory?: string;
-  schedule: string;
-  status: "Vigente" | "Programado" | "Finalizado";
-};
 
 export type WorkerTrainingDocumentStatus =
   | "Vigente"

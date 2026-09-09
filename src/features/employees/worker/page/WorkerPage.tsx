@@ -8,19 +8,19 @@ import {
   Settings2,
   Trash2,
   UserRound,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,11 +28,12 @@ import {
   BreadcrumbPage,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Link } from "react-router-dom"
+} from "@/components/ui/breadcrumb";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Link, useParams } from "react-router-dom";
+import { WorkerContractsTab } from "../components/contract/WorkerContractsTab";
 
 const worker = {
   id: "9203847562",
@@ -44,14 +45,14 @@ const worker = {
   phone: "",
   workerType: "Casa de papelII",
   observations: "Información adicional sobre el trabajador.",
-}
+};
 
 const workerTabs = [
   { value: "personal", label: "Datos personales", icon: UserRound },
   { value: "contracts", label: "Contratos", icon: BriefcaseBusiness },
   { value: "documents", label: "Documentos", icon: FileText },
   { value: "settings", label: "Ajustes", icon: Settings2 },
-] as const
+] as const;
 
 function WorkerProfile() {
   return (
@@ -91,7 +92,7 @@ function WorkerProfile() {
         </address>
       </section>
     </header>
-  )
+  );
 }
 
 function FormField({
@@ -99,15 +100,15 @@ function FormField({
   label,
   ...inputProps
 }: React.ComponentProps<typeof Input> & {
-  id: string
-  label: string
+  id: string;
+  label: string;
 }) {
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} {...inputProps} />
     </div>
-  )
+  );
 }
 
 function PersonalDataForm() {
@@ -206,15 +207,15 @@ function PersonalDataForm() {
         </div>
       </footer>
     </form>
-  )
+  );
 }
 
 function EmptyTab({
   title,
   description,
 }: {
-  title: string
-  description: string
+  title: string;
+  description: string;
 }) {
   return (
     <section className="rounded-xl border bg-card p-8 text-center">
@@ -222,11 +223,13 @@ function EmptyTab({
       <h2 className="mt-3 text-base font-semibold">{title}</h2>
       <p className="mt-1 text-xs text-muted-foreground">{description}</p>
     </section>
-  )
+  );
 }
 
 export function WorkerPage() {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
+  const { id } = useParams();
+  const workerId = Number(id);
 
   return (
     <article className="rounded-xl border bg-background p-4 sm:p-6">
@@ -272,17 +275,9 @@ export function WorkerPage() {
           <PersonalDataForm />
         </TabsContent>
         <TabsContent value="contracts">
-          <EmptyTab
-            title="Contratos"
-            description="Los contratos del trabajador aparecerán aquí."
-          />
+          <WorkerContractsTab workerId={workerId} />
         </TabsContent>
-        <TabsContent value="documents">
-          <EmptyTab
-            title="Documentos"
-            description="La documentación asociada aparecerá aquí."
-          />
-        </TabsContent>
+        <TabsContent value="documents"></TabsContent>
         <TabsContent value="settings">
           <EmptyTab
             title="Ajustes"
@@ -291,5 +286,5 @@ export function WorkerPage() {
         </TabsContent>
       </Tabs>
     </article>
-  )
+  );
 }
