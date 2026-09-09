@@ -220,6 +220,7 @@ function EmployeesFilters({
           <Button
             type="button"
             variant="outline"
+            
             onClick={() => {
               setDraft(employeeFiltersDefaultValues)
               onReset()

@@ -12,8 +12,12 @@ import {
     ChevronDown,
     CornerUpLeft,
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export const EmployeesTopNav = () => {
+
+    const navigate = useNavigate()
+
     return (
         <TopBar>
             <nav
@@ -48,7 +52,9 @@ export const EmployeesTopNav = () => {
                 </DropdownMenu>
                 <Button
                     variant="ghost"
-                    onClick={() => { }}
+                    onClick={() => { 
+                        navigate("models")
+                    }}
                 >
                     Modelos
                 </Button>
@@ -60,7 +66,9 @@ export const EmployeesTopNav = () => {
                 </Button>
                 <Button
                     variant="ghost"
-                    onClick={() => { }}
+                    onClick={() => {
+                        navigate("")
+                    }}
                 >
                     Trazabilidad
                 </Button>

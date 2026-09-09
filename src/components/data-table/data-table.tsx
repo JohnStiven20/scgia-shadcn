@@ -294,6 +294,11 @@ export function DataTable<TData extends RowData>({
     pageIndex: 0,
     pageSize,
   })
+
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
+
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
