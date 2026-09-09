@@ -76,6 +76,7 @@ interface DataTableProps<TData extends RowData> {
   emptyMessage?: string
   onDataChange?: (data: TData[]) => void
   onRowClick?: (row: TData) => void
+  selectedRowId?: string
   serverPagination?: DataTableServerPagination
   fitColumns?: boolean
   isLoading?: boolean
@@ -191,12 +192,14 @@ function DataTableRow<TData extends RowData>({
   orderingEnabled,
   columnWidths,
   onRowClick,
+  selected,
   fitColumns,
 }: {
   row: Row<DataTableFeatures, TData>
   orderingEnabled: boolean
   columnWidths: Record<string, number>
   onRowClick?: (row: TData) => void
+  selected: boolean
   fitColumns: boolean
 }) {
   const {
@@ -216,6 +219,8 @@ function DataTableRow<TData extends RowData>({
       <TableRow
         ref={setNodeRef}
         tabIndex={onRowClick ? 0 : undefined}
+        data-state={selected ? "selected" : undefined}
+        aria-selected={selected || undefined}
         className={
           [
             isDragging && "relative z-10 opacity-80",
@@ -226,11 +231,25 @@ function DataTableRow<TData extends RowData>({
             .join(" ") || undefined
         }
         style={{ transform: CSS.Transform.toString(transform), transition }}
-        onClick={() => onRowClick?.(row.original)}
+        onClick={(event) => {
+          const target = event.target
+          const interactiveElement =
+            target instanceof Element
+              ? target.closest(
+                  "button, a, input, select, textarea, [role=button], [role=menuitem]"
+                )
+              : null
+
+          if (interactiveElement) return
+
+          onRowClick?.(row.original)
+        }}
         onKeyDown={(event) => {
           if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) {
             return
           }
+
+          if (event.target !== event.currentTarget) return
 
           event.preventDefault()
           onRowClick(row.original)
@@ -259,6 +278,7 @@ export function DataTable<TData extends RowData>({
   emptyMessage = "No hay resultados.",
   onDataChange,
   onRowClick,
+  selectedRowId,
   serverPagination,
   fitColumns = false,
   isLoading = false,
@@ -475,6 +495,7 @@ export function DataTable<TData extends RowData>({
                       orderingEnabled={enableRowOrdering}
                       columnWidths={columnWidths}
                       onRowClick={onRowClick}
+                      selected={row.id === selectedRowId}
                       fitColumns={fitColumns}
                     />
                   ))}
