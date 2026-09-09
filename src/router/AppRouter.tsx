@@ -5,6 +5,7 @@ import { EmployeesPage } from "@/features/employees/layout/page/EmployeesPage"
 import { WorkerPage } from "@/features/employees/worker/page/WorkerPage"
 import { TraceabilityPage } from "@/features/inventory/traceability/page/TraceabilityPage"
 import { InventoryLayout } from "@/features/inventory/layout/InventoryLayout"
+import { ModelsPage } from "@/features/inventory/models/page/ModesPage"
 
 export const AppRouter = createBrowserRouter([
     {
@@ -33,6 +34,10 @@ export const AppRouter = createBrowserRouter([
                         index: true,
                         element: <TraceabilityPage />,
                     },
+                    {
+                        path: "models",
+                        element: <ModelsPage/>
+                    }
                 ]
             }
 
