@@ -30,6 +30,7 @@ import {
   type RowData,
   type SortingState,
   type ReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table"
 import { ChevronsUpDown, GripVertical } from "lucide-react"
 
@@ -85,6 +86,7 @@ interface DataTableProps<TData extends RowData> {
     table: ReactTable<DataTableFeatures, TData>
   ) => React.ReactNode
   initialSorting?: SortingState
+  initialColumnVisibility?: VisibilityState
   pageSizeOptions?: number[]
 }
 
@@ -290,6 +292,7 @@ export function DataTable<TData extends RowData>({
   isLoading = false,
   renderToolbar,
   initialSorting = [],
+  initialColumnVisibility,
   pageSizeOptions,
 }: DataTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
@@ -346,6 +349,9 @@ export function DataTable<TData extends RowData>({
     data: tableData,
     columns: resolvedColumns,
     getRowId,
+    initialState: {
+      columnVisibility: initialColumnVisibility,
+    },
     state: {
       sorting,
       columnFilters,

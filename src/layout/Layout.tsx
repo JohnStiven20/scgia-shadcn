@@ -22,7 +22,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { useEffect } from "react"
-import { Link, Outlet, useLocation } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 
 const workspaceMenus = [
   { title: "Dashboard", icon: LayoutDashboard, href: undefined },
@@ -30,7 +30,7 @@ const workspaceMenus = [
   { title: "Inventario", icon: Boxes, href: "/inventory" },
   { title: "Trabajadores", icon: Users, href: "/employees" },
   { title: "Ausencias", icon: CalendarX2, href: undefined },
-  { title: "Flota", icon: Truck, href: undefined },
+  { title: "Flota", icon: Truck, href: "/fleet" },
 ]
 
 const supportMenus = [
@@ -50,6 +50,7 @@ function ScrollToTop() {
 
 export const AppLayout = () => {
   const location = useLocation()
+  const navigate = useNavigate()
 
   return (
     <SidebarProvider>
@@ -69,7 +70,9 @@ export const AppLayout = () => {
                           ? location.pathname.startsWith(menu.href)
                           : false
                       }
-                      render={menu.href ? <Link to={menu.href} /> : undefined}
+                      onClick={() => {
+                        if (menu.href) navigate(menu.href)
+                      }}
                     >
                       <menu.icon />
                       <span>{menu.title}</span>
