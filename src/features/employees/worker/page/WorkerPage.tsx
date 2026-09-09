@@ -1,7 +1,6 @@
 import {
   BriefcaseBusiness,
   FileText,
-  FolderOpen,
   Mail,
   Phone,
   Save,
@@ -34,6 +33,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link, useParams } from "react-router-dom";
 import { WorkerContractsTab } from "../components/contract/WorkerContractsTab";
+import { WorkerDocumentsTab } from "../components/document/WorkerDocumentsTab";
+import { WorkerSettingsTab } from "../components/settings/WorkerSettingsTab";
 
 const worker = {
   id: "9203847562",
@@ -210,29 +211,13 @@ function PersonalDataForm() {
   );
 }
 
-function EmptyTab({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <section className="rounded-xl border bg-card p-8 text-center">
-      <FolderOpen className="mx-auto size-8 text-muted-foreground" />
-      <h2 className="mt-3 text-base font-semibold">{title}</h2>
-      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-    </section>
-  );
-}
-
 export function WorkerPage() {
   const isMobile = useIsMobile();
   const { id } = useParams();
   const workerId = Number(id);
 
   return (
-    <article className="rounded-xl border bg-background p-4 sm:p-6">
+    <article className="w-full rounded-xl border bg-background p-3 sm:p-5">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -277,12 +262,11 @@ export function WorkerPage() {
         <TabsContent value="contracts">
           <WorkerContractsTab workerId={workerId} />
         </TabsContent>
-        <TabsContent value="documents"></TabsContent>
+        <TabsContent value="documents">
+          <WorkerDocumentsTab workerId={workerId} />
+        </TabsContent>
         <TabsContent value="settings">
-          <EmptyTab
-            title="Ajustes"
-            description="Configura las opciones específicas del trabajador."
-          />
+          <WorkerSettingsTab workerId={workerId} />
         </TabsContent>
       </Tabs>
     </article>

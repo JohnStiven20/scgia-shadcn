@@ -23,10 +23,7 @@ export const workerContractApi = createApi({
   baseQuery: baseQueryWithAuth,
   tagTypes: ["WorkerContracts"],
   endpoints: (builder) => ({
-    getWorkerContractsByWorkerId: builder.query<
-      WorkerContract[],
-      number
-    >({
+    getWorkerContractsByWorkerId: builder.query<WorkerContract[], number>({
       query: (workerId) => ({
         url: `/worker-contract/worker/${workerId}`,
         method: "GET",

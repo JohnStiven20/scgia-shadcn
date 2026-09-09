@@ -1,7 +1,7 @@
-import * as React from "react"
-
+import { format } from "date-fns"
 import { X } from "lucide-react"
 
+import { DatePicker, OptionsSelect } from "@/components/general"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,14 +21,30 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { useCreateWorkerContractMutation } from "@/features/employees/worker/api/workerContractApi"
+import {
+  useCreateWorkerContractMutation,
+  useUpdateWorkerContractMutation,
+} from "@/features/employees/worker/api/workerContractApi"
+import {
+  salaryTypes,
+  type SalaryType,
+} from "@/features/interface/worker-contract/enum/salary-types"
+import {
+  salaryPeriods,
+  type SalaryPeriod,
+} from "@/features/interface/worker-contract/enum/salary-periods"
 import type { CreateWorkerContractRequest } from "@/features/interface/worker-contract/request/create-worker-contract-request"
+import type { UpdateWorkerContractRequest } from "@/features/interface/worker-contract/request/update-worker-contract-request"
+import type { WorkerContract } from "@/features/interface/worker-contract/type/worker-contract.interface"
+import { useGlobalError } from "@/hooks"
+import { useEffect, useState } from "react"
 
 type CreateWorkerContractDialogProps = {
   open: boolean
   workerId: number
   onOpenChange: (open: boolean) => void
   onCreated?: () => void
+  contract?: WorkerContract | null
 }
 
 const salaryCategories = [
@@ -53,6 +69,28 @@ function parseNullableNumber(value: FormDataEntryValue | null) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function parseDateValue(value?: string | null) {
+  if (!value) {
+    return undefined
+  }
+
+  const date = new Date(value)
+
+  return Number.isNaN(date.getTime()) ? undefined : date
+}
+
+function getSalaryTypeValue(value?: string | null): SalaryType {
+  return salaryTypes.some((type) => type.value === value)
+    ? (value as SalaryType)
+    : "FIXED"
+}
+
+function getSalaryPeriodValue(value?: string | null): SalaryPeriod {
+  return salaryPeriods.some((period) => period.value === value)
+    ? (value as SalaryPeriod)
+    : "month"
+}
+
 function DialogField({
   id,
   label,
@@ -74,56 +112,137 @@ export function CreateWorkerContractDialog({
   workerId,
   onOpenChange,
   onCreated,
+  contract,
 }: CreateWorkerContractDialogProps) {
   const [createWorkerContract, { isLoading }] =
     useCreateWorkerContractMutation()
-  const [salaryCategoryId, setSalaryCategoryId] = React.useState<string>("")
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+  const [updateWorkerContract, { isLoading: isUpdating }] =
+    useUpdateWorkerContractMutation()
+  const { handleError } = useGlobalError()
+  const isEditMode = Boolean(contract)
+  const isSaving = isLoading || isUpdating
+  const [startDate, setStartDate] = useState<Date | undefined>(() =>
+    parseDateValue(contract?.startDate)
+  )
+  const [endDate, setEndDate] = useState<Date | undefined>(() =>
+    parseDateValue(contract?.endDate)
+  )
+  const [salaryType, setSalaryType] = useState<SalaryType>(() =>
+    getSalaryTypeValue(contract?.salaryType)
+  )
+  const [salaryPeriod, setSalaryPeriod] = useState<SalaryPeriod>(() =>
+    getSalaryPeriodValue(contract?.salaryPeriod)
+  )
+  const [salaryCategoryId, setSalaryCategoryId] = useState<string>(
+    contract?.salaryCategoryId ? String(contract.salaryCategoryId) : ""
+  )
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    setStartDate(parseDateValue(contract?.startDate))
+    setEndDate(parseDateValue(contract?.endDate))
+    setSalaryType(getSalaryTypeValue(contract?.salaryType))
+    setSalaryPeriod(getSalaryPeriodValue(contract?.salaryPeriod))
+    setSalaryCategoryId(
+      contract?.salaryCategoryId ? String(contract.salaryCategoryId) : ""
+    )
+    setErrorMessage(null)
+  }, [contract, open])
+
+  function resetFormState() {
+    setStartDate(undefined)
+    setEndDate(undefined)
+    setSalaryType("FIXED")
+    setSalaryPeriod("month")
+    setSalaryCategoryId("")
+    setErrorMessage(null)
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      resetFormState()
+    }
+    onOpenChange(nextOpen)
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErrorMessage(null)
+    const form = event.currentTarget
 
-    const formData = new FormData(event.currentTarget)
+    if (!startDate || !endDate) {
+      setErrorMessage("Selecciona la fecha de inicio y la fecha de fin.")
+
+      return
+    }
+
+    const formData = new FormData(form)
     const request: CreateWorkerContractRequest = {
       workerId,
       reference: String(formData.get("reference") || "").trim() || null,
       employeeType: String(formData.get("employeeType") || "").trim() || null,
-      startDate: String(formData.get("startDate") || ""),
-      endDate: String(formData.get("endDate") || ""),
+      startDate: format(startDate, "yyyy-MM-dd"),
+      endDate: format(endDate, "yyyy-MM-dd"),
       weeklyHours: parseNumber(formData.get("weeklyHours"), 40),
-      salaryType: String(formData.get("salaryType") || "").trim(),
+      salaryType,
       salaryAmount: parseNumber(formData.get("salaryAmount")),
-      salaryPeriod: String(formData.get("salaryPeriod") || "").trim(),
+      salaryPeriod,
       employerCost: parseNullableNumber(formData.get("employerCost")),
       salaryCategoryId: salaryCategoryId ? Number(salaryCategoryId) : null,
     }
 
     try {
-      await createWorkerContract({ request }).unwrap()
-      event.currentTarget.reset()
-      setSalaryCategoryId("")
+      if (contract) {
+        const updateRequest: UpdateWorkerContractRequest = {
+          ...request,
+          employeeType: request.employeeType || "",
+        }
+
+        await updateWorkerContract({
+          id: contract.id,
+          request: updateRequest,
+        }).unwrap()
+      } else {
+        await createWorkerContract({ request }).unwrap()
+      }
+      form.reset()
+      resetFormState()
       onCreated?.()
       onOpenChange(false)
-    } catch {
-      setErrorMessage("No se ha podido crear el contrato. Revisa los datos.")
+    } catch (error) {
+      handleError(
+        error,
+        isEditMode
+          ? "No se ha podido actualizar el contrato."
+          : "No se ha podido crear el contrato."
+      )
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="top"
         showCloseButton={false}
         className="inset-x-auto! top-1/2! right-auto! left-1/2! h-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border shadow-2xl"
       >
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form
+          key={contract?.id ?? "create-contract"}
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <SheetHeader className="border-b px-6 py-5 pr-16">
             <SheetTitle className="text-2xl font-semibold">
-              Nuevo contrato
+              {isEditMode ? "Editar contrato" : "Nuevo contrato"}
             </SheetTitle>
             <SheetDescription className="text-sm">
-              Completa la informacion del contrato para este trabajador.
+              {isEditMode
+                ? "Modifica la informacion del contrato programado."
+                : "Completa la informacion del contrato para este trabajador."}
             </SheetDescription>
             <SheetClose
               render={
@@ -142,31 +261,33 @@ export function CreateWorkerContractDialog({
 
           <div className="grid min-h-0 gap-x-6 gap-y-5 overflow-y-auto px-6 py-6 sm:grid-cols-2">
             <DialogField
-            
               id="contract-reference"
               name="reference"
               label="Referencia"
               placeholder="Ej. CTR-2026-0013"
+              defaultValue={contract?.reference ?? ""}
             />
             <DialogField
               id="contract-employee-type"
               name="employeeType"
               label="Tipo de empleado"
               placeholder="Introduce el tipo de empleado"
+              defaultValue={contract?.employeeType ?? ""}
             />
-            <DialogField
+            <DatePicker
               id="contract-start-date"
-              name="startDate"
-              type="date"
               label="Fecha de inicio"
-              required
+              value={startDate}
+              onChange={setStartDate}
+              placeholder="DD/MM/YYYY"
             />
-            <DialogField
+            <DatePicker
               id="contract-end-date"
-              name="endDate"
-              type="date"
               label="Fecha de fin"
-              required
+              value={endDate}
+              onChange={setEndDate}
+              minDate={startDate}
+              placeholder="DD/MM/YYYY"
             />
             <DialogField
               id="contract-weekly-hours"
@@ -175,24 +296,24 @@ export function CreateWorkerContractDialog({
               min={0}
               step="0.5"
               label="Horas semanales"
-              defaultValue={40}
+              defaultValue={contract?.weeklyHours ?? 40}
               required
             />
-            <DialogField
+            <OptionsSelect
               id="contract-salary-type"
               name="salaryType"
               label="Tipo de salario"
-              placeholder="Mensual"
-              defaultValue="Mensual"
-              required
+              options={salaryTypes}
+              value={salaryType}
+              onChange={setSalaryType}
             />
-            <DialogField
+            <OptionsSelect
               id="contract-salary-period"
               name="salaryPeriod"
               label="Periodo salarial"
-              placeholder="month"
-              defaultValue="month"
-              required
+              options={salaryPeriods}
+              value={salaryPeriod}
+              onChange={setSalaryPeriod}
             />
             <DialogField
               id="contract-salary-amount"
@@ -201,7 +322,7 @@ export function CreateWorkerContractDialog({
               min={0}
               step="0.01"
               label="Salario"
-              defaultValue={0}
+              defaultValue={contract?.salaryAmount ?? 0}
               required
             />
             <DialogField
@@ -211,7 +332,7 @@ export function CreateWorkerContractDialog({
               min={0}
               step="0.01"
               label="Coste de empresa"
-              defaultValue={0}
+              defaultValue={contract?.employerCost ?? 0}
             />
 
             <div className="grid gap-1.5">
@@ -246,13 +367,19 @@ export function CreateWorkerContractDialog({
           <SheetFooter className="mt-0 flex-row justify-end border-t px-6 py-4">
             <SheetClose
               render={
-                <Button type="button" variant="outline" disabled={isLoading} />
+                <Button type="button" variant="outline" disabled={isSaving} />
               }
             >
               Cancelar
             </SheetClose>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creando..." : "Crear contrato"}
+            <Button type="submit" disabled={isSaving}>
+              {isSaving
+                ? isEditMode
+                  ? "Guardando..."
+                  : "Creando..."
+                : isEditMode
+                  ? "Guardar cambios"
+                  : "Crear contrato"}
             </Button>
           </SheetFooter>
         </form>

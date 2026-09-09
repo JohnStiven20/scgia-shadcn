@@ -1,8 +1,10 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithAuth } from "../../../api/rtkBaseQuery";
-import type { PageResponse } from "../../../types/api/page-response";
-import type { CreateWorkerRequest, SearchWorkersParams } from "@/features/interface/worker/request/create-worker-request";
-
+import { createApi } from "@reduxjs/toolkit/query/react"
+import { baseQueryWithAuth } from "../../../api/rtkBaseQuery"
+import type { PageResponse } from "../../../types/api/page-response"
+import type {
+  CreateWorkerRequest,
+  SearchWorkersParams,
+} from "@/features/interface/worker/request/create-worker-request"
 
 export const employeesApi = createApi({
   reducerPath: "employeesApi",
@@ -17,7 +19,10 @@ export const employeesApi = createApi({
       }),
       invalidatesTags: ["Employees"],
     }),
-    searchWorkers: builder.query<PageResponse<Worker>, SearchWorkersParams | void>({
+    searchWorkers: builder.query<
+      PageResponse<Worker>,
+      SearchWorkersParams | void
+    >({
       query: (params) => ({
         url: "/worker/search",
         method: "GET",
@@ -38,6 +43,6 @@ export const employeesApi = createApi({
       providesTags: ["Employees"],
     }),
   }),
-});
+})
 
-export const { useCreateWorkerMutation, useSearchWorkersQuery } = employeesApi;
+export const { useCreateWorkerMutation, useSearchWorkersQuery } = employeesApi

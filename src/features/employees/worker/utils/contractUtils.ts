@@ -3,38 +3,30 @@
 import type { ContractStatus } from "@/features/interface/worker-contract/enum/contract-status"
 import type { WorkerContract } from "@/features/interface/worker-contract/type/worker-contract.interface"
 
+export function getContractStatus(contract: WorkerContract): ContractStatus {
+  const now = new Date()
+  const startDate = new Date(contract.startDate)
+  const endDate = contract.endDate ? new Date(contract.endDate) : null
 
-export function getContractStatus(
-    contract: WorkerContract
-): ContractStatus {
-    const now = new Date()
-    const startDate = new Date(contract.startDate)
-    const endDate = contract.endDate
-        ? new Date(contract.endDate)
-        : null
+  if (!Number.isNaN(startDate.getTime()) && startDate > now) {
+    return "Programado"
+  }
 
-    if (!Number.isNaN(startDate.getTime()) && startDate > now) {
-        return "Programado"
-    }
+  if (endDate && !Number.isNaN(endDate.getTime()) && endDate < now) {
+    return "Finalizado"
+  }
 
-    if (
-        endDate &&
-        !Number.isNaN(endDate.getTime()) &&
-        endDate < now
-    ) {
-        return "Finalizado"
-    }
+  return "Activo"
+}
 
-    return "Activo"
+export function canManageContract(contract: WorkerContract): boolean {
+  return getContractStatus(contract) === "Programado"
 }
 
 export function sortContractsByStartDate(
-    contracts: WorkerContract[]
+  contracts: WorkerContract[]
 ): WorkerContract[] {
-    return [...contracts].sort((a, b) => {
-        return (
-            new Date(b.startDate).getTime() -
-            new Date(a.startDate).getTime()
-        )
-    })
+  return [...contracts].sort((a, b) => {
+    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  })
 }

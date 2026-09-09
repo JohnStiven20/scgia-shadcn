@@ -1,2 +1,6 @@
 export { DatePicker } from "./date-picker"
 export type { DatePickerProps } from "./date-picker"
+export { ConfirmDeleteDialog } from "./confirm-delete-dialog"
+export type { ConfirmDeleteDialogProps } from "./confirm-delete-dialog"
+export { OptionsSelect } from "./options-select"
+export type { OptionsSelectProps, SelectOption } from "./options-select"

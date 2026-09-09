@@ -10,24 +10,23 @@ export function ContractSchedulePanel({
   days,
 }: ContractSchedulePanelProps) {
   return (
-    <aside className="grid gap-3">
+    <aside className="grid min-w-0 gap-3">
       <h3 className="text-xs font-semibold tracking-normal uppercase">
         Horario
       </h3>
 
-      <section className="flex items-center gap-4 rounded-lg border bg-background p-4">
-        <Clock3 className="size-5 text-muted-foreground" />
-        <div>
-          <p className="text-sm font-semibold">{hours}</p>
-          <p className="text-xs text-muted-foreground">{days}</p>
+      <section className="flex min-w-0 items-center gap-3 rounded-lg border bg-background p-4">
+        <Clock3 className="size-5 shrink-0 text-muted-foreground" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold break-words">{hours}</p>
+          <p className="text-xs break-words text-muted-foreground">{days}</p>
         </div>
       </section>
 
-      <section className="flex gap-3 rounded-lg border bg-background p-4 text-xs leading-5 text-muted-foreground">
+      <section className="flex min-w-0 gap-3 rounded-lg border bg-background p-4 text-xs leading-5 text-muted-foreground">
         <Info className="mt-0.5 size-4 shrink-0" />
-        <p>
-          Este panel resume el contrato seleccionado del trabajador. Usa el
-          boton superior para registrar una nueva iteracion.
+        <p className="min-w-0 break-words">
+          Resumen del horario del contrato seleccionado.
         </p>
       </section>
     </aside>

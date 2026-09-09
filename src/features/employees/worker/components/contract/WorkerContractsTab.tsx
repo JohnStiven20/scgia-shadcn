@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react"
 
+import { ConfirmDeleteDialog } from "@/components/general"
 import { Button } from "@/components/ui/button"
 import { useWorkerContractsTab } from "@/features/employees/worker/hook/useWorkerContractsTab"
 
@@ -15,7 +16,13 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
   const {
     canFetchContracts,
     contracts,
+    contractToDelete,
+    contractToEdit,
+    confirmDeleteContract,
     isCreateDialogOpen,
+    isDeleteDialogOpen,
+    isDeletingContract,
+    isEditDialogOpen,
     isError,
     isFetching,
     openCreateDialog,
@@ -23,6 +30,10 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
     selectedContract,
     handleContractCreated,
     handleCreateDialogOpenChange,
+    handleDeleteContract,
+    handleDeleteDialogClose,
+    handleEditContract,
+    handleEditDialogOpenChange,
     handleSelectContract,
   } = useWorkerContractsTab({ workerId })
 
@@ -49,13 +60,18 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
         </Button>
       </header>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)]">
+      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))] items-start gap-4">
         {isFetching ? (
           <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
             Cargando contratos...
           </div>
         ) : (
-          <SelectedContractCard contract={selectedContract} />
+          <SelectedContractCard
+            contract={selectedContract}
+            isDeleting={isDeletingContract}
+            onDeleteContract={handleDeleteContract}
+            onEditContract={handleEditContract}
+          />
         )}
 
         <div className="grid gap-3">
@@ -85,6 +101,23 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
         workerId={workerId}
         onCreated={handleContractCreated}
         onOpenChange={handleCreateDialogOpenChange}
+      />
+      <CreateWorkerContractDialog
+        open={isEditDialogOpen}
+        workerId={workerId}
+        contract={contractToEdit}
+        onCreated={handleContractCreated}
+        onOpenChange={handleEditDialogOpenChange}
+      />
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        title="Eliminar contrato"
+        subtitle={`Seguro que quieres eliminar "${
+          contractToDelete?.reference || `CTR-${contractToDelete?.id ?? ""}`
+        }"?`}
+        loading={isDeletingContract}
+        onClose={handleDeleteDialogClose}
+        onDelete={confirmDeleteContract}
       />
     </section>
   )
