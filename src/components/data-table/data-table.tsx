@@ -29,6 +29,7 @@ import {
   type Row,
   type RowData,
   type SortingState,
+  type ReactTable,
 } from "@tanstack/react-table"
 import { ChevronsUpDown, GripVertical } from "lucide-react"
 
@@ -80,6 +81,11 @@ interface DataTableProps<TData extends RowData> {
   serverPagination?: DataTableServerPagination
   fitColumns?: boolean
   isLoading?: boolean
+  renderToolbar?: (
+    table: ReactTable<DataTableFeatures, TData>
+  ) => React.ReactNode
+  initialSorting?: SortingState
+  pageSizeOptions?: number[]
 }
 
 export interface DataTableServerPagination {
@@ -282,11 +288,15 @@ export function DataTable<TData extends RowData>({
   serverPagination,
   fitColumns = false,
   isLoading = false,
+  renderToolbar,
+  initialSorting = [],
+  pageSizeOptions,
 }: DataTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const tableContainerRef = React.useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = React.useState(0)
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -294,10 +304,6 @@ export function DataTable<TData extends RowData>({
     pageIndex: 0,
     pageSize,
   })
-
-  React.useEffect(() => {
-    setData(initialData)
-  }, [initialData])
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -308,7 +314,7 @@ export function DataTable<TData extends RowData>({
   const tablePagination = serverPagination
     ? { pageIndex: 0, pageSize: serverPagination.pageSize }
     : pagination
-  const tableData = serverPagination ? initialData : data
+  const tableData = serverPagination || !enableRowOrdering ? initialData : data
 
   const resolvedColumns = React.useMemo(() => {
     if (!enableRowOrdering) return columns
@@ -340,9 +346,16 @@ export function DataTable<TData extends RowData>({
     data: tableData,
     columns: resolvedColumns,
     getRowId,
-    state: { sorting, columnFilters, pagination: tablePagination },
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+      pagination: tablePagination,
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: "includesString",
     onPaginationChange: setPagination,
   })
 
@@ -412,6 +425,10 @@ export function DataTable<TData extends RowData>({
   const totalPages = serverPagination?.totalPages ?? table.getPageCount()
   const totalElements =
     serverPagination?.totalElements ?? table.getFilteredRowModel().rows.length
+  const resolvedPageSizeOptions =
+    serverPagination?.pageSizeOptions ?? pageSizeOptions
+  const resolvedPageSize =
+    serverPagination?.pageSize ?? table.state.pagination.pageSize
 
   return (
     <section
@@ -419,6 +436,8 @@ export function DataTable<TData extends RowData>({
       aria-label={ariaLabel}
       aria-busy={isLoading}
     >
+      {renderToolbar ? renderToolbar(table) : null}
+
       <div
         ref={tableContainerRef}
         className="overflow-hidden rounded-md border"
@@ -523,22 +542,29 @@ export function DataTable<TData extends RowData>({
       <footer className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex flex-wrap items-center gap-3">
           <span>{totalElements} registros.</span>
-          {serverPagination?.pageSizeOptions &&
-          serverPagination.onPageSizeChange ? (
+          {resolvedPageSizeOptions?.length ? (
             <Field orientation="horizontal" className="w-fit">
               <span className="fw-semibold text-sm">Filas por página</span>
               <Select
-                value={String(serverPagination.pageSize)}
-                onValueChange={(value) =>
-                  serverPagination.onPageSizeChange?.(Number(value))
-                }
+                value={String(resolvedPageSize)}
+                onValueChange={(value) => {
+                  const nextPageSize = Number(value)
+
+                  if (serverPagination?.onPageSizeChange) {
+                    serverPagination.onPageSizeChange(nextPageSize)
+                    return
+                  }
+
+                  table.setPageSize(nextPageSize)
+                  table.setPageIndex(0)
+                }}
               >
                 <SelectTrigger className="w-20" id="select-rows-per-page">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent align="start">
                   <SelectGroup>
-                    {serverPagination.pageSizeOptions.map((option) => (
+                    {resolvedPageSizeOptions.map((option) => (
                       <SelectItem key={option} value={String(option)}>
                         {option}
                       </SelectItem>

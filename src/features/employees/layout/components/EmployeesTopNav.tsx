@@ -31,7 +31,9 @@ export const EmployeesTopNav = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <DropdownMenuItem
-                            onClick={() => { }}
+                            onClick={() => {
+                                navigate("entry")
+                             }}
                         >
                             <ArrowDownToLine />
                             Entradas
