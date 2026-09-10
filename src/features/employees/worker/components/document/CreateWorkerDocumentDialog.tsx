@@ -1,9 +1,10 @@
 import { format } from "date-fns"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { Upload } from "lucide-react"
 
 import { FileFieldRHF, SelectFieldRHF } from "@/components/form"
+import { DatePicker } from "@/components/general"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -45,19 +46,21 @@ const selectableSections = documentSectionOptions.filter(
 
 type WorkerDocumentFormValues = {
   trainingTitle: string
-  trainingDate: string
-  expirationDate: string
+  trainingDate: Date | undefined
+  expirationDate: Date | undefined
   curriculumSection: string
   file: File | null
   remarks: string
 }
 
-function toDateInputValue(value?: string | null) {
+function toDateValue(value?: string | null) {
   if (!value) {
-    return ""
+    return undefined
   }
 
-  return value.slice(0, 10)
+  const date = new Date(value)
+
+  return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 export function CreateWorkerDocumentDialog({
@@ -81,12 +84,20 @@ export function CreateWorkerDocumentDialog({
   const form = useForm<WorkerDocumentFormValues>({
     defaultValues: {
       trainingTitle: document?.trainingTitle ?? "",
-      trainingDate: toDateInputValue(document?.trainingDate),
-      expirationDate: toDateInputValue(document?.expirationDate),
+      trainingDate: toDateValue(document?.trainingDate),
+      expirationDate: toDateValue(document?.expirationDate),
       curriculumSection: document?.curriculumSection || "UNASSIGNED",
       file: null,
       remarks: document?.remarks ?? "",
     },
+  })
+  const trainingDate = useWatch({
+    control: form.control,
+    name: "trainingDate",
+  })
+  const expirationDate = useWatch({
+    control: form.control,
+    name: "expirationDate",
   })
 
   function handleOpenChange(nextOpen: boolean) {
@@ -102,11 +113,11 @@ export function CreateWorkerDocumentDialog({
     setErrorMessage(null)
 
     const trainingTitle = values.trainingTitle.trim()
-    const trainingDate = values.trainingDate
-    const expirationDate = values.expirationDate
+    const selectedTrainingDate = values.trainingDate
+    const selectedExpirationDate = values.expirationDate
     const remarks = values.remarks.trim()
 
-    if (!trainingTitle || !trainingDate) {
+    if (!trainingTitle || !selectedTrainingDate) {
       setErrorMessage("Indica el curso/documento y la fecha del curso.")
 
       return
@@ -121,9 +132,9 @@ export function CreateWorkerDocumentDialog({
     const request: WorkerTrainingDocumentRequest = {
       workerId,
       trainingTitle,
-      trainingDate: format(new Date(trainingDate), "yyyy-MM-dd"),
-      expirationDate: expirationDate
-        ? format(new Date(expirationDate), "yyyy-MM-dd")
+      trainingDate: format(selectedTrainingDate, "yyyy-MM-dd"),
+      expirationDate: selectedExpirationDate
+        ? format(selectedExpirationDate, "yyyy-MM-dd")
         : null,
       curriculumSection:
         values.curriculumSection === "UNASSIGNED"
@@ -195,23 +206,26 @@ export function CreateWorkerDocumentDialog({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label htmlFor="trainingDate">Fecha curso</Label>
-              <Input
-                id="trainingDate"
-                type="date"
-                {...form.register("trainingDate")}
-              />
-            </div>
+            <DatePicker
+              id="trainingDate"
+              label="Fecha curso"
+              value={trainingDate}
+              onChange={(date) =>
+                form.setValue("trainingDate", date, { shouldDirty: true })
+              }
+              placeholder="DD/MM/YYYY"
+            />
 
-            <div className="grid gap-1.5">
-              <Label htmlFor="expirationDate">Vencimiento</Label>
-              <Input
-                id="expirationDate"
-                type="date"
-                {...form.register("expirationDate")}
-              />
-            </div>
+            <DatePicker
+              id="expirationDate"
+              label="Vencimiento"
+              value={expirationDate}
+              onChange={(date) =>
+                form.setValue("expirationDate", date, { shouldDirty: true })
+              }
+              minDate={trainingDate}
+              placeholder="DD/MM/YYYY"
+            />
           </div>
 
           <SelectFieldRHF
