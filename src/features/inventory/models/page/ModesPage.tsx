@@ -42,7 +42,7 @@ import {
   usePartialUpdateModelMutation,
   useUpdateIdentifierMutation,
   useUpdateModelMutation,
-} from "../api/modelsApi"
+} from "../../api/modelsApi"
 import { ModelSidePanel } from "../components/ModelSidePanel"
 
 const columnHelper = createColumnHelper<

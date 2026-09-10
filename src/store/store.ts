@@ -10,7 +10,10 @@ import { workerApi } from "@/features/employees/worker/api/workerApi"
 import { workerContractApi } from "@/features/employees/worker/api/workerContractApi"
 import { workerDocumentApi } from "@/features/employees/worker/api/workerDocumentApi"
 import { traceabilityApi } from "@/features/inventory/traceability/api/traceabilityApi"
-import { modelsApi } from "@/features/inventory/models/api/modelsApi"
+import { modelsApi } from "@/features/inventory/api/modelsApi"
+import { identificationApi } from "@/features/inventory/api/identificationApi"
+import { operationsApi } from "@/features/inventory/api/operations.service"
+import { assignmentApi } from "@/features/inventory/assignment/api/assignmentApi"
 
 export const store = configureStore({
   reducer: {
@@ -24,8 +27,10 @@ export const store = configureStore({
     [workerContractApi.reducerPath]: workerContractApi.reducer,
     [workerDocumentApi.reducerPath]: workerDocumentApi.reducer,
     [traceabilityApi.reducerPath]: traceabilityApi.reducer,
-    [modelsApi.reducerPath]:modelsApi.reducer,
-
+    [modelsApi.reducerPath]: modelsApi.reducer,
+    [identificationApi.reducerPath]: identificationApi.reducer,
+    [operationsApi.reducerPath]: operationsApi.reducer,
+    [assignmentApi.reducerPath]: assignmentApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -39,7 +44,10 @@ export const store = configureStore({
       .concat(workerContractApi.middleware)
       .concat(workerDocumentApi.middleware)
       .concat(traceabilityApi.middleware)
-      .concat(modelsApi.middleware),
+      .concat(modelsApi.middleware)
+      .concat(identificationApi.middleware)
+      .concat(operationsApi.middleware)
+      .concat(assignmentApi.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>

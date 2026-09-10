@@ -13,7 +13,7 @@ export const FleetTopBar = () => {
     return (
         <TopBar>
             <nav
-                className="hidden items-center gap-1 md:flex"
+                className="flex min-w-max items-center gap-1 whitespace-nowrap"
             >
                 <Button
                     variant="ghost"
