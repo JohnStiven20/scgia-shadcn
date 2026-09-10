@@ -143,6 +143,7 @@ export const operationsApi = createApi({
         url: `${OPERATION_BASE_URL}/return`,
         method: "POST",
         body: buildOperationFormData(operation),
+        timeout: 120_000,
       }),
     }),
   }),

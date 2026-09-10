@@ -29,7 +29,7 @@ const workspaceMenus = [
   { title: "Admin", icon: ShieldCheck, href: undefined },
   { title: "Inventario", icon: Boxes, href: "/inventory" },
   { title: "Trabajadores", icon: Users, href: "/employees" },
-  { title: "Ausencias", icon: CalendarX2, href: undefined },
+  { title: "Ausencias", icon: CalendarX2, href: "/absences" },
   { title: "Flota", icon: Truck, href: "/fleet" },
 ]
 

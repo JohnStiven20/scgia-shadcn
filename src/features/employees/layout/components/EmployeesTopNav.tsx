@@ -41,7 +41,11 @@ export const EmployeesTopNav = () => {
               <ArrowUpToLine />
               Salidas
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {}}>
+            <DropdownMenuItem
+              onClick={() => {
+                navigate("/inventory/return")
+              }}
+            >
               <CornerUpLeft />
               Retornos
             </DropdownMenuItem>
