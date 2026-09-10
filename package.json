@@ -30,7 +30,7 @@
     "date-fns": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.41.0",
-    "maplibre-gl": "^6.8.0",
+    "maplibre-gl": "^6.9.0",
     "onscan.js": "^1.5.2",
     "react": "^19.2.6",
     "react-day-picker": "^10.0.1",
@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10",
+    "@types/geojson": "^7946.0.16",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
