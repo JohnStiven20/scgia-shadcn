@@ -318,7 +318,9 @@ export function DataTable<TData extends RowData>({
   const sortableId = React.useId()
   const tablePagination = serverPagination
     ? { pageIndex: 0, pageSize: serverPagination.pageSize }
-    : pagination
+    : showPagination
+      ? pagination
+      : { pageIndex: 0, pageSize: Math.max(initialData.length, 1) }
   const tableData = serverPagination || !enableRowOrdering ? initialData : data
 
   const resolvedColumns = React.useMemo(() => {
@@ -548,120 +550,122 @@ export function DataTable<TData extends RowData>({
       </div>
 
       {showPagination ? (
-      <footer className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
-        <div className="flex flex-wrap items-center gap-3">
-          <span>{totalElements} registros.</span>
-          {resolvedPageSizeOptions?.length ? (
-            <Field orientation="horizontal" className="w-fit">
-              <span className="fw-semibold text-sm">Filas por página</span>
-              <Select
-                value={String(resolvedPageSize)}
-                onValueChange={(value) => {
-                  const nextPageSize = Number(value)
+        <footer className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>{totalElements} registros.</span>
+            {resolvedPageSizeOptions?.length ? (
+              <Field orientation="horizontal" className="w-fit">
+                <span className="fw-semibold text-sm">Filas por página</span>
+                <Select
+                  value={String(resolvedPageSize)}
+                  onValueChange={(value) => {
+                    const nextPageSize = Number(value)
 
-                  if (serverPagination?.onPageSizeChange) {
-                    serverPagination.onPageSizeChange(nextPageSize)
-                    return
+                    if (serverPagination?.onPageSizeChange) {
+                      serverPagination.onPageSizeChange(nextPageSize)
+                      return
+                    }
+
+                    table.setPageSize(nextPageSize)
+                    table.setPageIndex(0)
+                  }}
+                >
+                  <SelectTrigger className="w-20" id="select-rows-per-page">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="start">
+                    <SelectGroup>
+                      {resolvedPageSizeOptions.map((option) => (
+                        <SelectItem key={option} value={String(option)}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            ) : null}
+          </div>
+          <Pagination className="mx-0 w-auto justify-end">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  text="Anterior"
+                  href={
+                    currentPage > 1 ? `?page=${currentPage - 1}` : undefined
                   }
-
-                  table.setPageSize(nextPageSize)
-                  table.setPageIndex(0)
-                }}
-              >
-                <SelectTrigger className="w-20" id="select-rows-per-page">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent align="start">
-                  <SelectGroup>
-                    {resolvedPageSizeOptions.map((option) => (
-                      <SelectItem key={option} value={String(option)}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-          ) : null}
-        </div>
-        <Pagination className="mx-0 w-auto justify-end">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                text="Anterior"
-                href={currentPage > 1 ? `?page=${currentPage - 1}` : undefined}
-                aria-disabled={currentPage <= 1}
-                className={
-                  currentPage <= 1
-                    ? "pointer-events-none opacity-50"
-                    : undefined
-                }
-                onClick={(event) => {
-                  event.preventDefault()
-                  if (currentPage <= 1) return
-
-                  if (serverPagination) {
-                    serverPagination.onPageChange(currentPage - 1)
-                  } else {
-                    table.setPageIndex(currentPage - 2)
+                  aria-disabled={currentPage <= 1}
+                  className={
+                    currentPage <= 1
+                      ? "pointer-events-none opacity-50"
+                      : undefined
                   }
-                }}
-              />
-            </PaginationItem>
-            {getPageItems(currentPage, totalPages).map((page, index) => (
-              <PaginationItem key={`${page}-${index}`}>
-                {page === "ellipsis" ? (
-                  <PaginationEllipsis />
-                ) : (
-                  <PaginationLink
-                    href={`?page=${page}`}
-                    isActive={page === currentPage}
-                    aria-label={`Ir a la página ${page}`}
-                    onClick={(event) => {
-                      event.preventDefault()
-                      if (page === currentPage) return
+                  onClick={(event) => {
+                    event.preventDefault()
+                    if (currentPage <= 1) return
 
-                      if (serverPagination) {
-                        serverPagination.onPageChange(page)
-                      } else {
-                        table.setPageIndex(page - 1)
-                      }
-                    }}
-                  >
-                    {page}
-                  </PaginationLink>
-                )}
+                    if (serverPagination) {
+                      serverPagination.onPageChange(currentPage - 1)
+                    } else {
+                      table.setPageIndex(currentPage - 2)
+                    }
+                  }}
+                />
               </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                text="Siguiente"
-                href={
-                  currentPage < totalPages
-                    ? `?page=${currentPage + 1}`
-                    : undefined
-                }
-                aria-disabled={currentPage >= totalPages}
-                className={
-                  currentPage >= totalPages
-                    ? "pointer-events-none opacity-50"
-                    : undefined
-                }
-                onClick={(event) => {
-                  event.preventDefault()
-                  if (currentPage >= totalPages) return
+              {getPageItems(currentPage, totalPages).map((page, index) => (
+                <PaginationItem key={`${page}-${index}`}>
+                  {page === "ellipsis" ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      href={`?page=${page}`}
+                      isActive={page === currentPage}
+                      aria-label={`Ir a la página ${page}`}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        if (page === currentPage) return
 
-                  if (serverPagination) {
-                    serverPagination.onPageChange(currentPage + 1)
-                  } else {
-                    table.setPageIndex(currentPage)
+                        if (serverPagination) {
+                          serverPagination.onPageChange(page)
+                        } else {
+                          table.setPageIndex(page - 1)
+                        }
+                      }}
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  text="Siguiente"
+                  href={
+                    currentPage < totalPages
+                      ? `?page=${currentPage + 1}`
+                      : undefined
                   }
-                }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </footer>
+                  aria-disabled={currentPage >= totalPages}
+                  className={
+                    currentPage >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                  onClick={(event) => {
+                    event.preventDefault()
+                    if (currentPage >= totalPages) return
+
+                    if (serverPagination) {
+                      serverPagination.onPageChange(currentPage + 1)
+                    } else {
+                      table.setPageIndex(currentPage)
+                    }
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </footer>
       ) : null}
     </section>
   )
