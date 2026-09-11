@@ -13,14 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   useCreateWorkerContractMutation,
   useUpdateWorkerContractMutation,
@@ -224,27 +224,26 @@ export function CreateWorkerContractDialog({
   }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="top"
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
         showCloseButton={false}
-        className="inset-x-auto! top-1/2! right-auto! left-1/2! h-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border shadow-2xl"
+        className="inset-x-auto! top-1/2! right-auto! left-1/2! h-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border shadow-2xl"
       >
         <form
           key={contract?.id ?? "create-contract"}
           onSubmit={handleSubmit}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <SheetHeader className="border-b px-6 py-5 pr-16">
-            <SheetTitle className="text-2xl font-semibold">
+          <DialogHeader className="border-b px-6 py-5 pr-16">
+            <DialogTitle className="text-2xl font-semibold">
               {isEditMode ? "Editar contrato" : "Nuevo contrato"}
-            </SheetTitle>
-            <SheetDescription className="text-sm">
+            </DialogTitle>
+            <DialogDescription className="text-sm">
               {isEditMode
                 ? "Modifica la informacion del contrato programado."
                 : "Completa la informacion del contrato para este trabajador."}
-            </SheetDescription>
-            <SheetClose
+            </DialogDescription>
+            <DialogClose
               render={
                 <Button
                   type="button"
@@ -256,8 +255,8 @@ export function CreateWorkerContractDialog({
             >
               <X />
               <span className="sr-only">Cerrar</span>
-            </SheetClose>
-          </SheetHeader>
+            </DialogClose>
+          </DialogHeader>
 
           <div className="grid min-h-0 gap-x-6 gap-y-5 overflow-y-auto px-6 py-6 sm:grid-cols-2">
             <DialogField
@@ -364,14 +363,14 @@ export function CreateWorkerContractDialog({
             </p>
           ) : null}
 
-          <SheetFooter className="mt-0 flex-row justify-end border-t px-6 py-4">
-            <SheetClose
+          <DialogFooter className="mt-0 flex-row justify-end border-t px-6 py-4">
+            <DialogClose
               render={
                 <Button type="button" variant="outline" disabled={isSaving} />
               }
             >
               Cancelar
-            </SheetClose>
+            </DialogClose>
             <Button type="submit" disabled={isSaving}>
               {isSaving
                 ? isEditMode
@@ -381,9 +380,9 @@ export function CreateWorkerContractDialog({
                   ? "Guardar cambios"
                   : "Crear contrato"}
             </Button>
-          </SheetFooter>
+          </DialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

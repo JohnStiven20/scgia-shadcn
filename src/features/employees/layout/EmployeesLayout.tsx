@@ -1,12 +1,11 @@
-import { Outlet, useLocation } from "react-router-dom"
+import { Outlet} from "react-router-dom"
 import { EmployeesTopNav } from "./components/EmployeesTopNav"
 import { layoutConfig } from "@/config/layout"
 
 export const EmployeesLayout = () => {
-  const { pathname } = useLocation()
-  const contentClass = pathname.startsWith("/employees/worker/")
-    ? layoutConfig.wide
-    : layoutConfig.content
+  
+
+  const contentClass = layoutConfig.content
 
   return (
     <>

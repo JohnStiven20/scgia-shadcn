@@ -38,19 +38,18 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
   } = useWorkerContractsTab({ workerId })
 
   return (
-    <section className="grid gap-5">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <section className="space-y-6">
+      <header className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">CONTRATOS</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Contratos</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Gestion del contrato actual y trazabilidad de las iteraciones del
+            Gestión del contrato actual y trazabilidad de las iteraciones del
             trabajador.
           </p>
         </div>
 
         <Button
           type="button"
-          size="lg"
           className="w-fit"
           disabled={!canFetchContracts}
           onClick={openCreateDialog}
@@ -60,9 +59,9 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
         </Button>
       </header>
 
-      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))] items-start gap-4">
+      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
         {isFetching ? (
-          <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+          <div className="flex min-h-56 items-center justify-center rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
             Cargando contratos...
           </div>
         ) : (
@@ -74,7 +73,7 @@ export function WorkerContractsTab({ workerId }: WorkerContractsTabProps) {
           />
         )}
 
-        <div className="grid gap-3">
+        <div className="grid min-w-0 gap-3">
           {isError ? (
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
               No se han podido cargar los contratos.

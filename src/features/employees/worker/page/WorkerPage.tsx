@@ -212,12 +212,13 @@ function PersonalDataForm() {
 }
 
 export function WorkerPage() {
+
   const isMobile = useIsMobile();
   const { id } = useParams();
   const workerId = Number(id);
 
   return (
-    <article className="w-full rounded-xl border bg-background p-3 sm:p-5">
+    <article className=" rounded-xl border bg-background p-3 sm:p-5">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
