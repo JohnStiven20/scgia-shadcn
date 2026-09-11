@@ -14,6 +14,8 @@ import { modelsApi } from "@/features/inventory/api/modelsApi"
 import { identificationApi } from "@/features/inventory/api/identificationApi"
 import { operationsApi } from "@/features/inventory/api/operations.service"
 import { assignmentApi } from "@/features/inventory/assignment/api/assignmentApi"
+import { absenceTypeApi } from "@/features/absences/api/absenceTypeApi"
+import { absenceRequestApi } from "@/features/absences/api/absenceRequestApi"
 
 export const store = configureStore({
   reducer: {
@@ -31,6 +33,8 @@ export const store = configureStore({
     [identificationApi.reducerPath]: identificationApi.reducer,
     [operationsApi.reducerPath]: operationsApi.reducer,
     [assignmentApi.reducerPath]: assignmentApi.reducer,
+    [absenceTypeApi.reducerPath]: absenceTypeApi.reducer,
+    [absenceRequestApi.reducerPath]: absenceRequestApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -47,7 +51,9 @@ export const store = configureStore({
       .concat(modelsApi.middleware)
       .concat(identificationApi.middleware)
       .concat(operationsApi.middleware)
-      .concat(assignmentApi.middleware),
+      .concat(assignmentApi.middleware)
+      .concat(absenceTypeApi.middleware)
+      .concat(absenceRequestApi.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>

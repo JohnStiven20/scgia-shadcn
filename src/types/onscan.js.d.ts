@@ -3,6 +3,8 @@ declare module "onscan.js" {
     onScan: (scannedCode: string, quantity: number) => void
     onScanError?: (debug: unknown) => void
     minLength?: number
+    /** Maximum average time in milliseconds allowed between scanned characters. */
+    avgTimeByChar?: number
     suffixKeyCodes?: number[]
     ignoreIfFocusOn?: string | EventTarget
     preventDefault?: boolean
@@ -20,4 +22,3 @@ declare module "onscan.js" {
   const onScan: OnScan
   export default onScan
 }
-

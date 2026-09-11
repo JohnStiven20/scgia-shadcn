@@ -10,6 +10,7 @@ export function useInventoryScanner({
   onScanCode,
   enabled = true,
 }: UseInventoryScannerOptions) {
+  
   const onScanCodeRef = useRef(onScanCode)
 
   useEffect(() => {
@@ -22,7 +23,10 @@ export function useInventoryScanner({
     const scanTarget = document
 
     onScan.attachTo(scanTarget, {
-      minLength: 1,
+      // A scanner sends several characters almost instantaneously. This
+      // prevents regular keyboard typing from being treated as a scan.
+      minLength: 3,
+      avgTimeByChar: 20,
       suffixKeyCodes: [9, 13],
       ignoreIfFocusOn: "input, textarea, [contenteditable='true']",
       preventDefault: true,

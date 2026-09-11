@@ -276,6 +276,7 @@ function PreparationArea() {
   )
 
   async function handleScanCode(rawCode: string) {
+    
     const normalizedCode = rawCode.trim()
 
     if (selectedProviderId === undefined || !selectedProviderName) {

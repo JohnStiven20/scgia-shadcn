@@ -33,6 +33,18 @@ import { VehicleEditDialog } from "@/features/fleet/vehicle/components/VehicleEd
 import { VehicleTabs } from "@/features/fleet/vehicle/components/VehicleTabs"
 import type { UpdateVehicleRequest } from "@/features/interface/vehicle/request/update-vehicle-request"
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
+import {
+    Map,
+    MapControls,
+    MapRoute,
+    MarkerContent,
+    MarkerLabel,
+    RouteMarker,
+    RouteProgress,
+} from "@/components/ui/map"
+import { MOCK_TORREVIEJA_ROUTE } from "./mockTorreviejaRoute"
+
+const MOCK_ROUTE_UPDATE_INTERVAL = 5_000
 
 function VehicleBreadcrumb() {
   return (
@@ -173,6 +185,132 @@ function VehicleDetailItem({
       </div>
     </div>
   )
+}
+
+function VehicleSummaryTab() {
+    return (
+        <p className="text-muted-foreground">
+            Información general y operativa del vehículo.
+        </p>
+    )
+}
+
+function VehicleTelemetryTab() {
+    const [routeIndex, setRouteIndex] = useState(0)
+    const [lastUpdated, setLastUpdated] = useState(() => new Date())
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setRouteIndex((currentIndex) =>
+                (currentIndex + 1) % MOCK_TORREVIEJA_ROUTE.length,
+            )
+            setLastUpdated(new Date())
+        }, MOCK_ROUTE_UPDATE_INTERVAL)
+
+        return () => window.clearInterval(intervalId)
+    }, [])
+
+    const progress = routeIndex / (MOCK_TORREVIEJA_ROUTE.length - 1)
+    const currentPosition = MOCK_TORREVIEJA_ROUTE[routeIndex]
+
+    return (
+        <Card className="overflow-hidden border-border/80">
+            <CardHeader className="gap-2 border-b sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 className="text-base font-semibold">Ruta del vehículo</h2>
+                    <p className="text-sm text-muted-foreground">
+                        Recorrido simulado por Torrevieja.
+                    </p>
+                </div>
+                <Badge variant="secondary" className="w-fit gap-1.5">
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    Datos simulados · 5 s
+                </Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="relative h-[360px] w-full sm:h-[440px]">
+                    <Map
+                        className="absolute inset-0"
+                        center={[-0.6848, 37.976]}
+                        zoom={13}
+                    >
+                        <MapRoute
+                            coordinates={MOCK_TORREVIEJA_ROUTE}
+                            progress={progress}
+                            color="#94a3b8"
+                            width={5}
+                            opacity={0.8}
+                            dashArray={[0.5, 1.5]}
+                        >
+                            <RouteProgress color="#2563eb" width={5} opacity={1} />
+
+                            <RouteMarker at="start">
+                                <MarkerContent>
+                                    <div className="size-3.5 rounded-full border-2 border-foreground bg-background shadow-md" />
+                                </MarkerContent>
+                            </RouteMarker>
+
+                            <RouteMarker at="progress">
+                                <MarkerContent>
+                                    <div className="ring-background grid size-9 place-items-center rounded-full bg-blue-600 text-white shadow-md ring-2">
+                                        <Car className="size-4" />
+                                    </div>
+                                    <MarkerLabel
+                                        position="top"
+                                        className="rounded-md border border-border/50 bg-background/90 px-1.5 py-0.5 text-xs tabular-nums shadow-sm"
+                                    >
+                                        {Math.round(progress * 100)}%
+                                    </MarkerLabel>
+                                </MarkerContent>
+                            </RouteMarker>
+
+                            <RouteMarker at="end">
+                                <MarkerContent>
+                                    <div className="size-3.5 rounded-full bg-foreground shadow-md ring-2 ring-background" />
+                                </MarkerContent>
+                            </RouteMarker>
+                        </MapRoute>
+                        <MapControls showCompass showFullscreen />
+                    </Map>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
+                    <div>
+                        <p className="font-medium">Posición actual</p>
+                        <p className="text-muted-foreground">
+                            {currentPosition[1].toFixed(5)}, {currentPosition[0].toFixed(5)}
+                        </p>
+                    </div>
+                    <p className="text-muted-foreground">
+                        Actualizado a las {lastUpdated.toLocaleTimeString("es-ES")}
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+function VehicleTelemetryHistoryTab() {
+    return (
+        <p className="text-muted-foreground">
+            El registro de telemetría estará disponible próximamente.
+        </p>
+    )
+}
+
+function VehicleConfigurationTab() {
+    return (
+        <p className="text-muted-foreground">
+            La configuración estará disponible próximamente.
+        </p>
+    )
+}
+
+function VehicleDocumentsTab() {
+    return (
+        <p className="text-muted-foreground">
+            Los documentos estarán disponibles próximamente.
+        </p>
+    )
 }
 
 export const VehiclePage = () => {
