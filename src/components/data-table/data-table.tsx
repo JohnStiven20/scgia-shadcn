@@ -88,6 +88,7 @@ interface DataTableProps<TData extends RowData> {
   initialSorting?: SortingState
   initialColumnVisibility?: VisibilityState
   pageSizeOptions?: number[]
+  showPagination?: boolean
 }
 
 export interface DataTableServerPagination {
@@ -294,6 +295,7 @@ export function DataTable<TData extends RowData>({
   initialSorting = [],
   initialColumnVisibility,
   pageSizeOptions,
+  showPagination = true,
 }: DataTableProps<TData>) {
   const [data, setData] = React.useState(initialData)
   const tableContainerRef = React.useRef<HTMLDivElement>(null)
@@ -545,6 +547,7 @@ export function DataTable<TData extends RowData>({
         </DndContext>
       </div>
 
+      {showPagination ? (
       <footer className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex flex-wrap items-center gap-3">
           <span>{totalElements} registros.</span>
@@ -659,6 +662,7 @@ export function DataTable<TData extends RowData>({
           </PaginationContent>
         </Pagination>
       </footer>
+      ) : null}
     </section>
   )
 }
