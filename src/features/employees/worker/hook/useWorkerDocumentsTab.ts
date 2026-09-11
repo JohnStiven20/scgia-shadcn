@@ -18,9 +18,11 @@ type UseWorkerDocumentsTabParams = {
   workerId: number
 }
 
-export function useWorkerDocumentsTab({ workerId }: UseWorkerDocumentsTabParams) {
+export function useWorkerDocumentsTab({
+  workerId,
+}: UseWorkerDocumentsTabParams) {
   const [query, setQuery] = useState("")
-  const [selectedSection, setSelectedSection] =
+  const [selectedCategory, setSelectedCategory] =
     useState<WorkerDocumentSectionKey>("ALL")
   const [documentToEdit, setDocumentToEdit] =
     useState<WorkerTrainingDocument | null>(null)
@@ -60,7 +62,7 @@ export function useWorkerDocumentsTab({ workerId }: UseWorkerDocumentsTabParams)
 
     return viewDocuments.filter((document) => {
       const matchesSection =
-        selectedSection === "ALL" || document.sectionKey === selectedSection
+        selectedCategory === "ALL" || document.sectionKey === selectedCategory
       const matchesQuery =
         !normalizedQuery ||
         document.title.toLowerCase().includes(normalizedQuery) ||
@@ -69,27 +71,34 @@ export function useWorkerDocumentsTab({ workerId }: UseWorkerDocumentsTabParams)
 
       return matchesSection && matchesQuery
     })
-  }, [query, selectedSection, viewDocuments])
+  }, [query, selectedCategory, viewDocuments])
 
   const selectedDocument =
     filteredDocuments.find((document) => document.id === selectedDocumentId) ??
-    filteredDocuments[0] ??
     null
 
   const rawSelectedDocument =
     sortedDocuments.find((document) => document.id === selectedDocument?.id) ??
     null
 
-  const sectionCounters = documentSectionOptions.map((option) => ({
-    ...option,
-    count:
-      option.key === "ALL"
-        ? viewDocuments.length
-        : viewDocuments.filter((document) => document.sectionKey === option.key)
-            .length,
-  }))
+  function handleDocumentCreated() {
+    setSelectedDocumentId(null)
+  }
 
-  function handleDocumentSaved() {
+  function handleDocumentUpdated() {
+    // Keep the detail view open. RTK Query refreshes the selected data.
+  }
+
+  function selectDocument(documentId: number) {
+    setSelectedDocumentId(documentId)
+  }
+
+  function clearSelectedDocument() {
+    setSelectedDocumentId(null)
+  }
+
+  function handleCategoryChange(category: WorkerDocumentSectionKey) {
+    setSelectedCategory(category)
     setSelectedDocumentId(null)
   }
 
@@ -139,21 +148,25 @@ export function useWorkerDocumentsTab({ workerId }: UseWorkerDocumentsTabParams)
     isError,
     isFetching,
     query,
+    hasDocuments: viewDocuments.length > 0,
+    hasFilteredDocuments: filteredDocuments.length > 0,
     rawSelectedDocument,
     refetch,
-    sectionCounters,
     selectedDocument,
-    selectedSection,
+    selectedCategory,
+    categoryOptions: documentSectionOptions,
     confirmDeleteDocument,
     handleCreateDialogOpenChange,
     handleDeleteDialogClose,
-    handleDocumentSaved,
+    handleDocumentCreated,
+    handleDocumentUpdated,
     handleEditDialogOpenChange,
     openCreateDialog: () => setIsCreateDialogOpen(true),
     setDocumentToDelete,
     setDocumentToEdit,
     setQuery,
-    setSelectedDocumentId,
-    setSelectedSection,
+    selectDocument,
+    clearSelectedDocument,
+    handleCategoryChange,
   }
 }

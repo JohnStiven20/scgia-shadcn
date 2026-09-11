@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Link, useParams } from "react-router-dom"
 import { WorkerContractsTab } from "../components/contract/WorkerContractsTab"
 import { WorkerDocumentsTab } from "../components/document/WorkerDocumentsTab"
@@ -212,7 +211,6 @@ function PersonalDataForm() {
 }
 
 export function WorkerPage() {
-  const isMobile = useIsMobile()
   const { id } = useParams()
   const workerId = Number(id)
 
@@ -235,14 +233,10 @@ export function WorkerPage() {
       </Breadcrumb>
 
       <WorkerProfile />
-      <Tabs
-        defaultValue="personal"
-        orientation={isMobile ? "vertical" : "horizontal"}
-        className="mt-5 flex-col gap-5"
-      >
+      <Tabs defaultValue="personal" className="mt-5 min-w-0 flex-col gap-5">
         <TabsList
           variant="default"
-          className="w-full max-w-full items-stretch justify-start md:w-fit md:items-center md:overflow-x-auto md:overflow-y-hidden"
+          className="w-full max-w-full items-stretch justify-start overflow-x-auto overflow-y-hidden md:w-fit"
         >
           {workerTabs.map((tab) => (
             <TabsTrigger
@@ -266,7 +260,7 @@ export function WorkerPage() {
             workerDni={worker.dni}
           />
         </TabsContent>
-        <TabsContent value="documents">
+        <TabsContent value="documents" className="min-w-0">
           <WorkerDocumentsTab workerId={workerId} />
         </TabsContent>
         <TabsContent value="settings">

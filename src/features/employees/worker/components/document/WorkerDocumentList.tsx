@@ -1,137 +1,100 @@
-import { FileText, MoreVertical } from "lucide-react"
+import { createColumnHelper } from "@tanstack/react-table"
+import { FileText } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+  DataTable,
+  DataTableColumnHeader,
+} from "@/components/data-table/data-table"
+import type { DataTableFeatures } from "@/components/data-table/data-table-features"
 import type { WorkerTrainingDocumentViewModel } from "../../interface/types/workerPage"
 import { DocumentStatusBadge } from "./DocumentStatusBadge"
 
+const columnHelper = createColumnHelper<
+  DataTableFeatures,
+  WorkerTrainingDocumentViewModel
+>()
+
+const documentColumns = columnHelper.columns([
+  columnHelper.accessor("title", {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Documento" />
+    ),
+    size: 300,
+    minSize: 220,
+    enableSorting: false,
+    cell: ({ row }) => (
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="grid size-9 shrink-0 place-items-center rounded-lg border border-red-100 bg-red-50 text-red-600">
+          <FileText className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate font-medium">{row.original.title}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {row.original.documentName}
+          </p>
+        </div>
+      </div>
+    ),
+  }),
+  columnHelper.accessor("section", {
+    header: "Categoría",
+    size: 170,
+    minSize: 140,
+    enableSorting: false,
+    cell: ({ row }) => (
+      <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">
+        {row.original.section}
+      </span>
+    ),
+  }),
+  columnHelper.accessor("trainingDateLabel", {
+    header: "Fecha curso",
+    size: 160,
+    minSize: 130,
+    enableSorting: false,
+  }),
+  columnHelper.accessor("expirationDateLabel", {
+    header: "Vencimiento",
+    size: 170,
+    minSize: 140,
+    enableSorting: false,
+  }),
+  columnHelper.accessor("status", {
+    header: "Estado",
+    size: 170,
+    minSize: 150,
+    enableSorting: false,
+    cell: ({ row }) => <DocumentStatusBadge status={row.original.status} />,
+  }),
+])
+
 type WorkerDocumentListProps = {
   documents: WorkerTrainingDocumentViewModel[]
-  selectedDocumentId?: number
-  isFetching?: boolean
+  isLoading?: boolean
+  hasDocuments: boolean
   onSelectDocument: (documentId: number) => void
 }
 
 export function WorkerDocumentList({
   documents,
-  selectedDocumentId,
-  isFetching,
+  isLoading = false,
+  hasDocuments,
   onSelectDocument,
 }: WorkerDocumentListProps) {
   return (
-    <Card className="min-h-80 gap-0 overflow-hidden py-0">
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-64 px-4">Documento</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Fecha curso</TableHead>
-              <TableHead>Vencimiento</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isFetching ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-28 text-center text-sm text-muted-foreground"
-                >
-                  Cargando documentos...
-                </TableCell>
-              </TableRow>
-            ) : null}
-
-            {!isFetching && documents.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-36 text-center text-sm text-muted-foreground"
-                >
-                  No hay cursos ni documentos registrados.
-                </TableCell>
-              </TableRow>
-            ) : null}
-
-            {!isFetching
-              ? documents.map((document) => (
-                  <TableRow
-                    key={document.id}
-                    className={cn(
-                      "cursor-pointer",
-                      selectedDocumentId === document.id &&
-                        "border-l-2 border-l-primary bg-muted/40"
-                    )}
-                    onClick={() => onSelectDocument(document.id)}
-                  >
-                    <TableCell className="px-4">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="grid size-9 shrink-0 place-items-center rounded-lg border border-red-100 bg-red-50 text-red-600">
-                          <FileText className="size-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">
-                            {document.title}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {document.documentName}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">
-                        {document.section}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {document.trainingDateLabel}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {document.expirationDateLabel}
-                    </TableCell>
-                    <TableCell>
-                      <DocumentStatusBadge status={document.status} />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Acciones de ${document.title}`}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <MoreVertical />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              : null}
-          </TableBody>
-        </Table>
-
-        <footer className="flex flex-col gap-3 border-t px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            Mostrando {documents.length} de {documents.length} resultados
-          </span>
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="icon" disabled>
-              1
-            </Button>
-          </div>
-        </footer>
-      </CardContent>
-    </Card>
+    <DataTable
+      columns={documentColumns}
+      data={documents}
+      isLoading={isLoading}
+      showPagination={false}
+      getRowId={(document) => String(document.id)}
+      onRowClick={(document) => onSelectDocument(document.id)}
+      ariaLabel="Listado de documentos del trabajador"
+      emptyMessage={
+        hasDocuments
+          ? "No hay documentos que coincidan con los filtros seleccionados."
+          : "No hay documentos registrados para este trabajador."
+      }
+    />
   )
 }

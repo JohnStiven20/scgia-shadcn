@@ -1,11 +1,21 @@
-import { FileText, Filter, Plus, Search, Upload } from "lucide-react"
+import { Layers3, Plus, Search, Upload } from "lucide-react"
 
 import { ConfirmDeleteDialog } from "@/components/general"
 import { Button } from "@/components/ui/button"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useWorkerDocumentsTab } from "../../hook/useWorkerDocumentsTab"
 import { CreateWorkerDocumentDialog } from "./CreateWorkerDocumentDialog"
-import { DocumentCategorySidebar } from "./DocumentCategorySidebar"
 import { WorkerDocumentDetailPanel } from "./WorkerDocumentDetailPanel"
 import { WorkerDocumentList } from "./WorkerDocumentList"
 
@@ -19,6 +29,7 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
     documents,
     documentToDelete,
     documentToEdit,
+    hasDocuments,
     isCreateDialogOpen,
     isDeleteDialogOpen,
     isDeletingDocument,
@@ -28,40 +39,39 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
     query,
     rawSelectedDocument,
     refetch,
-    sectionCounters,
+    selectedCategory,
     selectedDocument,
-    selectedSection,
+    categoryOptions,
     confirmDeleteDocument,
+    handleCategoryChange,
     handleCreateDialogOpenChange,
     handleDeleteDialogClose,
-    handleDocumentSaved,
+    handleDocumentCreated,
+    handleDocumentUpdated,
     handleEditDialogOpenChange,
     openCreateDialog,
     setDocumentToDelete,
     setDocumentToEdit,
     setQuery,
-    setSelectedDocumentId,
-    setSelectedSection,
+    selectDocument,
+    clearSelectedDocument,
   } = useWorkerDocumentsTab({ workerId })
 
+  const isListView = selectedDocument === null
+
   return (
-    <section className="grid gap-5">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="grid size-11 shrink-0 place-items-center rounded-lg border bg-card text-muted-foreground">
-            <FileText className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-xl font-semibold tracking-tight">
-              FORMACIONES Y DOCUMENTOS
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cursos, certificados y documentacion con vencimiento del trabajador.
-            </p>
-          </div>
+    <section className="grid w-full min-w-0 gap-5">
+      <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Formaciones y documentos
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Cursos, certificados y documentación con vencimiento del trabajador.
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
           <Button
             type="button"
             variant="outline"
@@ -69,7 +79,7 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
             onClick={openCreateDialog}
           >
             <Plus />
-            Anadir curso
+            Añadir curso
           </Button>
           <Button
             type="button"
@@ -82,72 +92,101 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
         </div>
       </header>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <InputGroup className="h-10 md:max-w-sm">
-          <InputGroupAddon>
-            <Search />
-          </InputGroupAddon>
-          <InputGroupInput
-            value={query}
-            placeholder="Buscar documentos..."
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </InputGroup>
-        <Button type="button" variant="outline" className="w-fit" disabled>
-          <Filter />
-          Filtrar
-        </Button>
-      </div>
+      {isListView ? (
+        <>
+          <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-end">
+            <div className="w-full min-w-0 md:max-w-xl">
+              <label htmlFor="worker-document-search">
+                Buscar documentos
+              </label>
+              <InputGroup>
+                <InputGroupAddon>
+                  <Search />
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="worker-document-search"
+                  value={query}
+                  placeholder="Buscar documentos..."
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </InputGroup>
+            </div>
 
-      {isError ? (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-          No se han podido cargar los documentos.
-          <Button
-            type="button"
-            variant="link"
-            className="ml-1 h-auto px-0 text-xs"
-            onClick={() => refetch()}
-          >
-            Reintentar
-          </Button>
-        </div>
-      ) : null}
+            <div className="w-full min-w-0 md:max-w-sm">
+              <label
+                htmlFor="worker-document-category"
+              >
+                Categoría
+              </label>
+              <Select
+                value={selectedCategory}
+                onValueChange={(value) =>
+                  handleCategoryChange(
+                    value as (typeof categoryOptions)[number]["key"]
+                  )
+                }
+              >
+                <SelectTrigger
+                  id="worker-document-category"
+                  className="h-10 w-full"
+                >
+                  <Layers3 className="text-muted-foreground" />
+                  <SelectValue placeholder="Selecciona una categoría">
+                    {categoryOptions.find(
+                      (option) => option.key === selectedCategory
+                    )?.label ?? "Todos"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((option) => (
+                    <SelectItem key={option.key} value={option.key}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
-        <DocumentCategorySidebar
-          categories={sectionCounters}
-          selectedSection={selectedSection}
-          onSelectSection={setSelectedSection}
-        />
+          {isError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+              No se han podido cargar los documentos.
+              <Button
+                type="button"
+                variant="link"
+                className="ml-1 h-auto px-0 text-xs"
+                onClick={() => refetch()}
+              >
+                Reintentar
+              </Button>
+            </div>
+          ) : null}
 
-        <div className="grid min-w-0 gap-4 min-[1180px]:grid-cols-[minmax(0,1fr)_360px]">
           <WorkerDocumentList
             documents={documents}
-            selectedDocumentId={selectedDocument?.id}
-            isFetching={isFetching}
-            onSelectDocument={setSelectedDocumentId}
+            hasDocuments={hasDocuments}
+            isLoading={isFetching}
+            onSelectDocument={selectDocument}
           />
-          <WorkerDocumentDetailPanel
-            document={selectedDocument}
-            onEditDocument={() => {
-              if (rawSelectedDocument) {
-                setDocumentToEdit(rawSelectedDocument)
-              }
-            }}
-            onDeleteDocument={() => {
-              if (rawSelectedDocument) {
-                setDocumentToDelete(rawSelectedDocument)
-              }
-            }}
-          />
-        </div>
-      </div>
+        </>
+      ) : (
+        <WorkerDocumentDetailPanel
+          document={selectedDocument}
+          onBack={clearSelectedDocument}
+          onEditDocument={() => {
+            if (rawSelectedDocument) setDocumentToEdit(rawSelectedDocument)
+          }}
+          onDeleteDocument={() => {
+            if (rawSelectedDocument) setDocumentToDelete(rawSelectedDocument)
+          }}
+        />
+      )}
 
       {isCreateDialogOpen ? (
         <CreateWorkerDocumentDialog
           open={isCreateDialogOpen}
           workerId={workerId}
-          onCreated={handleDocumentSaved}
+          onCreated={handleDocumentCreated}
           onOpenChange={handleCreateDialogOpenChange}
         />
       ) : null}
@@ -156,14 +195,14 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
           open={isEditDialogOpen}
           workerId={workerId}
           document={documentToEdit}
-          onCreated={handleDocumentSaved}
+          onCreated={handleDocumentUpdated}
           onOpenChange={handleEditDialogOpenChange}
         />
       ) : null}
       <ConfirmDeleteDialog
         open={isDeleteDialogOpen}
         title="Eliminar documento"
-        subtitle={`Seguro que quieres eliminar "${
+        subtitle={`¿Seguro que quieres eliminar "${
           documentToDelete?.trainingTitle || documentToDelete?.fileName || ""
         }"?`}
         loading={isDeletingDocument}

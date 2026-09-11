@@ -2,28 +2,21 @@ import type { WorkerTrainingDocument } from "@/features/interface/worker-documen
 import { API_BASE_URL } from "@/api/apiConfig"
 
 export type WorkerDocumentStatus =
-  | "Vigente"
-  | "Por caducar"
-  | "Caducado"
-  | "Sin vencimiento"
+  "Vigente" | "Por caducar" | "Caducado" | "Sin vencimiento"
 
 export type WorkerDocumentSectionKey =
-  | "ALL"
-  | "FORMACION"
-  | "SEGURIDAD"
-  | "OPERACION"
-  | "UNASSIGNED"
+  "ALL" | "FORMACION" | "SEGURIDAD" | "OPERACION" | "UNASSIGNED"
 
 export const documentSectionOptions: Array<{
   key: WorkerDocumentSectionKey
   value: string | null
   label: string
 }> = [
-  { key: "ALL", value: null, label: "Todas" },
-  { key: "FORMACION", value: "FORMACION", label: "Formacion" },
+  { key: "ALL", value: null, label: "Todos" },
+  { key: "FORMACION", value: "FORMACION", label: "Formación" },
   { key: "SEGURIDAD", value: "SEGURIDAD", label: "Seguridad" },
-  { key: "OPERACION", value: "OPERACION", label: "Operacion" },
-  { key: "UNASSIGNED", value: "UNASSIGNED", label: "Sin seccion" },
+  { key: "OPERACION", value: "OPERACION", label: "Operación" },
+  { key: "UNASSIGNED", value: "UNASSIGNED", label: "Sin sección" },
 ]
 
 export function normalizeDocumentSection(
@@ -51,7 +44,7 @@ export function getDocumentSectionLabel(value?: string | null) {
 
   return (
     documentSectionOptions.find((option) => option.key === key)?.label ??
-    "Sin seccion"
+    "Sin sección"
   )
 }
 
@@ -120,7 +113,7 @@ export function sortWorkerDocuments(documents: WorkerTrainingDocument[]) {
 
 export function formatFileSize(value?: number | null) {
   if (!value) {
-    return "Sin tamano"
+    return "Sin tamaño"
   }
 
   if (value < 1024 * 1024) {
