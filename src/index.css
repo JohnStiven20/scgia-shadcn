@@ -149,4 +149,39 @@
   .maplibregl-ctrl-attrib-button {
     @apply bg-transparent! dark:invert;
     }
+  .absence-calendar .fc {
+    @apply text-sm text-foreground;
+    }
+  .absence-calendar .fc-scrollgrid {
+    @apply rounded-lg overflow-hidden;
+    }
+  .absence-calendar .fc-theme-standard td,
+  .absence-calendar .fc-theme-standard th,
+  .absence-calendar .fc-scrollgrid {
+    @apply border-border!;
+    }
+  .absence-calendar .fc-col-header-cell {
+    @apply bg-slate-50 py-3 text-sm font-medium text-slate-600;
+    }
+  .absence-calendar .fc-daygrid-day-number {
+    @apply p-2 text-sm font-medium text-slate-800;
+    }
+  .absence-calendar .fc-day-today {
+    @apply bg-blue-50/70!;
+    }
+  .absence-calendar .fc-daygrid-day-frame {
+    @apply min-h-32;
+    }
+  .absence-calendar .fc-event {
+    @apply border-0! bg-transparent! p-0! my-0.5!;
+    }
+  .absence-calendar .fc-daygrid-event-harness {
+    @apply mx-1.5;
+    }
+  .absence-calendar .fc-day-other .fc-daygrid-day-number {
+    @apply text-slate-300;
+    }
+  .absence-calendar .fc-daygrid-more-link {
+    @apply text-xs font-medium text-blue-600;
+    }
 }

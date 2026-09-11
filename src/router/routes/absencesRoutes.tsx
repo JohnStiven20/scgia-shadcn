@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom"
 import { AbsencesLayout } from "@/features/absences/layout/AbsencesLayout"
 import { AbsenceTypesPage } from "@/features/absences/absence-type/page/AbsenceTypesPage"
 import { MyAbsencesPage } from "@/features/absences/my-absences/page/MyAbsencesPage"
-import { AbsencesPlaceholderPage } from "@/features/absences/page/AbsencesPlaceholderPage"
+import { AbsencesPage } from "@/features/absences/layout/page/AbsencesPage"
 
 
 export const absencesRoutes: RouteObject = {
@@ -14,12 +14,7 @@ export const absencesRoutes: RouteObject = {
     { path: "my-absences", element: <MyAbsencesPage /> },
     {
       path: "requests",
-      element: (
-        <AbsencesPlaceholderPage
-          title="Peticiones"
-          description="Gestiona las peticiones de ausencia."
-        />
-      ),
+      element: <AbsencesPage />,
     },
     {
       path: "types",

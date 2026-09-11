@@ -4,6 +4,7 @@ import {
   ClipboardList,
   FileText,
   Gauge,
+  History,
   Info,
   Settings,
   SlidersHorizontal,
@@ -15,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
 import { VehicleDocumentsSection } from "./documents/VehicleDocumentsSection"
 import { VehicleSettingsSection } from "./settings/VehicleSettingsSection"
+import { VehicleTelemetryHistoryTab } from "./VehicleTelemetryHistoryTab"
 import { VehicleTelemetryTab } from "./telemetry/VehicleTelemetryTab"
 
 export function VehicleTabs({ vehicle }: { vehicle: Vehicle }) {
@@ -27,6 +29,9 @@ export function VehicleTabs({ vehicle }: { vehicle: Vehicle }) {
       </TabsContent>
       <TabsContent value="telemetria">
         <VehicleTelemetryTab vehicle={vehicle} />
+      </TabsContent>
+      <TabsContent value="historial-telemetria">
+        <VehicleTelemetryHistoryTab vehicleId={vehicle.id} vehicle={vehicle} />
       </TabsContent>
       <TabsContent value="documentos">
         <VehicleDocumentsSection vehicle={vehicle} />
@@ -46,6 +51,9 @@ function VehicleTabsList() {
       </VehicleTabsTrigger>
       <VehicleTabsTrigger value="telemetria" icon={<Gauge />}>
         Telemetría
+      </VehicleTabsTrigger>
+      <VehicleTabsTrigger value="historial-telemetria" icon={<History />}>
+        Historial
       </VehicleTabsTrigger>
       <VehicleTabsTrigger value="documentos" icon={<FileText />}>
         Documentos
