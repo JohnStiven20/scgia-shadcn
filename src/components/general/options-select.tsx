@@ -15,7 +15,7 @@ export type SelectOption<TValue extends OptionValue = string> = {
 
 type OptionsSelectProps<TValue extends OptionValue = string> = {
   id: string
-  label: string
+  label?: string
   options: readonly SelectOption<TValue>[]
   value: TValue
   onChange: (value: TValue) => void
@@ -39,7 +39,7 @@ export function OptionsSelect<TValue extends OptionValue = string>({
 
   return (
     <div className={className ?? "grid gap-1.5"}>
-      <Label htmlFor={id}>{label}</Label>
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
       <Select
         name={name}
         value={String(value)}

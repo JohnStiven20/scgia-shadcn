@@ -1,3 +1,3 @@
 export type SearchVehicleDocumentsParams = {
-  vehicleId: number;
-};
+  vehicleId: number
+}

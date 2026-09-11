@@ -4,10 +4,5 @@ const runtimeApiBaseUrl =
     : "http://localhost:8083/api"
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_URL
-const usesLocalhost = configuredApiBaseUrl?.includes("localhost")
-  || configuredApiBaseUrl?.includes("127.0.0.1")
 
-export const API_BASE_URL =
-  typeof window !== "undefined" && usesLocalhost
-    ? runtimeApiBaseUrl
-    : configuredApiBaseUrl || runtimeApiBaseUrl
+export const API_BASE_URL = configuredApiBaseUrl || runtimeApiBaseUrl
