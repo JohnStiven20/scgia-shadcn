@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import {
-  CalendarDays,
   Car,
   ClipboardList,
   FileText,
@@ -8,13 +7,15 @@ import {
   Info,
   Settings,
   SlidersHorizontal,
-  Smartphone,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
+import { VehicleDocumentsSection } from "./documents/VehicleDocumentsSection"
+import { VehicleSettingsSection } from "./settings/VehicleSettingsSection"
+import { VehicleTelemetryTab } from "./telemetry/VehicleTelemetryTab"
 
 export function VehicleTabs({ vehicle }: { vehicle: Vehicle }) {
   return (
@@ -25,13 +26,13 @@ export function VehicleTabs({ vehicle }: { vehicle: Vehicle }) {
         <VehicleDataTab vehicle={vehicle} />
       </TabsContent>
       <TabsContent value="telemetria">
-        <VehicleTelemetryTab />
+        <VehicleTelemetryTab vehicle={vehicle} />
       </TabsContent>
       <TabsContent value="documentos">
-        <VehicleDocumentsTab />
+        <VehicleDocumentsSection vehicle={vehicle} />
       </TabsContent>
       <TabsContent value="ajustes">
-        <VehicleSettingsTab />
+        <VehicleSettingsSection vehicle={vehicle} />
       </TabsContent>
     </Tabs>
   )
@@ -256,28 +257,4 @@ function formatKilometers(value?: number | null) {
 
 function valueOrFallback(value?: string | null, fallback = "Sin registro") {
   return value?.trim() || fallback
-}
-
-function VehicleTelemetryTab() {
-  return (
-    <p className="text-muted-foreground">
-      La telemetría estará disponible próximamente.
-    </p>
-  )
-}
-
-function VehicleDocumentsTab() {
-  return (
-    <p className="text-muted-foreground">
-      Los documentos estarán disponibles próximamente.
-    </p>
-  )
-}
-
-function VehicleSettingsTab() {
-  return (
-    <p className="text-muted-foreground">
-      Los ajustes estarán disponibles próximamente.
-    </p>
-  )
 }

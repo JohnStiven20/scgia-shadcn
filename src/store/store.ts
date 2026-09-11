@@ -5,6 +5,7 @@ import { employeesApi } from "@/features/employees/api/employeesApi"
 import { workerTypeApi } from "@/features/employees/employee-types/api/workerTypeApi"
 import { brandApi } from "@/features/fleet/api/apiBrand"
 import { vehicleApi } from "@/features/fleet/api/apiVehicle"
+import { vehicleDocumentApi } from "@/features/fleet/api/apiVehicleDocument"
 import { vehicleModelApi } from "@/features/fleet/api/apiVehicleModel"
 import { workerApi } from "@/features/employees/worker/api/workerApi"
 import { workerContractApi } from "@/features/employees/worker/api/workerContractApi"
@@ -24,6 +25,7 @@ export const store = configureStore({
     [workerTypeApi.reducerPath]: workerTypeApi.reducer,
     [brandApi.reducerPath]: brandApi.reducer,
     [vehicleApi.reducerPath]: vehicleApi.reducer,
+    [vehicleDocumentApi.reducerPath]: vehicleDocumentApi.reducer,
     [vehicleModelApi.reducerPath]: vehicleModelApi.reducer,
     [workerApi.reducerPath]: workerApi.reducer,
     [workerContractApi.reducerPath]: workerContractApi.reducer,
@@ -43,6 +45,7 @@ export const store = configureStore({
       .concat(workerTypeApi.middleware)
       .concat(brandApi.middleware)
       .concat(vehicleApi.middleware)
+      .concat(vehicleDocumentApi.middleware)
       .concat(vehicleModelApi.middleware)
       .concat(workerApi.middleware)
       .concat(workerContractApi.middleware)
