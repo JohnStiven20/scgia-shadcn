@@ -12,7 +12,12 @@ import { useNotifications } from "@/components/notifications/NotificationsProvid
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
@@ -282,10 +287,7 @@ function ModelsToolbar({
   }
 
   return (
-    <section
-      className="grid gap-2 rounded-md border bg-card p-3"
-      aria-label="Filtros de modelos"
-    >
+    <section className="grid gap-2" aria-label="Filtros de modelos">
       <div
         className={
           compact
@@ -293,102 +295,138 @@ function ModelsToolbar({
             : "grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(14rem,1fr)_repeat(3,minmax(9rem,0.35fr))]"
         }
       >
-        <div className={compact ? "relative lg:col-span-3" : "relative"}>
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={globalFilter}
-            className="pl-8"
-            placeholder="Buscar por nombre o descripción..."
-            aria-label="Buscar modelos"
-            onChange={(event) => {
-              table.setGlobalFilter(event.target.value)
-              table.setPageIndex(0)
-            }}
-          />
-        </div>
-
-        <Select
-          value={providerFilter}
-          onValueChange={(value) => value && applyFilter("provider", value)}
-        >
-          <SelectTrigger className="w-full" aria-label="Filtrar por proveedor">
-            <SelectValue>
-              {providerFilter === "ALL"
-                ? "Todos los proveedores"
-                : providerFilter}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Todos los proveedores</SelectItem>
-            {providers.map((provider) => (
-              <SelectItem key={provider.id} value={provider.name}>
-                {provider.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={typeFilter}
-          onValueChange={(value) =>
-            value && applyFilter("telecommunicationItemType", value)
+        <div
+          className={
+            compact
+              ? "relative grid gap-1 lg:col-span-3"
+              : "relative grid gap-1"
           }
         >
-          <SelectTrigger
-            className="w-full"
-            aria-label="Filtrar por tipo de modelo"
-          >
-            <SelectValue>
-              {typeFilter === "SPECIFIC"
-                ? "Específicos"
-                : typeFilter === "GENERIC"
-                  ? "Genéricos"
-                  : "Todos los tipos"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Todos los tipos</SelectItem>
-            <SelectItem value="SPECIFIC">Específicos</SelectItem>
-            <SelectItem value="GENERIC">Genéricos</SelectItem>
-          </SelectContent>
-        </Select>
+          <Label htmlFor="model-search">Buscar</Label>
+          <InputGroup>
+            <InputGroupAddon>
+              <Search />
+            </InputGroupAddon>
+            <InputGroupInput
+              id="model-search"
+              value={globalFilter}
+              placeholder="Buscar por nombre o descripción..."
+              aria-label="Buscar modelos"
+              onChange={(event) => {
+                table.setGlobalFilter(event.target.value)
+                table.setPageIndex(0)
+              }}
+            />
+          </InputGroup>
+        </div>
 
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => value && applyFilter("active", value)}
-        >
-          <SelectTrigger className="w-full" aria-label="Filtrar por estado">
-            <SelectValue>
-              {statusFilter === "ACTIVE"
-                ? "Activos"
-                : statusFilter === "INACTIVE"
-                  ? "Inactivos"
-                  : "Todos los estados"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Todos los estados</SelectItem>
-            <SelectItem value="ACTIVE">Activos</SelectItem>
-            <SelectItem value="INACTIVE">Inactivos</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid gap-1">
+          <Label htmlFor="model-provider">Proveedor</Label>
+          <Select
+            value={providerFilter}
+            onValueChange={(value) => value && applyFilter("provider", value)}
+          >
+            <SelectTrigger
+              id="model-provider"
+              className="w-full"
+              aria-label="Filtrar por proveedor"
+            >
+              <SelectValue>
+                {providerFilter === "ALL"
+                  ? "Todos los proveedores"
+                  : providerFilter}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos los proveedores</SelectItem>
+              {providers.map((provider) => (
+                <SelectItem key={provider.id} value={provider.name}>
+                  {provider.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-1">
+          <Label htmlFor="model-type">Tipo</Label>
+          <Select
+            value={typeFilter}
+            onValueChange={(value) =>
+              value && applyFilter("telecommunicationItemType", value)
+            }
+          >
+            <SelectTrigger
+              id="model-type"
+              className="w-full"
+              aria-label="Filtrar por tipo de modelo"
+            >
+              <SelectValue>
+                {typeFilter === "SPECIFIC"
+                  ? "Específicos"
+                  : typeFilter === "GENERIC"
+                    ? "Genéricos"
+                    : "Todos los tipos"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos los tipos</SelectItem>
+              <SelectItem value="SPECIFIC">Específicos</SelectItem>
+              <SelectItem value="GENERIC">Genéricos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-1">
+          <Label htmlFor="model-status">Estado</Label>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => value && applyFilter("active", value)}
+          >
+            <SelectTrigger
+              id="model-status"
+              className="w-full"
+              aria-label="Filtrar por estado"
+            >
+              <SelectValue>
+                {statusFilter === "ACTIVE"
+                  ? "Activos"
+                  : statusFilter === "INACTIVE"
+                    ? "Inactivos"
+                    : "Todos los estados"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos los estados</SelectItem>
+              <SelectItem value="ACTIVE">Activos</SelectItem>
+              <SelectItem value="INACTIVE">Inactivos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Select
-          value={currentSort}
-          onValueChange={(value) => value && applySort(value as ModelSort)}
-        >
-          <SelectTrigger className="w-48" aria-label="Ordenar modelos">
-            <SelectValue>{sortLabels[currentSort]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="RECENT">Más recientes</SelectItem>
-            <SelectItem value="OLDEST">Más antiguos</SelectItem>
-            <SelectItem value="NAME_ASC">Nombre A-Z</SelectItem>
-            <SelectItem value="NAME_DESC">Nombre Z-A</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid gap-1">
+          <Label htmlFor="model-sort">Ordenar por</Label>
+          <Select
+            value={currentSort}
+            onValueChange={(value) => value && applySort(value as ModelSort)}
+          >
+            <SelectTrigger
+              id="model-sort"
+              className="w-48"
+              aria-label="Ordenar modelos"
+            >
+              <SelectValue>{sortLabels[currentSort]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="RECENT">Más recientes</SelectItem>
+              <SelectItem value="OLDEST">Más antiguos</SelectItem>
+              <SelectItem value="NAME_ASC">Nombre A-Z</SelectItem>
+              <SelectItem value="NAME_DESC">Nombre Z-A</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" onClick={clearFilters}>
@@ -688,7 +726,6 @@ export const ModelsPage = () => {
           onConfirmIdentifierDelete={handleConfirmIdentifierDelete}
         />
       </div>
-
     </section>
   )
 }

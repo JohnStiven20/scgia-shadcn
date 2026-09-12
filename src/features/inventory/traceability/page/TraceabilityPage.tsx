@@ -359,6 +359,7 @@ function createTraceabilityColumns(
 }
 
 export function TraceabilityPage() {
+  
   const isMobile = useIsMobile()
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null)
   const traceabilityColumns = useMemo(
@@ -383,18 +384,6 @@ export function TraceabilityPage() {
         description="Auditoría y trazabilidad de movimientos del inventario."
       />
 
-      <TraceabilityFilters
-        values={filters.values}
-        onApply={(nextFilters) => {
-          setSelectedEventId(null)
-          filters.apply(nextFilters)
-        }}
-        onReset={() => {
-          setSelectedEventId(null)
-          return filters.reset()
-        }}
-      />
-
       <p className="sr-only" role="status" aria-live="polite">
         {isFetching ? "Actualizando movimientos" : "Movimientos actualizados"}
       </p>
@@ -415,6 +404,19 @@ export function TraceabilityPage() {
             selectedRowId={
               selectedEventId === null ? undefined : String(selectedEventId)
             }
+            renderToolbar={() => (
+              <TraceabilityFilters
+                values={filters.values}
+                onApply={(nextFilters) => {
+                  setSelectedEventId(null)
+                  filters.apply(nextFilters)
+                }}
+                onReset={() => {
+                  setSelectedEventId(null)
+                  return filters.reset()
+                }}
+              />
+            )}
             onRowClick={(transaction) => {
               setSelectedEventId((current) =>
                 current === transaction.id ? null : transaction.id

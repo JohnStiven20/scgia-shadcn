@@ -23,6 +23,7 @@
     "@fullcalendar/interaction": "^6.1.21",
     "@fullcalendar/multimonth": "^6.1.21",
     "@fullcalendar/react": "^6.1.21",
+    "@react-pdf/renderer": "^4.9.0",
     "@reduxjs/toolkit": "^2.12.0",
     "@stomp/stompjs": "^7.3.0",
     "@tailwindcss/vite": "^4",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import {
   useDeleteWorkerContractMutation,
@@ -25,9 +25,6 @@ export function useWorkerContractsTab({
   )
   const [contractToDelete, setContractToDelete] =
     useState<WorkerContract | null>(null)
-  const [selectedContractId, setSelectedContractId] = useState<number | null>(
-    null
-  )
   const [deleteWorkerContract, { isLoading: isDeletingContract }] =
     useDeleteWorkerContractMutation()
   const { handleError } = useGlobalError()
@@ -48,20 +45,6 @@ export function useWorkerContractsTab({
     [contracts]
   )
 
-  const selectedContract = useMemo(() => {
-    return (
-      sortedContracts.find((contract) => contract.id === selectedContractId) ??
-      sortedContracts[0] ??
-      null
-    )
-  }, [selectedContractId, sortedContracts])
-
-  useEffect(() => {
-    if (!selectedContractId && sortedContracts[0]) {
-      setSelectedContractId(sortedContracts[0].id)
-    }
-  }, [selectedContractId, sortedContracts])
-
   function openCreateDialog() {
     setIsCreateDialogOpen(true)
   }
@@ -80,14 +63,6 @@ export function useWorkerContractsTab({
     if (!isDeletingContract) {
       setContractToDelete(null)
     }
-  }
-
-  function handleSelectContract(contract: WorkerContract) {
-    setSelectedContractId(contract.id)
-  }
-
-  function handleContractCreated() {
-    setSelectedContractId(null)
   }
 
   function handleEditContract(contract: WorkerContract) {
@@ -116,7 +91,7 @@ export function useWorkerContractsTab({
 
   async function confirmDeleteContract() {
     if (!contractToDelete) {
-      return
+      return false
     }
 
     try {
@@ -124,11 +99,12 @@ export function useWorkerContractsTab({
         id: contractToDelete.id,
         workerId: contractToDelete.workerId,
       }).unwrap()
-      setSelectedContractId(null)
       setContractToDelete(null)
       notifications.success("Contrato eliminado correctamente.")
+      return true
     } catch (error) {
       handleError(error, "No se ha podido eliminar el contrato.")
+      return false
     }
   }
 
@@ -145,14 +121,11 @@ export function useWorkerContractsTab({
     openCreateDialog,
     refetch,
     contractToEdit,
-    selectedContract,
     confirmDeleteContract,
-    handleContractCreated,
     handleCreateDialogOpenChange,
     handleDeleteContract,
     handleDeleteDialogClose,
     handleEditContract,
     handleEditDialogOpenChange,
-    handleSelectContract,
   }
 }

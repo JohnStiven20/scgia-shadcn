@@ -175,7 +175,10 @@ export function CreateWorkerDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent showCloseButton={!isSaving} className="max-w-2xl gap-0 p-0">
+      <DialogContent
+        showCloseButton={!isSaving}
+        className="max-w-2xl gap-0 p-0"
+      >
         <DialogHeader className="border-b px-5 py-4 pr-12">
           <DialogTitle className="text-base font-semibold">
             {isEditMode ? "Editar documento" : "Subir documento"}
@@ -230,7 +233,7 @@ export function CreateWorkerDocumentDialog({
 
           <SelectFieldRHF
             name="curriculumSection"
-            label="Categoria"
+            label="Categoría"
             control={form.control}
             options={selectableSections.map((option) => ({
               label: option.label,

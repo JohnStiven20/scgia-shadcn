@@ -10,7 +10,7 @@ export function useInventoryScanner({
   onScanCode,
   enabled = true,
 }: UseInventoryScannerOptions) {
-  
+
   const onScanCodeRef = useRef(onScanCode)
 
   useEffect(() => {
@@ -28,11 +28,14 @@ export function useInventoryScanner({
       minLength: 3,
       avgTimeByChar: 20,
       suffixKeyCodes: [9, 13],
-      ignoreIfFocusOn: "input, textarea, [contenteditable='true']",
       preventDefault: true,
       stopPropagation: true,
       onScan: (scannedCode) => {
         void onScanCodeRef.current(scannedCode)
+        console.log(scannedCode);
+      },
+      onScanError: (scannedCode) => {
+        console.log(scannedCode)
       },
     })
 

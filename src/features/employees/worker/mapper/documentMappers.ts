@@ -72,12 +72,19 @@ function getStatusCaption(
 export function buildWorkerDocumentInfo(
   document: WorkerTrainingDocumentViewModel
 ) {
+  const fileType =
+    document.mimeType?.split("/").at(-1)?.toUpperCase() ||
+    document.documentName.split(".").at(-1)?.toUpperCase() ||
+    "Desconocido"
+
   return [
     { label: "Trabajador", value: document.workerName },
-    { label: "Categoria", value: document.section },
-    { label: "Fecha curso", value: document.trainingDateLabel },
+    { label: "Categoría", value: document.section },
+    { label: "Fecha del curso", value: document.trainingDateLabel },
     { label: "Vencimiento", value: document.expirationDateLabel },
-    { label: "Dias restantes", value: document.statusCaption },
-    { label: "Archivo", value: formatFileSize(document.fileSize) },
+    { label: "Días restantes", value: document.statusCaption },
+    { label: "Tipo de archivo", value: fileType },
+    { label: "Tamaño", value: formatFileSize(document.fileSize) },
+    { label: "Observaciones", value: document.remarks },
   ]
 }

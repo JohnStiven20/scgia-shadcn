@@ -7,19 +7,19 @@ import {
   Settings2,
   Trash2,
   UserRound,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,14 +27,13 @@ import {
   BreadcrumbPage,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Link, useParams } from "react-router-dom";
-import { WorkerContractsTab } from "../components/contract/WorkerContractsTab";
-import { WorkerDocumentsTab } from "../components/document/WorkerDocumentsTab";
-import { WorkerSettingsTab } from "../components/settings/WorkerSettingsTab";
+} from "@/components/ui/breadcrumb"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { Link, useParams } from "react-router-dom"
+import { WorkerContractsTab } from "../components/contract/WorkerContractsTab"
+import { WorkerDocumentsTab } from "../components/document/WorkerDocumentsTab"
+import { WorkerSettingsTab } from "../components/settings/WorkerSettingsTab"
 
 const worker = {
   id: "9203847562",
@@ -46,14 +45,14 @@ const worker = {
   phone: "",
   workerType: "Casa de papelII",
   observations: "Información adicional sobre el trabajador.",
-};
+}
 
 const workerTabs = [
   { value: "personal", label: "Datos personales", icon: UserRound },
   { value: "contracts", label: "Contratos", icon: BriefcaseBusiness },
   { value: "documents", label: "Documentos", icon: FileText },
   { value: "settings", label: "Ajustes", icon: Settings2 },
-] as const;
+] as const
 
 function WorkerProfile() {
   return (
@@ -93,7 +92,7 @@ function WorkerProfile() {
         </address>
       </section>
     </header>
-  );
+  )
 }
 
 function FormField({
@@ -101,15 +100,15 @@ function FormField({
   label,
   ...inputProps
 }: React.ComponentProps<typeof Input> & {
-  id: string;
-  label: string;
+  id: string
+  label: string
 }) {
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} {...inputProps} />
     </div>
-  );
+  )
 }
 
 function PersonalDataForm() {
@@ -208,17 +207,15 @@ function PersonalDataForm() {
         </div>
       </footer>
     </form>
-  );
+  )
 }
 
 export function WorkerPage() {
-
-  const isMobile = useIsMobile();
-  const { id } = useParams();
-  const workerId = Number(id);
+  const { id } = useParams()
+  const workerId = Number(id)
 
   return (
-    <article className=" rounded-xl border bg-background p-3 sm:p-5">
+    <article className="rounded-xl border bg-background p-3 sm:p-5">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -236,14 +233,10 @@ export function WorkerPage() {
       </Breadcrumb>
 
       <WorkerProfile />
-      <Tabs
-        defaultValue="personal"
-        orientation={isMobile ? "vertical" : "horizontal"}
-        className="mt-5 flex-col gap-5"
-      >
+      <Tabs defaultValue="personal" className="mt-5 min-w-0 flex-col gap-5">
         <TabsList
           variant="default"
-          className="w-full max-w-full items-stretch justify-start md:w-fit md:items-center md:overflow-x-auto md:overflow-y-hidden"
+          className="w-full max-w-full items-stretch justify-start overflow-x-auto overflow-y-hidden md:w-fit"
         >
           {workerTabs.map((tab) => (
             <TabsTrigger
@@ -261,9 +254,13 @@ export function WorkerPage() {
           <PersonalDataForm />
         </TabsContent>
         <TabsContent value="contracts">
-          <WorkerContractsTab workerId={workerId} />
+          <WorkerContractsTab
+            workerId={workerId}
+            workerName={`${worker.firstName} ${worker.lastName}`}
+            workerDni={worker.dni}
+          />
         </TabsContent>
-        <TabsContent value="documents">
+        <TabsContent value="documents" className="min-w-0">
           <WorkerDocumentsTab workerId={workerId} />
         </TabsContent>
         <TabsContent value="settings">
@@ -271,5 +268,5 @@ export function WorkerPage() {
         </TabsContent>
       </Tabs>
     </article>
-  );
+  )
 }

@@ -8,13 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   DataTable,
   DataTableColumnHeader,
 } from "@/components/data-table/data-table"
@@ -29,18 +22,13 @@ import {
 } from "../hooks/useEmployeesPage"
 
 type EmployeeTextFilterField = {
-  key: "firstName" | "surname" | "dni" | "email" | "phone" | "employeeCode"
+  key: "firstName" | "employeeCode"
   label: string
   placeholder: string
-  type?: string
 }
 
 const employeeTextFilterFields: EmployeeTextFilterField[] = [
   { key: "firstName", label: "Nombre", placeholder: "Nombre" },
-  { key: "surname", label: "Apellidos", placeholder: "Apellidos" },
-  { key: "dni", label: "DNI", placeholder: "DNI" },
-  { key: "email", label: "Email", placeholder: "Email", type: "email" },
-  { key: "phone", label: "Teléfono", placeholder: "Teléfono", type: "tel" },
   {
     key: "employeeCode",
     label: "Código de empleado",
@@ -123,17 +111,11 @@ const employeeColumns = columnHelper.columns([
 
 type EmployeesFiltersProps = {
   values: SearchWorkersParams
-  workerTypes: { id: number; name: string }[]
   onApply: (values: SearchWorkersParams) => Promise<void>
   onReset: () => void
 }
 
-function EmployeesFilters({
-  values,
-  workerTypes,
-  onApply,
-  onReset,
-}: EmployeesFiltersProps) {
+function EmployeesFilters({ values, onApply, onReset }: EmployeesFiltersProps) {
   const [draft, setDraft] = useState<SearchWorkersParams>(values)
 
   const updateDraft = (key: keyof SearchWorkersParams, value: string) => {
@@ -141,9 +123,9 @@ function EmployeesFilters({
   }
 
   return (
-    <section className="flex flex-col gap-6" aria-label="Filtros de empleados">
+    <section aria-label="Filtros de empleados">
       <form
-        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
         onSubmit={(event) => {
           event.preventDefault()
           void onApply(draft)
@@ -159,7 +141,6 @@ function EmployeesFilters({
               <Input
                 id={`employee-${field.key}`}
                 name={field.key}
-                type={field.type ?? "text"}
                 placeholder={field.placeholder}
                 value={String(draft[field.key] ?? "")}
                 onChange={(event) => updateDraft(field.key, event.target.value)}
@@ -169,58 +150,11 @@ function EmployeesFilters({
           </div>
         ))}
 
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-worker-type">Tipo de trabajador</Label>
-          <Select
-            value={draft.workerTypeId ? String(draft.workerTypeId) : "all"}
-            onValueChange={(value) =>
-              setDraft((current) => ({
-                ...current,
-                workerTypeId: value === "all" ? undefined : Number(value),
-              }))
-            }
-          >
-            <SelectTrigger id="employee-worker-type" className="h-8 w-full">
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {workerTypes.map((workerType) => (
-                <SelectItem key={workerType.id} value={String(workerType.id)}>
-                  {workerType.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="employee-status">Estado</Label>
-          <Select
-            value={draft.active === undefined ? "all" : String(draft.active)}
-            onValueChange={(value) =>
-              setDraft((current) => ({
-                ...current,
-                active: value === "all" ? undefined : value === "true",
-              }))
-            }
-          >
-            <SelectTrigger id="employee-status" className="h-8 w-full">
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="true">Activo</SelectItem>
-              <SelectItem value="false">Inactivo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-wrap items-end justify-end gap-3 sm:col-span-2 lg:col-span-4">
+        <div className="flex flex-wrap justify-end gap-3 md:col-start-3">
           <Button
             type="button"
             variant="outline"
-            
+
             onClick={() => {
               setDraft(employeeFiltersDefaultValues)
               onReset()
@@ -255,13 +189,6 @@ export function EmployeesPage() {
         }
       />
 
-      <EmployeesFilters
-        values={filters.values}
-        workerTypes={filters.workerTypes}
-        onApply={filters.apply}
-        onReset={filters.reset}
-      />
-
       <section aria-label="Listado de empleados">
         <DataTable
           data={data.rows}
@@ -269,6 +196,13 @@ export function EmployeesPage() {
           isLoading={data.isLoading}
           getRowId={(worker) => String(worker.id)}
           onRowClick={(worker) => navigation.goToWorker(worker.id)}
+          renderToolbar={() => (
+            <EmployeesFilters
+              values={filters.values}
+              onApply={filters.apply}
+              onReset={filters.reset}
+            />
+          )}
           serverPagination={{
             page: pagination.page,
             pageSize: pagination.pageSize,

@@ -115,7 +115,7 @@ export function WorkerSettingsTab({
   return (
     <section className="grid gap-5">
       <header>
-        <h2 className="text-xl font-semibold tracking-tight">AJUSTES</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Ajustes</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Configuracion y datos adicionales del trabajador.
         </p>
@@ -138,26 +138,12 @@ export function WorkerSettingsTab({
           </div>
         </CardHeader>
 
-        <CardContent className="p-5">
+        <CardContent className="p-5 pt-0">
           <form
             className="grid gap-4 lg:grid-cols-[minmax(18rem,0.85fr)_minmax(18rem,1fr)_14rem]"
             onSubmit={form.handleSubmit(handleSubmit)}
           >
-            <SelectFieldRHF
-              name="accountId"
-              label="Cuenta"
-              control={form.control}
-              options={accountOptions}
-              placeholder="Selecciona una cuenta"
-              searchPlaceholder="Buscar cuenta..."
-              searchValue={accountSearch}
-              isLoading={isFetchingAccounts}
-              emptyText="No hay cuentas disponibles"
-              onSearchChange={setAccountSearch}
-              disabled={isAssigningAccount}
-            />
-
-            <div className="rounded-lg bg-muted/50 p-4">
+             <div className="rounded-lg bg-muted/50 p-4">
               <div className="flex items-start gap-3">
                 <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
@@ -183,6 +169,23 @@ export function WorkerSettingsTab({
                 </div>
               </div>
             </div>
+
+            <SelectFieldRHF
+              name="accountId"
+              label="Cuenta"
+              className="my-auto"
+              control={form.control}
+              options={accountOptions}
+              placeholder="Selecciona una cuenta"
+              searchPlaceholder="Buscar cuenta..."
+              searchValue={accountSearch}
+              isLoading={isFetchingAccounts}
+              emptyText="No hay cuentas disponibles"
+              onSearchChange={setAccountSearch}
+              disabled={isAssigningAccount}
+            />
+
+           
 
             <div className="grid content-start gap-2">
               <Button
