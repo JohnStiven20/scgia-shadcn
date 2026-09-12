@@ -24,25 +24,27 @@ export function TelemetryMetricCard({
   footer: ReactNode
 }) {
   return (
-    <Card className="min-h-32 rounded-lg border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
+    <Card className="min-h-28 rounded-lg border-border/80 py-3 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(3)] sm:min-h-32 sm:py-4 sm:[--card-spacing:--spacing(4)]">
       <CardContent className="flex h-full flex-col">
-        <div className="mb-3 flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl border bg-slate-50">
+        <div className="mb-2 flex items-center gap-3 sm:mb-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border bg-slate-50 sm:size-10 sm:rounded-xl">
             <Icon className={cn("size-5", iconClassName)} />
           </span>
-          <p className="min-w-0 text-sm font-medium text-muted-foreground">
+          <p className="min-w-0 truncate text-sm font-medium text-muted-foreground">
             {title}
           </p>
         </div>
-        <div className="mb-3 flex items-baseline gap-1">
-          <p className="text-2xl font-bold tracking-normal text-slate-950">
+        <div className="mb-2 flex min-w-0 items-baseline gap-1 sm:mb-3">
+          <p className="min-w-0 truncate text-2xl font-bold tracking-normal text-slate-950">
             {value}
           </p>
           {unit ? (
-            <span className="text-sm font-medium text-slate-600">{unit}</span>
+            <span className="shrink-0 text-sm font-medium text-slate-600">
+              {unit}
+            </span>
           ) : null}
         </div>
-        <div className="mt-auto">{footer}</div>
+        <div className="mt-auto min-w-0 overflow-hidden">{footer}</div>
       </CardContent>
     </Card>
   )

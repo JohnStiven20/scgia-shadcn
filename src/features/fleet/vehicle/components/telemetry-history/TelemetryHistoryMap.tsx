@@ -49,22 +49,22 @@ export function TelemetryHistoryMap({ snapshots }: TelemetryHistoryMapProps) {
 
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="grid-cols-[1fr_auto] items-center gap-3">
-        <div className="flex items-center gap-3">
+      <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <MapPinned className="size-5 text-slate-900" />
-          <div>
+          <div className="min-w-0">
             <CardTitle>Recorrido historico</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
               Reproduce el trayecto real mockeado de Torrevieja
             </p>
           </div>
         </div>
-        <span className="text-sm font-semibold text-slate-900">
+        <span className="w-fit rounded-full border bg-muted/40 px-2 py-1 text-sm font-semibold text-slate-900 sm:justify-self-end">
           {Math.round(progress * 100)}%
         </span>
       </CardHeader>
       <CardContent>
-        <div className="relative h-[420px] overflow-hidden rounded-lg border bg-muted shadow-inner xl:h-[560px]">
+        <div className="relative h-[360px] overflow-hidden rounded-lg border bg-muted shadow-inner sm:h-[420px] xl:h-[560px]">
           <Map
             ref={mapRef}
             center={[-0.6776, 37.9818]}
@@ -92,7 +92,7 @@ export function TelemetryHistoryMap({ snapshots }: TelemetryHistoryMapProps) {
 
               <RouteMarker at="progress">
                 <MarkerContent>
-                  <div className="grid size-11 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-500/30 ring-8 ring-blue-500/20">
+                  <div className="grid size-11 place-items-center rounded-full bg-blue-600 text-white shadow-lg ring-8 shadow-blue-500/30 ring-blue-500/20">
                     <Car className="size-5" />
                   </div>
                   <MarkerLabel
@@ -116,7 +116,7 @@ export function TelemetryHistoryMap({ snapshots }: TelemetryHistoryMapProps) {
             <MapControls position="top-right" showCompass showFullscreen />
           </Map>
 
-          <div className="absolute right-3 bottom-3 left-3 grid gap-3 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur md:left-3 md:w-[28rem]">
+          <div className="absolute right-2 bottom-2 left-2 grid gap-3 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur sm:right-3 sm:bottom-3 sm:left-3 md:w-[28rem]">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-950">
@@ -161,7 +161,10 @@ export function TelemetryHistoryMap({ snapshots }: TelemetryHistoryMapProps) {
   )
 }
 
-function getSnapshotAtProgress(snapshots: TelemetrySnapshot[], progress: number) {
+function getSnapshotAtProgress(
+  snapshots: TelemetrySnapshot[],
+  progress: number
+) {
   if (!snapshots.length) {
     return null
   }

@@ -3,8 +3,6 @@ import { CalendarDays, Download, Route } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -30,25 +28,25 @@ export function TelemetryHistoryHeader({
 }: TelemetryHistoryHeaderProps) {
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="grid size-12 shrink-0 place-items-center rounded-xl border bg-slate-50 text-slate-900">
-            <Route className="size-6" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <CardTitle className="text-2xl font-semibold tracking-normal text-slate-950">
+      <CardHeader className="gap-4">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+          <div className="flex min-w-0 gap-3 sm:items-center">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl border bg-slate-50 text-slate-900 sm:size-12">
+              <Route className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-xl leading-tight font-semibold tracking-normal text-slate-950 sm:text-2xl">
                 Registro de telemetria
               </CardTitle>
-              <LiveBadge label="Historico" tone="success" />
-              <CardDescription className="text-sm">
-                Datos mock del dia seleccionado en Torrevieja
-              </CardDescription>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <LiveBadge label="Historico" tone="success" />
+                <CardDescription className="text-sm">
+                  Datos mock del dia seleccionado en Torrevieja
+                </CardDescription>
+              </div>
             </div>
           </div>
-        </div>
-        <CardAction className="static row-auto flex flex-wrap items-center gap-2 self-auto justify-self-start lg:justify-self-end">
-          <CardContent className="border-l-0 p-0 sm:border-l sm:pl-6">
+          <div className="grid min-w-0 gap-3 rounded-md border bg-muted/25 p-3 sm:grid-cols-[minmax(0,1fr)_auto] md:w-[min(32rem,48vw)]">
             <div className="flex min-w-0 items-center gap-3">
               <CalendarDays className="size-5 shrink-0 text-slate-900" />
               <div className="min-w-0">
@@ -58,26 +56,28 @@ export function TelemetryHistoryHeader({
                 <p className="text-xs text-muted-foreground">Dispositivo</p>
               </div>
             </div>
-          </CardContent>
-          <Input
-            type="date"
-            value={requestDate}
-            max={formatDateInputValue(new Date())}
-            className="h-9 w-40"
-            onChange={(event) => {
-              if (event.target.value) {
-                onDateChange(new Date(`${event.target.value}T12:00:00`))
-              }
-            }}
-          />
-          <Button type="button" variant="outline" onClick={onExport}>
-            <Download />
-            Exportar
-          </Button>
-          <span className="sr-only">
-            Fecha seleccionada {formatDateInputValue(selectedDate)}
-          </span>
-        </CardAction>
+            <div className="flex min-w-0 flex-wrap gap-2 sm:justify-end">
+              <Input
+                type="date"
+                value={requestDate}
+                max={formatDateInputValue(new Date())}
+                className="h-9 min-w-0 flex-1 sm:w-40 sm:flex-none"
+                onChange={(event) => {
+                  if (event.target.value) {
+                    onDateChange(new Date(`${event.target.value}T12:00:00`))
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={onExport}>
+                <Download />
+                Exportar
+              </Button>
+            </div>
+            <span className="sr-only">
+              Fecha seleccionada {formatDateInputValue(selectedDate)}
+            </span>
+          </div>
+        </div>
       </CardHeader>
     </Card>
   )

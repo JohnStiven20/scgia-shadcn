@@ -18,13 +18,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
 
@@ -36,11 +30,7 @@ import {
   TelemetryMetricCard,
 } from "./components"
 import { LocationStrip, VehicleMapSurface } from "./map"
-import type {
-  GpsLevel,
-  PresentableAlert,
-  TelemetrySample,
-} from "./types"
+import type { GpsLevel, PresentableAlert, TelemetrySample } from "./types"
 import {
   formatCoordinates,
   formatEngineActiveTime,
@@ -105,7 +95,9 @@ export function MetricsSection({
           <MetricProgress
             value={temperatureProgress}
             className={temperatureValue > 105 ? "bg-red-500" : "bg-emerald-500"}
-            label={temperatureValue > 105 ? "Fuera de rango" : "Rango operativo"}
+            label={
+              temperatureValue > 105 ? "Fuera de rango" : "Rango operativo"
+            }
           />
         }
       />
@@ -157,7 +149,7 @@ export function MapSection({
 }) {
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="grid-cols-[1fr_auto] items-center gap-3">
+      <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid size-10 shrink-0 place-items-center rounded-xl border bg-slate-50">
             <MapPin className="size-5 text-slate-900" />
@@ -169,7 +161,7 @@ export function MapSection({
             </p>
           </div>
         </div>
-        <CardAction className="flex gap-1">
+        <div className="flex min-w-0 gap-1 sm:justify-end">
           <Button type="button" variant="outline" size="sm">
             <LocateFixed />
             Seguir vehiculo
@@ -183,7 +175,7 @@ export function MapSection({
           >
             <Expand />
           </Button>
-        </CardAction>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="relative">
@@ -195,7 +187,10 @@ export function MapSection({
           />
           <div className="absolute bottom-3 left-3 w-[min(24rem,calc(100%-1.5rem))]">
             <LocationStrip
-              title={formatCoordinates(telemetry?.latitude, telemetry?.longitude)}
+              title={formatCoordinates(
+                telemetry?.latitude,
+                telemetry?.longitude
+              )}
               coordinates={locationLabel}
               direction={direction}
               heading={heading}
@@ -210,12 +205,12 @@ export function MapSection({
 export function AlertsSection({ alerts }: { alerts: PresentableAlert[] }) {
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="grid-cols-[1fr_auto] items-center">
+      <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="flex items-center gap-3">
           <Bell className="size-5 text-slate-900" />
           <CardTitle>Alertas activas</CardTitle>
         </div>
-        <Button variant="link" className="px-0 text-blue-600">
+        <Button variant="link" className="w-fit px-0 text-blue-600">
           Ver todas ({alerts.length})
         </Button>
       </CardHeader>
@@ -275,9 +270,15 @@ export function DeviceStatusSection({
             icon={Activity}
             label="Motor"
             value={
-              engineRunning ? "Encendido" : connecting ? "Conectando" : "Apagado"
+              engineRunning
+                ? "Encendido"
+                : connecting
+                  ? "Conectando"
+                  : "Apagado"
             }
-            iconClassName={engineRunning ? "text-emerald-600" : "text-slate-500"}
+            iconClassName={
+              engineRunning ? "text-emerald-600" : "text-slate-500"
+            }
             dotClassName={engineRunning ? "bg-emerald-500" : "bg-slate-400"}
           />
           <StatusRow
@@ -344,7 +345,9 @@ function StatusRow({
       </div>
       <div className="flex min-w-0 items-center gap-3 text-right">
         {dotClassName ? (
-          <span className={cn("size-2.5 shrink-0 rounded-full", dotClassName)} />
+          <span
+            className={cn("size-2.5 shrink-0 rounded-full", dotClassName)}
+          />
         ) : null}
         <span className="truncate text-sm font-semibold text-slate-900">
           {value}

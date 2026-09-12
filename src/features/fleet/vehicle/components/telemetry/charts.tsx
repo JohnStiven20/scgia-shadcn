@@ -55,22 +55,30 @@ export function SpeedChartCard({
 }) {
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="grid-cols-[1fr_auto] items-center gap-3">
-        <div className="flex items-center gap-3">
+      <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <BarChart3 className="size-5 text-slate-900" />
           <CardTitle>Velocidad ultimos 15 min</CardTitle>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-1 sm:justify-end">
           <Button variant="outline" size="sm" className="h-8">
             5 min
           </Button>
           <Button variant="secondary" size="sm" className="h-8 text-blue-600">
             15 min
           </Button>
-          <Button variant="outline" size="sm" className="hidden h-8 sm:inline-flex">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden h-8 sm:inline-flex"
+          >
             30 min
           </Button>
-          <Button variant="outline" size="sm" className="hidden h-8 sm:inline-flex">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden h-8 sm:inline-flex"
+          >
             1 h
           </Button>
         </div>

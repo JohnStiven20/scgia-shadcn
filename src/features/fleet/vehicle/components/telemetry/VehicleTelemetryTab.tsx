@@ -3,8 +3,6 @@ import { CarFront, Clock3 } from "lucide-react"
 
 import {
   Card,
-  CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -123,7 +121,7 @@ export function VehicleTelemetryTab({ vehicle }: VehicleTelemetryTabProps) {
           telemetry={telemetry}
           onExpand={() => setMapExpanded(true)}
         />
-        <div className="grid gap-4 content-start">
+        <div className="grid content-start gap-4">
           <DeviceStatusSection
             telemetry={telemetry}
             vehicle={vehicle}
@@ -190,29 +188,31 @@ function TelemetryHeader({
   connectionTone: "success" | "warning" | "danger"
 }) {
   const deviceName =
-    vehicle.telemetryDeviceIdentifier ?? vehicle.internalCode ?? "Sin dispositivo"
+    vehicle.telemetryDeviceIdentifier ??
+    vehicle.internalCode ??
+    "Sin dispositivo"
 
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="grid size-12 shrink-0 place-items-center rounded-xl border bg-slate-50 text-slate-900">
-            <CarFront className="size-6" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <CardTitle className="text-2xl font-semibold tracking-normal text-slate-950">
-              Telemetria en tiempo real
+      <CardHeader className="gap-4">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+          <div className="flex min-w-0 gap-3 sm:items-center">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl border bg-slate-50 text-slate-900 sm:size-12">
+              <CarFront className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-xl leading-tight font-semibold tracking-normal text-slate-950 sm:text-2xl">
+                Telemetria en tiempo real
               </CardTitle>
-              <LiveBadge label={connectionText} tone={connectionTone} />
-              <CardDescription className="text-sm">
-                Actualizado {formatRelativeTime(lastUpdatedAt, now)}
-              </CardDescription>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <LiveBadge label={connectionText} tone={connectionTone} />
+                <CardDescription className="text-sm">
+                  Actualizado {formatRelativeTime(lastUpdatedAt, now)}
+                </CardDescription>
+              </div>
             </div>
           </div>
-        </div>
-        <CardAction className="static row-auto grid gap-3 self-auto justify-self-start sm:grid-cols-2 lg:justify-self-end">
-          <CardContent className="border-l-0 p-0 sm:border-l sm:pl-6">
+          <div className="grid min-w-0 gap-3 rounded-md border bg-muted/25 p-3 sm:grid-cols-2 md:w-[min(26rem,42vw)]">
             <div className="flex min-w-0 items-center gap-3">
               <CarFront className="size-5 shrink-0 text-slate-900" />
               <div className="min-w-0">
@@ -222,8 +222,6 @@ function TelemetryHeader({
                 <p className="text-xs text-muted-foreground">Dispositivo</p>
               </div>
             </div>
-          </CardContent>
-          <CardContent className="border-l-0 p-0 sm:border-l sm:pl-6">
             <div className="flex min-w-0 items-center gap-3">
               <Clock3 className="size-5 shrink-0 text-slate-900" />
               <div className="min-w-0">
@@ -235,8 +233,8 @@ function TelemetryHeader({
                 </p>
               </div>
             </div>
-          </CardContent>
-        </CardAction>
+          </div>
+        </div>
       </CardHeader>
     </Card>
   )

@@ -17,6 +17,12 @@ import { operationsApi } from "@/features/inventory/api/operations.service"
 import { assignmentApi } from "@/features/inventory/assignment/api/assignmentApi"
 import { absenceTypeApi } from "@/features/absences/api/absenceTypeApi"
 import { absenceRequestApi } from "@/features/absences/api/absenceRequestApi"
+import { accountApi } from "@/features/admin/account/api/accountApi"
+import { roleApi } from "@/features/admin/roles/api/roleApi"
+import { authorizationCatalogApi } from "@/features/admin/roles/api/authorizationCatalogApi"
+import { accountRoleApi } from "@/features/api/accountRoleApi"
+import { accountSettingApi } from "@/features/api/accountSettingApi"
+import { rolePermissionApi } from "@/features/api/rolePermissionApi"
 
 export const store = configureStore({
   reducer: {
@@ -37,6 +43,12 @@ export const store = configureStore({
     [assignmentApi.reducerPath]: assignmentApi.reducer,
     [absenceTypeApi.reducerPath]: absenceTypeApi.reducer,
     [absenceRequestApi.reducerPath]: absenceRequestApi.reducer,
+    [accountApi.reducerPath]: accountApi.reducer,
+    [roleApi.reducerPath]: roleApi.reducer,
+    [authorizationCatalogApi.reducerPath]: authorizationCatalogApi.reducer,
+    [accountRoleApi.reducerPath]: accountRoleApi.reducer,
+    [accountSettingApi.reducerPath]: accountSettingApi.reducer,
+    [rolePermissionApi.reducerPath]: rolePermissionApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -56,7 +68,13 @@ export const store = configureStore({
       .concat(operationsApi.middleware)
       .concat(assignmentApi.middleware)
       .concat(absenceTypeApi.middleware)
-      .concat(absenceRequestApi.middleware),
+      .concat(absenceRequestApi.middleware)
+      .concat(accountApi.middleware)
+      .concat(roleApi.middleware)
+      .concat(authorizationCatalogApi.middleware)
+      .concat(accountRoleApi.middleware)
+      .concat(accountSettingApi.middleware)
+      .concat(rolePermissionApi.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>

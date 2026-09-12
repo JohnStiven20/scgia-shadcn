@@ -40,18 +40,18 @@ export function TelemetryDayRecords({ snapshots }: TelemetryDayRecordsProps) {
   return (
     <>
       <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-        <CardHeader className="grid-cols-[1fr_auto] items-center">
-          <div className="flex items-center gap-3">
+        <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="flex min-w-0 items-center gap-3">
             <Gauge className="size-5 text-slate-900" />
             <CardTitle>Registros del dia</CardTitle>
           </div>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground sm:justify-self-end">
             {snapshots.length} lecturas
           </span>
         </CardHeader>
         <CardContent>
           <div className="overflow-hidden rounded-lg border">
-            <div className="grid grid-cols-[5rem_minmax(0,1fr)_5rem_7rem_3rem] gap-3 border-b bg-slate-50 px-3 py-2 text-xs font-medium text-muted-foreground">
+            <div className="hidden grid-cols-[5rem_minmax(0,1fr)_5rem_7rem_3rem] gap-3 border-b bg-slate-50 px-3 py-2 text-xs font-medium text-muted-foreground sm:grid">
               <span>Hora</span>
               <span>Estado</span>
               <span className="text-right">Km/h</span>
@@ -63,34 +63,41 @@ export function TelemetryDayRecords({ snapshots }: TelemetryDayRecordsProps) {
                 <button
                   key={snapshot.id}
                   type="button"
-                  className="grid w-full grid-cols-[5rem_minmax(0,1fr)_5rem_7rem_3rem] items-center gap-3 px-3 py-3 text-left transition hover:bg-slate-50"
+                  className="grid w-full gap-3 px-3 py-3 text-left transition hover:bg-slate-50 sm:grid-cols-[5rem_minmax(0,1fr)_5rem_7rem_3rem] sm:items-center"
                   onClick={() => setSelectedSnapshotId(snapshot.id)}
                 >
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-900 sm:block">
+                    <span className="sm:hidden">Hora</span>
                     {format(new Date(snapshot.timestamp), "HH:mm")}
                   </span>
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span
-                      className="size-2.5 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor: telemetryStateColors[snapshot.state],
-                      }}
-                    />
-                    <span className="truncate text-sm text-muted-foreground">
-                      {telemetryStateLabels[snapshot.state]}
+                  <span className="grid min-w-0 gap-2 sm:flex sm:items-center">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: telemetryStateColors[snapshot.state],
+                        }}
+                      />
+                      <span className="truncate text-sm text-muted-foreground">
+                        {telemetryStateLabels[snapshot.state]}
+                      </span>
                     </span>
                   </span>
-                  <span className="text-right text-sm font-semibold">
+                  <span className="flex items-center justify-between gap-3 text-sm font-semibold sm:block sm:text-right">
+                    <span className="text-muted-foreground sm:hidden">
+                      Km/h
+                    </span>
                     {snapshot.speed ?? 0}
                   </span>
-                  <span className="text-right text-sm text-muted-foreground">
+                  <span className="flex items-center justify-between gap-3 text-sm text-muted-foreground sm:block sm:text-right">
+                    <span className="sm:hidden">Odometro</span>
                     {snapshot.odometer == null
                       ? "-"
                       : `${(snapshot.odometer / 1000).toLocaleString("es-ES", {
                           maximumFractionDigits: 1,
                         })} km`}
                   </span>
-                  <span className="flex justify-end text-muted-foreground">
+                  <span className="hidden justify-end text-muted-foreground sm:flex">
                     <Eye className="size-4" />
                   </span>
                 </button>

@@ -26,7 +26,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom"
 
 const workspaceMenus = [
   { title: "Dashboard", icon: LayoutDashboard, href: undefined },
-  { title: "Admin", icon: ShieldCheck, href: undefined },
+  { title: "Admin", icon: ShieldCheck, href: "/admin" },
   { title: "Inventario", icon: Boxes, href: "/inventory" },
   { title: "Trabajadores", icon: Users, href: "/employees" },
   { title: "Ausencias", icon: CalendarX2, href: "/absences" },

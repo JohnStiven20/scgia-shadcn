@@ -50,17 +50,20 @@ export function TelemetrySpeedEvolutionChart({
 
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="grid-cols-[1fr_auto] items-center gap-3">
-        <div className="flex items-center gap-3">
+      <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <BarChart3 className="size-5 text-slate-900" />
           <CardTitle>Velocidad del dia</CardTitle>
         </div>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground sm:justify-self-end">
           {snapshots.length} registros
         </span>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[280px] w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="h-[240px] w-full sm:h-[280px]"
+        >
           <AreaChart
             data={data}
             margin={{ top: 18, right: 8, left: -12, bottom: 4 }}

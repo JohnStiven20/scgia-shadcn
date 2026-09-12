@@ -17,12 +17,12 @@ type TelemetryDayEventsProps = {
 export function TelemetryDayEvents({ events }: TelemetryDayEventsProps) {
   return (
     <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader className="grid-cols-[1fr_auto] items-center">
-        <div className="flex items-center gap-3">
+      <CardHeader className="gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <Bell className="size-5 text-slate-900" />
           <CardTitle>Eventos del dia</CardTitle>
         </div>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground sm:justify-self-end">
           {events.length} eventos
         </span>
       </CardHeader>
@@ -40,7 +40,7 @@ export function TelemetryDayEvents({ events }: TelemetryDayEventsProps) {
                   <presentation.Icon className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1 rounded-lg border bg-card p-3">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-950">
                         {presentation.label}
@@ -49,7 +49,7 @@ export function TelemetryDayEvents({ events }: TelemetryDayEventsProps) {
                         {event.locationName ?? "Torrevieja"}
                       </p>
                     </div>
-                    <span className="shrink-0 text-sm font-semibold">
+                    <span className="text-sm font-semibold sm:shrink-0">
                       {format(new Date(event.timestamp), "HH:mm")}
                     </span>
                   </div>

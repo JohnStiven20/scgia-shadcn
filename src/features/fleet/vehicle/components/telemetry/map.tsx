@@ -48,7 +48,7 @@ export function VehicleMapSurface({
       >
         <MapMarker longitude={longitude} latitude={latitude} rotation={heading}>
           <MarkerContent>
-            <div className="grid size-12 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-500/30 ring-8 ring-blue-500/20">
+            <div className="grid size-12 place-items-center rounded-full bg-blue-600 text-white shadow-lg ring-8 shadow-blue-500/30 ring-blue-500/20">
               <Car className="size-5" />
             </div>
           </MarkerContent>
@@ -72,7 +72,7 @@ export function LocationStrip({
 }) {
   return (
     <div className="rounded-lg border bg-card/95 px-3 py-3 shadow-lg backdrop-blur">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-2">
           <MapPin className="mt-0.5 size-4 shrink-0 text-slate-900" />
           <div className="min-w-0">
