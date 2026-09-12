@@ -64,7 +64,9 @@ export function DatePicker({
           }
         >
           <CalendarIcon />
-          {value ? format(value, "dd/MM/yyyy", { locale: es }) : placeholder}
+          <span className="min-w-0 flex-1 truncate">
+            {value ? format(value, "dd/MM/yyyy", { locale: es }) : placeholder}
+          </span>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar

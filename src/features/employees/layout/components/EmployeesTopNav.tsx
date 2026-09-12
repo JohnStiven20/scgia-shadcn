@@ -67,7 +67,12 @@ export const EmployeesTopNav = () => {
         >
           Modelos
         </Button>
-        <Button variant="ghost" onClick={() => {}}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            navigate("/inventory/products")
+          }}
+        >
           Productos
         </Button>
         <Button

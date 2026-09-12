@@ -15,6 +15,9 @@ import { modelsApi } from "@/features/inventory/api/modelsApi"
 import { identificationApi } from "@/features/inventory/api/identificationApi"
 import { operationsApi } from "@/features/inventory/api/operations.service"
 import { assignmentApi } from "@/features/inventory/assignment/api/assignmentApi"
+import { getSpecificModelInventorySummary } from "@/features/inventory/api/products.service"
+import { specificModelItemsApi } from "@/features/inventory/api/specificModelItemsApi"
+import { getTelecommunicationSpecificItemHistory } from "@/features/inventory/api/telecommunicationSpecificItemHistoryApi"
 import { absenceTypeApi } from "@/features/absences/api/absenceTypeApi"
 import { absenceRequestApi } from "@/features/absences/api/absenceRequestApi"
 
@@ -35,6 +38,11 @@ export const store = configureStore({
     [identificationApi.reducerPath]: identificationApi.reducer,
     [operationsApi.reducerPath]: operationsApi.reducer,
     [assignmentApi.reducerPath]: assignmentApi.reducer,
+    [getSpecificModelInventorySummary.reducerPath]:
+      getSpecificModelInventorySummary.reducer,
+    [specificModelItemsApi.reducerPath]: specificModelItemsApi.reducer,
+    [getTelecommunicationSpecificItemHistory.reducerPath]:
+      getTelecommunicationSpecificItemHistory.reducer,
     [absenceTypeApi.reducerPath]: absenceTypeApi.reducer,
     [absenceRequestApi.reducerPath]: absenceRequestApi.reducer,
   },
@@ -55,6 +63,9 @@ export const store = configureStore({
       .concat(identificationApi.middleware)
       .concat(operationsApi.middleware)
       .concat(assignmentApi.middleware)
+      .concat(getSpecificModelInventorySummary.middleware)
+      .concat(specificModelItemsApi.middleware)
+      .concat(getTelecommunicationSpecificItemHistory.middleware)
       .concat(absenceTypeApi.middleware)
       .concat(absenceRequestApi.middleware),
 })

@@ -233,6 +233,7 @@ function VehiclesToolbar({ table, vehicles }: VehiclesToolbarProps) {
     <section className="grid gap-4" aria-label="Filtros de vehículos">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <div className="grid min-w-0 gap-1">
+          <Label htmlFor="vehicle-internal-code">Código interno</Label>
           <Input
             id="vehicle-internal-code"
             value={getTextFilter("internalCode")}
@@ -242,6 +243,7 @@ function VehiclesToolbar({ table, vehicles }: VehiclesToolbarProps) {
           />
         </div>
         <div className="grid min-w-0 gap-1">
+          <Label htmlFor="vehicle-license-plate">Matrícula</Label>
           <Input
             id="vehicle-license-plate"
             value={getTextFilter("licensePlate")}
@@ -251,6 +253,7 @@ function VehiclesToolbar({ table, vehicles }: VehiclesToolbarProps) {
           />
         </div>
         <div className="grid min-w-0 gap-1">
+          <Label htmlFor="vehicle-vin">VIN</Label>
           <Input
             id="vehicle-vin"
             value={getTextFilter("vin")}
@@ -260,6 +263,7 @@ function VehiclesToolbar({ table, vehicles }: VehiclesToolbarProps) {
           />
         </div>
         <div className="grid min-w-0 gap-1">
+          <Label htmlFor="vehicle-model">Modelo</Label>
           <Select
             value={modelFilter}
             onValueChange={(value) => {
@@ -286,6 +290,7 @@ function VehiclesToolbar({ table, vehicles }: VehiclesToolbarProps) {
           </Select>
         </div>
         <div className="grid min-w-0 gap-1">
+          <Label htmlFor="vehicle-worker">Empleado</Label>
           <Select
             value={workerFilter}
             onValueChange={(value) => {
@@ -312,6 +317,7 @@ function VehiclesToolbar({ table, vehicles }: VehiclesToolbarProps) {
           </Select>
         </div>
         <div className="grid min-w-0 gap-1">
+          <Label htmlFor="vehicle-availability">Disponibilidad</Label>
           <Select
             value={availabilityFilter}
             onValueChange={(value) => {

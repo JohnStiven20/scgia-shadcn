@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useNotifications } from "../../../../components/notifications/NotificationsProvider"
-import { useGetWorkerTypesQuery } from "../../employee-types/api/workerTypeApi"
 import {
   useCreateWorkerMutation,
   useSearchWorkersQuery,
@@ -199,12 +198,6 @@ export function useEmployeesPage() {
   const pagination = useEmployeesPagination()
   const data = useEmployeesWorkersData(filters.values, pagination)
   const createWorker = useCreateWorkerFlow()
-  const { data: workerTypesPage } = useGetWorkerTypesQuery({
-    page: 0,
-    size: 50,
-    sort: ["name,asc"],
-  })
-
   const safePage = Math.min(pagination.page, data.totalPages)
   const visiblePages = useVisiblePaginationWindow(safePage, data.totalPages)
 
@@ -222,7 +215,6 @@ export function useEmployeesPage() {
     filters: {
       values: filters.values,
       rows: data.rows,
-      workerTypes: workerTypesPage?.content ?? [],
       apply: applyFilters,
       reset: resetFilters,
     },
