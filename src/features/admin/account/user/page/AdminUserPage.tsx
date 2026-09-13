@@ -80,17 +80,11 @@ type AccountFormValues = {
   isactive: boolean
 }
 
-function getAccountTypeIcon(typeAccount: TypeAccount) {
-  if (typeAccount === "MOBILE") {
-    return Smartphone
-  }
-
-  if (typeAccount === "BOTH") {
-    return MonitorSmartphone
-  }
-
-  return Laptop
-}
+const ACCOUNT_TYPE_ICONS = {
+  WEB: Laptop,
+  MOBILE: Smartphone,
+  BOTH: MonitorSmartphone,
+} as const satisfies Record<TypeAccount, typeof Laptop>
 
 function getAccountDisplayName(username: string) {
   const name = username.includes("@") ? username.split("@")[0] : username
@@ -150,7 +144,7 @@ function AccountProfile({
   account: Account
   onDelete: () => void
 }) {
-  const TypeIcon = getAccountTypeIcon(account.typeAccount)
+  const TypeIcon = ACCOUNT_TYPE_ICONS[account.typeAccount]
 
   return (
     <header className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center">
@@ -228,14 +222,6 @@ function AccountGeneralTab({
     typeAccount: account.typeAccount,
     isactive: account.isactive,
   })
-
-  useEffect(() => {
-    setValues({
-      username: account.username,
-      typeAccount: account.typeAccount,
-      isactive: account.isactive,
-    })
-  }, [account])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

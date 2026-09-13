@@ -15,7 +15,6 @@ import {
   DataTableColumnHeader,
 } from "@/components/data-table/data-table"
 import type { DataTableFeatures } from "@/components/data-table/data-table-features"
-import { useNotifications } from "@/components/notifications/NotificationsProvider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -70,10 +69,6 @@ function getAccountDisplayName(username: string) {
   const name = username.includes("@") ? username.split("@")[0] : username
 
   return name.trim() || "-"
-}
-
-function getAccountEmail(username: string) {
-  return username.includes("@") ? username : "-"
 }
 
 function getAccountTypeFilterLabel(value: AccountFilters["typeAccount"]) {

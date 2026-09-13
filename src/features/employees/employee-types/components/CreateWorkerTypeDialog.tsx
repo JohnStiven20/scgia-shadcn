@@ -1,21 +1,52 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
-import type { RefObject } from "react";
-import { DynamicFormModal } from "../../../../components/dynamic/DynamicFormModal";
-import type { FieldConfig, GlobalFormRef } from "../../../../types/dinamicFormField";
-import type { WorkerTypeInterface } from "../../interface/worker-type/type/worker-type-interface";
+import { useCallback, useEffect, useMemo, useState } from "react"
+import type { MutableRefObject } from "react"
 
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import type { WorkerTypeInterface } from "@/features/interface/worker-type/type/worker-type-interface"
+
+const EMPTY_WORKER_TYPE: WorkerTypeInterface = {
+  id: 0,
+  name: "",
+  description: "",
+  active: true,
+}
+
+type WorkerTypeDialogFormRef = {
+  submit: () => void
+  reset: (values?: WorkerTypeInterface) => void
+}
 
 type CreateWorkerTypeDialogProps = {
-  open: boolean;
-  title?: string;
-  submitLabel?: string;
-  isSubmitting?: boolean;
-  formRef: RefObject<GlobalFormRef<WorkerTypeInterface> | null>;
-  record: FieldConfig<WorkerTypeInterface>[];
-  defaultValues: WorkerTypeInterface;
-  onClose: () => void;
-  onSubmit: (values: WorkerTypeInterface) => Promise<void> | void;
-};
+  open: boolean
+  title?: string
+  submitLabel?: string
+  isSubmitting?: boolean
+  formRef?: MutableRefObject<WorkerTypeDialogFormRef | null>
+  record?: unknown
+  defaultValues?: WorkerTypeInterface
+  onClose: () => void
+  onSubmit: (values: WorkerTypeInterface) => Promise<void> | void
+}
+
+function normalizeValues(values?: WorkerTypeInterface): WorkerTypeInterface {
+  return {
+    ...EMPTY_WORKER_TYPE,
+    ...values,
+    description: values?.description ?? "",
+  }
+}
 
 export function CreateWorkerTypeDialog({
   open,
@@ -23,67 +54,187 @@ export function CreateWorkerTypeDialog({
   submitLabel = "Crear tipo",
   isSubmitting = false,
   formRef,
-  record,
   defaultValues,
   onClose,
   onSubmit,
 }: CreateWorkerTypeDialogProps) {
+  const initialValues = useMemo(
+    () => normalizeValues(defaultValues),
+    [defaultValues]
+  )
+  const formKey = `${open ? "open" : "closed"}-${initialValues.id}-${initialValues.name}-${initialValues.description ?? ""}-${initialValues.active}`
+
   return (
     <Dialog
       open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      slotProps={{
-        paper: {
-          sx: {
-            borderRadius: "16px",
-          },
-        },
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !isSubmitting) {
+          onClose()
+        }
       }}
     >
-      <DialogTitle sx={{ pb: 1, fontWeight: 700 }}>{title}</DialogTitle>
-
-      <DialogContent sx={{ pt: 1 }}>
-        <DynamicFormModal<WorkerTypeInterface>
-          ref={formRef}
-          record={record}
-          defaultValues={defaultValues}
+      <DialogContent className="max-w-md">
+        <WorkerTypeDialogForm
+          key={formKey}
+          title={title}
+          submitLabel={submitLabel}
+          isSubmitting={isSubmitting}
+          formRef={formRef}
+          initialValues={initialValues}
+          onClose={onClose}
           onSubmit={onSubmit}
         />
       </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 3, pt: 1.5 }}>
-        <Button
-          onClick={onClose}
-          disabled={isSubmitting}
-          sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            color: "#475569",
-          }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={() => void formRef.current?.submit()}
-          variant="contained"
-          disabled={isSubmitting}
-          sx={{
-            minWidth: 150,
-            textTransform: "none",
-            fontWeight: 700,
-            backgroundColor: "#0f172a",
-            boxShadow: "none",
-            "&:hover": {
-              backgroundColor: "#1e293b",
-              boxShadow: "none",
-            },
-          }}
-        >
-          {submitLabel}
-        </Button>
-      </DialogActions>
     </Dialog>
-  );
+  )
+}
+
+type WorkerTypeDialogFormProps = {
+  title: string
+  submitLabel: string
+  isSubmitting: boolean
+  formRef?: MutableRefObject<WorkerTypeDialogFormRef | null>
+  initialValues: WorkerTypeInterface
+  onClose: () => void
+  onSubmit: (values: WorkerTypeInterface) => Promise<void> | void
+}
+
+function WorkerTypeDialogForm({
+  title,
+  submitLabel,
+  isSubmitting,
+  formRef,
+  initialValues,
+  onClose,
+  onSubmit,
+}: WorkerTypeDialogFormProps) {
+  const [values, setValues] = useState(initialValues)
+  const [nameError, setNameError] = useState<string | null>(null)
+
+  const handleSubmit = useCallback(async () => {
+    const name = values.name.trim()
+    const description = values.description?.trim() ?? ""
+
+    if (!name) {
+      setNameError("El nombre es obligatorio.")
+      return
+    }
+
+    setNameError(null)
+    await onSubmit({
+      ...values,
+      name,
+      description: description || null,
+    })
+  }, [onSubmit, values])
+
+  useEffect(() => {
+    if (!formRef) return
+
+    formRef.current = {
+      submit: () => {
+        void handleSubmit()
+      },
+      reset: (nextValues?: WorkerTypeInterface) => {
+        setValues(normalizeValues(nextValues ?? initialValues))
+        setNameError(null)
+      },
+    }
+
+    return () => {
+      formRef.current = null
+    }
+  }, [formRef, handleSubmit, initialValues])
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>
+          Define el nombre, la descripcion y el estado del tipo de trabajador.
+        </DialogDescription>
+      </DialogHeader>
+
+      <form
+        className="grid gap-4"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void handleSubmit()
+        }}
+      >
+        <div className="grid gap-2">
+          <Label htmlFor="worker-type-name">Nombre</Label>
+          <Input
+            id="worker-type-name"
+            value={values.name}
+            disabled={isSubmitting}
+            aria-invalid={Boolean(nameError)}
+            placeholder="Ej. Tecnico instalador"
+            onChange={(event) => {
+              setValues((current) => ({
+                ...current,
+                name: event.target.value,
+              }))
+              if (nameError) {
+                setNameError(null)
+              }
+            }}
+          />
+          {nameError ? (
+            <p className="text-xs/relaxed text-destructive">{nameError}</p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="worker-type-description">Descripcion</Label>
+          <Textarea
+            id="worker-type-description"
+            value={values.description ?? ""}
+            disabled={isSubmitting}
+            placeholder="Notas internas o detalle del tipo"
+            onChange={(event) => {
+              setValues((current) => ({
+                ...current,
+                description: event.target.value,
+              }))
+            }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+          <div className="grid gap-1">
+            <Label htmlFor="worker-type-active">Activo</Label>
+            <p className="text-xs/relaxed text-muted-foreground">
+              Los tipos inactivos no deberian usarse en nuevas altas.
+            </p>
+          </div>
+          <Switch
+            id="worker-type-active"
+            checked={values.active}
+            disabled={isSubmitting}
+            onCheckedChange={(checked) => {
+              setValues((current) => ({
+                ...current,
+                active: checked,
+              }))
+            }}
+          />
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting}
+            onClick={onClose}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {submitLabel}
+          </Button>
+        </DialogFooter>
+      </form>
+    </>
+  )
 }

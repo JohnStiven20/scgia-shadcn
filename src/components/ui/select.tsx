@@ -76,7 +76,6 @@ function SelectContent({
         alignOffset={alignOffset}
         alignItemWithTrigger={alignItemWithTrigger}
         className="isolate z-[70]"
-        className="isolate z-[70]"
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
@@ -184,7 +183,6 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <ChevronDownIcon />
       <ChevronDownIcon />
     </SelectPrimitive.ScrollDownArrow>
   )

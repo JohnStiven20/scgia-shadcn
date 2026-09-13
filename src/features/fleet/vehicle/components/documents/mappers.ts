@@ -70,7 +70,7 @@ export function groupVehicleDocuments(
     return acc
   }, {})
 
-  return Object.entries(grouped).map(([key, items]) => {
+  return Object.entries(grouped).map(([, items]) => {
     const documentType = items[0].documentType
     const meta = VEHICLE_DOCUMENT_TYPE_META[documentType]
 
