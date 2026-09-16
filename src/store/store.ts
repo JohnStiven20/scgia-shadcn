@@ -1,6 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit"
 
 import { commonApi } from "@/api/commonApi"
+import { authApi } from "@/features/auth/api/authApi"
+import { authReducer } from "@/features/auth/store/authSlice"
 import { employeesApi } from "@/features/employees/api/employeesApi"
 import { workerTypeApi } from "@/features/employees/employee-types/api/workerTypeApi"
 import { brandApi } from "@/features/fleet/api/apiBrand"
@@ -29,6 +31,8 @@ import { rolePermissionApi } from "@/features/api/rolePermissionApi"
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
+    [authApi.reducerPath]: authApi.reducer,
     [commonApi.reducerPath]: commonApi.reducer,
     [employeesApi.reducerPath]: employeesApi.reducer,
     [workerTypeApi.reducerPath]: workerTypeApi.reducer,
@@ -60,6 +64,7 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
+      .concat(authApi.middleware)
       .concat(commonApi.middleware)
       .concat(employeesApi.middleware)
       .concat(workerTypeApi.middleware)

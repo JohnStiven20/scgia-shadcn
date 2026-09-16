@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { ShieldAlert } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export function ForbiddenPage() {
@@ -20,9 +20,9 @@ export function ForbiddenPage() {
               Tu cuenta no tiene permisos para acceder a esta seccion.
             </p>
           </div>
-          <Button asChild>
-            <Link to="/">Volver al inicio</Link>
-          </Button>
+          <Link className={buttonVariants()} to="/">
+            Volver al inicio
+          </Link>
         </CardContent>
       </Card>
     </main>
