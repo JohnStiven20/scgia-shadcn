@@ -33,7 +33,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { useGlobalError } from "@/hooks"
+import { useGlobalError, useMediaQuery } from "@/hooks"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxTrigger,
+} from "@/components/ui/combobox"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -41,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { IdentificationResponse } from "@/features/interface/identification/types"
 import { useIdentifyProductMutation } from "@/features/inventory/api/identificationApi"
 import { useGetProvidersQuery } from "@/features/inventory/api/modelsApi"
@@ -55,6 +66,11 @@ import type {
   GenericEntryDraftItem,
   SpecificEntryDraftItem,
 } from "../types"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Stepper, StepperContent, StepperDescription, StepperIndicator, StepperItem, StepperNav, StepperPanel, StepperSeparator, StepperTitle, StepperTrigger } from "@/components/reui/stepper"
+import { Field } from "@/components/ui/field"
+import hguWifiImage from "@/assets/hgu_wifi_5_f.png"
 
 type ConfirmationDialogProps = {
   open: boolean
@@ -64,6 +80,31 @@ type ConfirmationDialogProps = {
   onCancel: () => void
   onConfirm: () => void
 }
+
+type WorkflowStepProps = {
+  number: number
+  title: string
+  last?: boolean
+  children?: React.ReactNode
+}
+
+type ModelOption = {
+  id: number
+  name: string
+  image: string
+}
+
+const specificModels: ModelOption[] = [
+  { id: 1, name: "HG WiFi 5", image: hguWifiImage },
+  { id: 2, name: "HG WiFi 6", image: hguWifiImage },
+  { id: 3, name: "HG WiFi 7", image: hguWifiImage },
+]
+
+const genericModels: ModelOption[] = [
+  { id: 101, name: "Acometida", image: hguWifiImage },
+  { id: 102, name: "Roseta de fibra", image: hguWifiImage },
+  { id: 103, name: "Cable de fibra invisible", image: hguWifiImage },
+]
 
 function ConfirmationDialog({
   open,
@@ -140,7 +181,7 @@ function buildRegisterEntryRequest(
 }
 
 function PreparationArea() {
-  
+
   const [providerId, setProviderId] = useState("")
   const [pendingProviderId, setPendingProviderId] = useState<string | null>(
     null,
@@ -276,7 +317,7 @@ function PreparationArea() {
   )
 
   async function handleScanCode(rawCode: string) {
-    
+
     const normalizedCode = rawCode.trim()
 
     if (selectedProviderId === undefined || !selectedProviderName) {
@@ -313,8 +354,8 @@ function PreparationArea() {
         selectedProviderName,
         selectedProviderId,
       )
-      } catch (error) {
-        handleError(error, "No se pudo identificar el código escaneado.")
+    } catch (error) {
+      handleError(error, "No se pudo identificar el código escaneado.")
     } finally {
       identifyingRef.current = false
     }
@@ -416,25 +457,14 @@ function PreparationArea() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="min-w-0 sm:max-w-sm sm:flex-1">
-              <Select value={providerId} onValueChange={handleProviderChange}>
-                <SelectTrigger
-                  className="h-9 w-full"
-                  disabled={isLoadingProviders || isIdentifying}
-                  aria-label="Proveedor de lectura"
-                >
-                  <Truck className="size-4 text-muted-foreground" />
-                  <SelectValue placeholder="Selecciona un proveedor">
-                    {selectedProvider?.name}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent align="start">
-                  {activeProviders.map((provider) => (
-                    <SelectItem key={provider.id} value={String(provider.id)}>
-                      <span className="font-medium">{provider.name}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ProviderSelect
+                providerId={providerId}
+                providers={activeProviders}
+                selectedProviderName={selectedProvider?.name}
+                isLoading={isLoadingProviders}
+                isIdentifying={isIdentifying}
+                onProviderChange={handleProviderChange}
+              />
             </div>
 
             <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row">
@@ -442,13 +472,12 @@ function PreparationArea() {
                 variant="secondary"
                 role="status"
                 aria-live="polite"
-                className={`h-7 w-full justify-center gap-2 px-3 text-xs font-medium sm:w-auto ${
-                  isIdentifying
-                    ? "bg-blue-50 text-blue-700"
-                    : hasProvider
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-muted text-muted-foreground"
-                }`}
+                className={`h-7 w-full justify-center gap-2 px-3 text-xs font-medium sm:w-auto ${isIdentifying
+                  ? "bg-blue-50 text-blue-700"
+                  : hasProvider
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-muted text-muted-foreground"
+                  }`}
               >
                 {isIdentifying ? (
                   <LoaderCircle className="animate-spin" />
@@ -574,7 +603,459 @@ function PreparationArea() {
   )
 }
 
+
+function WorkflowStep({
+  number,
+  title,
+  last = false,
+  children,
+}: WorkflowStepProps) {
+  return (
+    <StepperItem step={number} className="block! flex-none!">
+      <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-3">
+        <div className="flex flex-col items-center">
+          <StepperIndicator className="text-white bg-black">{number}</StepperIndicator>
+          {!last ? (
+            <StepperSeparator className="m-0! h-auto! min-h-5 flex-1" />
+          ) : null}
+        </div>
+        <div>
+          <StepperTitle className="mb-2 pt-1">{title}</StepperTitle>
+          <div className={last ? undefined : "py-2"}>{children}</div>
+        </div>
+      </div>
+    </StepperItem>
+  )
+}
+
+
+type ProviderSelectProps = {
+  providerId: string
+  providers: { id: number; name: string }[]
+  selectedProviderName?: string
+  isLoading: boolean
+  isIdentifying: boolean
+  onProviderChange: (providerId: string) => void
+}
+
+function ProviderSelect({
+  providerId,
+  providers,
+  selectedProviderName,
+  isLoading,
+  isIdentifying,
+  onProviderChange,
+}: ProviderSelectProps) {
+  return (
+    <Select value={providerId} onValueChange={onProviderChange}>
+      <SelectTrigger
+        className="h-9 w-full"
+        disabled={isLoading || isIdentifying}
+        aria-label="Proveedor de lectura"
+      >
+        <Truck className="size-4 text-muted-foreground" />
+        <SelectValue placeholder="Selecciona un proveedor">
+          {selectedProviderName}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent align="start">
+        {providers.map((provider) => (
+          <SelectItem key={provider.id} value={String(provider.id)}>
+            <span className="font-medium">{provider.name}</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+function ActionSetUp({
+  providerId,
+  providers,
+  selectedProviderName,
+  isLoadingProviders,
+  isIdentifying,
+  onProviderChange,
+}: ProviderSelectProps & { isLoadingProviders: boolean }) {
+  const [selectedSpecificModel, setSelectedSpecificModel] =
+    useState<ModelOption | null>(null)
+  const [selectedGenericModel, setSelectedGenericModel] =
+    useState<ModelOption | null>(null)
+
+  return (
+    <Stepper orientation="vertical" id="elemento-1">
+      <StepperNav className="w-full">
+        <WorkflowStep
+          title="Proveedor"
+          number={1}
+        >
+          <ProviderSelect
+            providerId={providerId}
+            providers={providers}
+            selectedProviderName={selectedProviderName}
+            isLoading={isLoadingProviders}
+            isIdentifying={isIdentifying}
+            onProviderChange={onProviderChange}
+          />
+        </WorkflowStep>
+        <WorkflowStep
+          title="Proveedor"
+          last
+          number={2}
+        >
+          <Tabs defaultValue="proveedor" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="proveedor">Productos</TabsTrigger>
+              <TabsTrigger value="lectura">Genéricos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="proveedor" className="space-y-2">
+              <Label htmlFor="specific-model">Modelo específico</Label>
+              <Combobox
+                items={specificModels}
+                value={selectedSpecificModel}
+                onValueChange={setSelectedSpecificModel}
+                itemToStringValue={(model) => model.name}
+              >
+                <ComboboxTrigger
+                  render={<Button variant="outline" className="h-14 w-full justify-between px-3" />}
+                >
+                  {selectedSpecificModel ? (
+                    <span className="flex items-center gap-3">
+                      <img src={selectedSpecificModel.image} alt="" className="size-9 object-contain" />
+                      {selectedSpecificModel.name}
+                    </span>
+                  ) : (
+                    "Selecciona un modelo específico"
+                  )}
+                </ComboboxTrigger>
+                <ComboboxInput
+                  id="specific-model"
+                  placeholder="Selecciona un modelo específico"
+                  className="w-full"
+                />
+                <ComboboxContent>
+                  <ComboboxEmpty>No se encontraron modelos.</ComboboxEmpty>
+                  <ComboboxList>
+                    {(model) => (
+                      <ComboboxItem key={model.id} value={model} className="gap-3">
+                        <img src={model.image} alt={model.name} className="size-9 rounded-md object-cover" />
+                        <span>{model.name}</span>
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </TabsContent>
+            <TabsContent value="lectura" className="space-y-2">
+              <Label htmlFor="generic-model">Modelo genérico</Label>
+              <Combobox
+                items={genericModels}
+                value={selectedGenericModel}
+                onValueChange={setSelectedGenericModel}
+                itemToStringValue={(model) => model.name}
+              >
+                <ComboboxTrigger
+                  render={<Button variant="outline" className="h-14 w-full justify-between px-3" />}
+                >
+                  {selectedGenericModel ? (
+                    <span className="flex items-center gap-3">
+                      <img src={selectedGenericModel.image} alt="" className="size-9 object-contain" />
+                      {selectedGenericModel.name}
+                    </span>
+                  ) : (
+                    "Selecciona un modelo genérico"
+                  )}
+                </ComboboxTrigger>
+                <ComboboxInput
+                  id="generic-model"
+                  placeholder="Selecciona un modelo genérico"
+                  className="w-full"
+                />
+                <ComboboxContent>
+                  <ComboboxEmpty>No se encontraron modelos.</ComboboxEmpty>
+                  <ComboboxList>
+                    {(model) => (
+                      <ComboboxItem key={model.id} value={model} className="gap-3">
+                        <img src={model.image} alt={model.name} className="size-9 rounded-md object-cover" />
+                        <span>{model.name}</span>
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </TabsContent>
+          </Tabs>
+        </WorkflowStep>
+
+      </StepperNav>
+    </Stepper>
+  )
+}
+
+
 export const EntryPage = () => {
+
+  const desktop = useMediaQuery("(min-width: 1024px)")
+
+  const [providerId, setProviderId] = useState("")
+  const [pendingProviderId, setPendingProviderId] = useState<string | null>(
+    null,
+  )
+  const [specificItems, setSpecificItems] = useState<
+    SpecificEntryDraftItem[]
+  >([])
+  const [genericItems, setGenericItems] = useState<GenericEntryDraftItem[]>([])
+  const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const identifyingRef = useRef(false)
+  const specificItemsRef = useRef<SpecificEntryDraftItem[]>([])
+  const genericItemsRef = useRef<GenericEntryDraftItem[]>([])
+  const notifications = useNotifications()
+  const { handleError } = useGlobalError()
+  const {
+    data: providers = [],
+    isLoading: isLoadingProviders,
+    isError: isProvidersError,
+  } = useGetProvidersQuery()
+  const [identifyProduct, { isLoading: isIdentifying }] =
+    useIdentifyProductMutation()
+  const [registerEntry, { isLoading: isRegistering }] =
+    useRegisterEntryMutation()
+
+  const activeProviders = providers.filter((provider) => provider.active)
+  const selectedProvider = activeProviders.find(
+    (provider) => String(provider.id) === providerId,
+  )
+  const selectedProviderId = selectedProvider?.id
+  const selectedProviderName = selectedProvider?.name
+  const hasProvider = selectedProviderId !== undefined
+  const hasPendingItems = specificItems.length > 0 || genericItems.length > 0
+  const blocker = useBlocker(hasPendingItems)
+
+  const replaceSpecificItems = useCallback(
+    (nextItems: SpecificEntryDraftItem[]) => {
+      specificItemsRef.current = nextItems
+      setSpecificItems(nextItems)
+    },
+    [],
+  )
+
+  const replaceGenericItems = useCallback(
+    (nextItems: GenericEntryDraftItem[]) => {
+      genericItemsRef.current = nextItems
+      setGenericItems(nextItems)
+    },
+    [],
+  )
+
+  const clearPreparation = useCallback(() => {
+    replaceSpecificItems([])
+    replaceGenericItems([])
+  }, [replaceGenericItems, replaceSpecificItems])
+
+  const addIdentificationResult = useCallback(
+    (result: IdentificationResponse, providerName: string, provider: number) => {
+      if (result.productType === "SPECIFIC") {
+        if (!result.uniqueCode || !result.uniqueCodeType) {
+          notifications.error(
+            "La respuesta no contiene el identificador único del producto.",
+          )
+          return
+        }
+
+        const isDuplicate = specificItemsRef.current.some(
+          (item) => item.uniqueCode === result.uniqueCode,
+        )
+
+        if (isDuplicate) {
+          notifications.notify(
+            `El código ${result.uniqueCode} ya está en la preparación.`,
+            "warning",
+          )
+          return
+        }
+
+        replaceSpecificItems([
+          ...specificItemsRef.current,
+          {
+            id: createTemporaryId(),
+            providerId: provider,
+            modelId: result.model.id,
+            identifierId: result.identifier.id,
+            telecommunicationItemId: result.telecommunicationItemId,
+            model: result.model.name,
+            modelIdentifier: result.identifier.code,
+            provider: providerName,
+            uniqueCode: result.uniqueCode,
+            uniqueCodeType: result.uniqueCodeType,
+          },
+        ])
+        notifications.success(`${result.model.name} añadido a la preparación.`)
+        return
+      }
+
+      const existingIndex = genericItemsRef.current.findIndex(
+        (item) =>
+          item.modelId === result.model.id &&
+          item.identifierId === result.identifier.id,
+      )
+
+      if (existingIndex >= 0) {
+        replaceGenericItems(
+          genericItemsRef.current.map((item, index) =>
+            index === existingIndex
+              ? { ...item, quantity: item.quantity + 1 }
+              : item,
+          ),
+        )
+      } else {
+        replaceGenericItems([
+          ...genericItemsRef.current,
+          {
+            id: createTemporaryId(),
+            providerId: provider,
+            modelId: result.model.id,
+            identifierId: result.identifier.id,
+            telecommunicationGenericItemId:
+              result.telecommunicationGenericItemId,
+            model: result.model.name,
+            provider: providerName,
+            identifier: result.identifier.code,
+            identifierType: "Código",
+            quantity: Math.max(1, result.quantity ?? 1),
+          },
+        ])
+      }
+
+      notifications.success(`${result.model.name} añadido a la preparación.`)
+    },
+    [notifications, replaceGenericItems, replaceSpecificItems],
+  )
+
+  async function handleScanCode(rawCode: string) {
+
+    const normalizedCode = rawCode.trim()
+
+    if (selectedProviderId === undefined || !selectedProviderName) {
+      notifications.error(
+        "Selecciona un proveedor antes de utilizar el escáner.",
+      )
+      return
+    }
+
+    if (!normalizedCode) {
+      notifications.error("El código escaneado está vacío.")
+      return
+    }
+
+    if (identifyingRef.current) {
+      notifications.notify(
+        "Espera a que termine la identificación actual.",
+        "warning",
+      )
+      return
+    }
+
+    identifyingRef.current = true
+
+    try {
+      const result = await identifyProduct({
+        operationType: "ENTRY",
+        providerId: selectedProviderId,
+        rawCode: normalizedCode,
+      }).unwrap()
+
+      addIdentificationResult(
+        result,
+        selectedProviderName,
+        selectedProviderId,
+      )
+    } catch (error) {
+      handleError(error, "No se pudo identificar el código escaneado.")
+    } finally {
+      identifyingRef.current = false
+    }
+  }
+
+  useInventoryScanner({ onScanCode: handleScanCode })
+
+  useEffect(() => {
+    if (!hasPendingItems) return
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ""
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [hasPendingItems])
+
+  function handleProviderChange(nextProviderId: string | null) {
+    const normalizedProviderId = nextProviderId ?? ""
+
+    if (normalizedProviderId === providerId) return
+
+    if (hasPendingItems) {
+      setPendingProviderId(normalizedProviderId)
+      return
+    }
+
+    setProviderId(normalizedProviderId)
+  }
+
+  function confirmProviderChange() {
+    if (pendingProviderId === null) return
+
+    clearPreparation()
+    setProviderId(pendingProviderId)
+    setPendingProviderId(null)
+  }
+
+  function removeSpecificItem(id: string) {
+    replaceSpecificItems(
+      specificItemsRef.current.filter((item) => item.id !== id),
+    )
+  }
+
+  function removeGenericItem(id: string) {
+    replaceGenericItems(
+      genericItemsRef.current.filter((item) => item.id !== id),
+    )
+  }
+
+  function changeGenericQuantity(id: string, quantity: number) {
+    if (quantity < 1) return
+
+    replaceGenericItems(
+      genericItemsRef.current.map((item) =>
+        item.id === id ? { ...item, quantity } : item,
+      ),
+    )
+  }
+
+  async function handleRegisterEntry() {
+    const request = buildRegisterEntryRequest(
+      specificItemsRef.current,
+      genericItemsRef.current,
+    )
+
+    if (!request) {
+      notifications.error(
+        "Uno de los productos genéricos no tiene un inventario asociado.",
+      )
+      return
+    }
+
+    try {
+      await registerEntry(request).unwrap()
+      clearPreparation()
+      notifications.success("Entrada registrada correctamente.")
+    } catch (error) {
+      handleError(error, "No se pudo registrar la entrada.")
+    }
+  }
+
+
   return (
     <section className="flex flex-col gap-4" aria-label="Entrada de inventario">
       <InventoryPageHeader
@@ -582,9 +1063,36 @@ export const EntryPage = () => {
         description="Registra los productos que ingresan al inventario."
       />
 
-      <section aria-label="Área de preparación">
-        <PreparationArea />
-      </section>
+      {desktop ? (
+        <ResizablePanelGroup
+          orientation="horizontal"
+          className="h-[calc(100dvh-10rem)] min-h-152 gap-4 overflow-hidden bg-transparent"
+        >
+          <ResizablePanel defaultSize={36} minSize={28}>
+            <ScrollArea className="h-full">
+              <article className="rounded-lg border bg-card p-3">
+                <ActionSetUp
+                  providerId={providerId}
+                  providers={activeProviders}
+                  selectedProviderName={selectedProvider?.name}
+                  isLoading={isLoadingProviders}
+                  isLoadingProviders={isLoadingProviders}
+                  isIdentifying={isIdentifying}
+                  onProviderChange={handleProviderChange}
+                />
+              </article>
+            </ScrollArea>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={64} minSize={40}>
+            <ScrollArea className="h-full">{ }</ScrollArea>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+
+        <></>
+      )}
+
     </section>
   )
 }

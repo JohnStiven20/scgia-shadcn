@@ -387,6 +387,7 @@ function StepperSeparator({ className }: React.ComponentProps<"div">) {
 }
 
 function StepperTitle({ children, className }: React.ComponentProps<"h3">) {
+  
   const { state } = useStepItem()
 
   return (

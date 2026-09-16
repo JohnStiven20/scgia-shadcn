@@ -9,7 +9,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
 } from "@/components/ui/input-group"
 import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react"
 
@@ -63,7 +62,8 @@ function ComboboxInput({
   return (
     <InputGroup className={cn("w-auto", className)}>
       <ComboboxPrimitive.Input
-        render={<InputGroupInput disabled={disabled} />}
+        disabled={disabled}
+        className="flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 outline-none focus-visible:ring-0"
         {...props}
       />
       <InputGroupAddon align="inline-end">

@@ -100,15 +100,15 @@ type ReturnCategory = "SPECIFIC" | "GENERIC"
 
 type ModelOption =
   | {
-      key: string
-      kind: "SPECIFIC"
-      model: AssignmentSpecificModelResponse
-    }
+    key: string
+    kind: "SPECIFIC"
+    model: AssignmentSpecificModelResponse
+  }
   | {
-      key: string
-      kind: "GENERIC"
-      model: AssignmentGenericModelResponse
-    }
+    key: string
+    kind: "GENERIC"
+    model: AssignmentGenericModelResponse
+  }
 
 type PendingContextChange =
   | { kind: "worker"; id: number | null }
@@ -126,7 +126,6 @@ type ConfirmationDialogProps = {
 type WorkflowStepProps = {
   number: number
   title: string
-  open: boolean
   last?: boolean
   children: React.ReactNode
 }
@@ -135,6 +134,8 @@ const initialDraft: ReturnDraft = {
   specificItems: [],
   genericItems: [],
 }
+
+const legacyCategoryContent = false
 
 const dateFormatter = new Intl.DateTimeFormat("es-ES", {
   day: "2-digit",
@@ -219,25 +220,22 @@ function buildReturnOperation(
 function WorkflowStep({
   number,
   title,
-  open,
   last = false,
   children,
 }: WorkflowStepProps) {
   return (
-    <StepperItem step={number} className="!block !flex-none">
+    <StepperItem step={number} className="block! flex-none!">
       <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-3">
         <div className="flex flex-col items-center">
           <StepperIndicator>{number}</StepperIndicator>
           {!last ? (
-            <StepperSeparator className="!m-0 !h-auto min-h-5 flex-1" />
+            <StepperSeparator className="m-0! h-auto! min-h-5 flex-1" />
           ) : null}
         </div>
-        <Collapsible open={open} className="min-w-0">
+        <div className="min-w-0">
           <StepperTitle className="mb-2 pt-1">{title}</StepperTitle>
-          <CollapsibleContent className={last ? undefined : "pb-5"}>
-            {children}
-          </CollapsibleContent>
-        </Collapsible>
+          <div className={last ? undefined : "pb-5"}>{children}</div>
+        </div>
       </div>
     </StepperItem>
   )
@@ -334,15 +332,197 @@ function AssignmentCard({
     <button
       type="button"
       aria-pressed={selected}
-      className={`w-full rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none ${
-        selected
+      className={`w-full rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none ${selected
           ? "border-primary bg-primary/5"
           : "bg-card hover:border-primary/40 hover:bg-muted/30"
-      }`}
+        }`}
       onClick={onSelect}
     >
       {content}
     </button>
+  )
+}
+
+function AssignmentStepContent({
+  assignments,
+  selectedAssignment,
+  isLoading,
+  isError,
+  isFetching,
+  isRegistering,
+  onAssignmentChange,
+}: {
+  assignments: AssignmentSummaryResponse[]
+  selectedAssignment?: AssignmentSummaryResponse
+  isLoading: boolean
+  isError: boolean
+  isFetching: boolean
+  isRegistering: boolean
+  onAssignmentChange: (id: number | null) => void
+}) {
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="h-24 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <Alert variant="destructive">
+        <Info />
+        <AlertTitle>No se pudieron cargar las asignaciones.</AlertTitle>
+        <AlertDescription>
+          Vuelve a intentarlo o selecciona otro trabajador.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  return (
+    <>
+      <Collapsible open={selectedAssignment === undefined}>
+        <CollapsibleContent className="data-open:animate-none! data-closed:animate-none!">
+          {assignments.length > 0 ? (
+            <ScrollArea className="h-68 pr-3">
+              <div className="space-y-2">
+                {assignments.map((assignment) => (
+                  <AssignmentCard
+                    key={assignment.id}
+                    assignment={assignment}
+                    onSelect={() => onAssignmentChange(assignment.id)}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          ) : (
+            <Alert>
+              <Info />
+              <AlertTitle>Sin asignaciones pendientes.</AlertTitle>
+              <AlertDescription>
+                Este trabajador no tiene productos asignados para devolver.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Collapsible open={selectedAssignment !== undefined}>
+        <CollapsibleContent className="data-open:animate-none! data-closed:animate-none!">
+          {selectedAssignment ? (
+            <div className="space-y-2">
+              <AssignmentCard assignment={selectedAssignment} selected />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isRegistering}
+                onClick={() => onAssignmentChange(null)}
+              >
+                <RefreshCcw /> Cambiar asignación
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <LoaderCircle className="animate-spin" />
+              Actualizando asignación...
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+
+      {isFetching ? (
+        <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+          <LoaderCircle className="size-3 animate-spin" /> Actualizando
+        </p>
+      ) : null}
+    </>
+  )
+}
+
+function CategoryStepContent({
+  isLoading,
+  isError,
+  accountMismatch,
+  specificModels,
+  genericModels,
+  category,
+  onSelectCategory,
+}: {
+  isLoading: boolean
+  isError: boolean
+  accountMismatch: boolean
+  specificModels: ModelOption[]
+  genericModels: ModelOption[]
+  category: ReturnCategory | null
+  onSelectCategory: (category: ReturnCategory) => void
+}) {
+  if (isLoading) {
+    return (
+      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <LoaderCircle className="animate-spin" />
+        Cargando productos asignados...
+      </span>
+    )
+  }
+
+  if (isError) {
+    return (
+      <Alert variant="destructive">
+        <Info />
+        <AlertTitle>No se pudo cargar la asignación.</AlertTitle>
+      </Alert>
+    )
+  }
+
+  if (accountMismatch) {
+    return (
+      <Alert variant="destructive">
+        <Info />
+        <AlertTitle>Asignación incompatible.</AlertTitle>
+        <AlertDescription>
+          No pertenece al trabajador seleccionado.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (specificModels.length === 0 && genericModels.length === 0) {
+    return (
+      <Alert>
+        <Info />
+        <AlertTitle>Asignación vacía.</AlertTitle>
+        <AlertDescription>
+          No quedan elementos retornables en esta asignación.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button
+        type="button"
+        variant={category === "SPECIFIC" ? "default" : "outline"}
+        className="w-full"
+        disabled={specificModels.length === 0}
+        onClick={() => onSelectCategory("SPECIFIC")}
+      >
+        <Archive /> Productos ({specificModels.reduce((total, option) => total + option.model.quantity, 0)})
+      </Button>
+      <Button
+        type="button"
+        variant={category === "GENERIC" ? "default" : "outline"}
+        className="w-full"
+        disabled={genericModels.length === 0}
+        onClick={() => onSelectCategory("GENERIC")}
+      >
+        <Package /> Consumibles ({genericModels.reduce((total, option) => total + option.model.quantity, 0)})
+      </Button>
+    </div>
   )
 }
 
@@ -351,8 +531,8 @@ function TableSearch({
   placeholder,
 }: {
   table:
-    | ReactTable<DataTableFeatures, AssignmentSpecificItemResponse>
-    | ReactTable<DataTableFeatures, AssignmentGenericItemResponse>
+  | ReactTable<DataTableFeatures, AssignmentSpecificItemResponse>
+  | ReactTable<DataTableFeatures, AssignmentGenericItemResponse>
   placeholder: string
 }) {
   return (
@@ -722,9 +902,9 @@ export function ReturnPage() {
 
   const detailAccountMismatch = Boolean(
     assignmentDetail &&
-      assignmentDetail.id === assignmentId &&
-      workerId !== null &&
-      assignmentDetail.accountId !== workerId
+    assignmentDetail.id === assignmentId &&
+    workerId !== null &&
+    assignmentDetail.accountId !== workerId
   )
 
   const specificModels = useMemo<ModelOption[]>(() => {
@@ -935,9 +1115,9 @@ export function ReturnPage() {
       const incompatibleLine = draftRef.current.genericItems.find(
         (item) =>
           item.telecommunicationGenericItemId ===
-            source.telecommunicationGenericItemId &&
+          source.telecommunicationGenericItemId &&
           item.assignmentTelecommunicationGenericItemId !==
-            source.assignmentTelecommunicationGenericItemId
+          source.assignmentTelecommunicationGenericItemId
       )
       if (incompatibleLine) {
         notifications.error(
@@ -1057,11 +1237,11 @@ export function ReturnPage() {
       specificItems: current.specificItems.map((item) =>
         item.draftId === draftId
           ? {
-              ...item,
-              evidence: item.evidence.filter(
-                (entry) => entry.localId !== localId
-              ),
-            }
+            ...item,
+            evidence: item.evidence.filter(
+              (entry) => entry.localId !== localId
+            ),
+          }
           : item
       ),
     }))
@@ -1089,11 +1269,11 @@ export function ReturnPage() {
       genericItems: current.genericItems.map((item) =>
         item.draftId === draftId
           ? {
-              ...item,
-              evidence: item.evidence.filter(
-                (entry) => entry.localId !== localId
-              ),
-            }
+            ...item,
+            evidence: item.evidence.filter(
+              (entry) => entry.localId !== localId
+            ),
+          }
           : item
       ),
     }))
@@ -1132,6 +1312,7 @@ export function ReturnPage() {
   ).reduce((total, quantity) => total + quantity, 0)
 
   const desktop = useMediaQuery("(min-width: 1024px)")
+  
   const activeStep =
     workerId === null
       ? 1
@@ -1155,17 +1336,18 @@ export function ReturnPage() {
           <WorkflowStep
             number={1}
             title="Trabajador"
-            open
             last={workerId === null}
           >
-            {workerId === null ? (
-              <Alert className="mb-3 border-primary/20 bg-primary/5 text-primary">
-                <Info />
-                <AlertDescription>
-                  Selecciona un trabajador para continuar.
-                </AlertDescription>
-              </Alert>
-            ) : null}
+            <Collapsible open={workerId === null}>
+              <CollapsibleContent>
+                <Alert className="mb-3 border-primary/20 bg-primary/5 text-primary">
+                  <Info />
+                  <AlertDescription>
+                    Selecciona un trabajador para continuar.
+                  </AlertDescription>
+                </Alert>
+              </CollapsibleContent>
+            </Collapsible>
             <Select
               value={workerId === null ? "" : String(workerId)}
               onValueChange={requestWorkerChange}
@@ -1195,167 +1377,53 @@ export function ReturnPage() {
               </Alert>
             ) : null}
           </WorkflowStep>
+          <Collapsible open={workerId !== null}>
+            <CollapsibleContent>
+              <WorkflowStep
+                number={2}
+                title="Asignaciones"
+                last={assignmentId === null}
+              >
+                <AssignmentStepContent
+                  assignments={assignments}
+                  selectedAssignment={selectedAssignment}
+                  isLoading={isLoadingAssignments}
+                  isError={isAssignmentsError}
+                  isFetching={isFetchingAssignments}
+                  isRegistering={isRegistering}
+                  onAssignmentChange={requestAssignmentChange}
+                />
+              
+              </WorkflowStep>
+            </CollapsibleContent>
+          </Collapsible>
 
-          {workerId !== null ? (
-            <WorkflowStep
-              number={2}
-              title="Asignaciones"
-              open
-              last={assignmentId === null}
-            >
-              {isLoadingAssignments ? (
-                <div className="space-y-2">
-                  {[0, 1, 2].map((item) => (
-                    <div
-                      key={item}
-                      className="h-24 animate-pulse rounded-lg bg-muted"
-                    />
-                  ))}
-                </div>
-              ) : isAssignmentsError ? (
-                <Alert variant="destructive">
-                  <Info />
-                  <AlertTitle>No se pudieron cargar las asignaciones.</AlertTitle>
-                  <AlertDescription>
-                    Vuelve a intentarlo o selecciona otro trabajador.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <>
-                  <Collapsible open={assignmentId === null}>
-                    <CollapsibleContent>
-                      {assignments.length > 0 ? (
-                        <ScrollArea className="h-64 pr-3">
-                          <div className="space-y-2">
-                            {assignments.map((assignment) => (
-                              <AssignmentCard
-                                key={assignment.id}
-                                assignment={assignment}
-                                onSelect={() =>
-                                  requestAssignmentChange(assignment.id)
-                                }
-                              />
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      ) : (
-                        <Alert>
-                          <Info />
-                          <AlertTitle>Sin asignaciones pendientes.</AlertTitle>
-                          <AlertDescription>
-                            Este trabajador no tiene productos asignados para
-                            devolver.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  <Collapsible open={assignmentId !== null}>
-                    <CollapsibleContent>
-                      {selectedAssignment ? (
-                        <div className="space-y-2">
-                          <AssignmentCard
-                            assignment={selectedAssignment}
-                            selected
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={isRegistering}
-                            onClick={() => requestAssignmentChange(null)}
-                          >
-                            <RefreshCcw /> Cambiar asignación
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <LoaderCircle className="animate-spin" />
-                          Actualizando asignación...
-                        </div>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-                </>
-              )}
-
-              {isFetchingAssignments && !isLoadingAssignments ? (
-                <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <LoaderCircle className="size-3 animate-spin" /> Actualizando
-                </p>
-              ) : null}
-            </WorkflowStep>
-          ) : null}
-
-          {assignmentId !== null ? (
-            <WorkflowStep
-              number={3}
-              title="Categoría"
-              open
-              last={category === null}
-            >
-              {isLoadingDetail || isFetchingDetail ? (
-                <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <LoaderCircle className="animate-spin" />
-                  Cargando productos asignados...
-                </span>
-              ) : isDetailError ? (
-                <Alert variant="destructive">
-                  <Info />
-                  <AlertTitle>No se pudo cargar la asignación.</AlertTitle>
-                </Alert>
-              ) : detailAccountMismatch ? (
-                <Alert variant="destructive">
-                  <Info />
-                  <AlertTitle>Asignación incompatible.</AlertTitle>
-                  <AlertDescription>
-                    No pertenece al trabajador seleccionado.
-                  </AlertDescription>
-                </Alert>
-              ) : specificModels.length === 0 && genericModels.length === 0 ? (
-                <Alert>
-                  <Info />
-                  <AlertTitle>Asignación vacía.</AlertTitle>
-                  <AlertDescription>
-                    No quedan elementos retornables en esta asignación.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={category === "SPECIFIC" ? "default" : "outline"}
-                    className="w-full"
-                    disabled={specificModels.length === 0}
-                    onClick={() => selectCategory("SPECIFIC")}
-                  >
-                    <Archive /> Productos ({specificModels.reduce(
-                      (total, option) => total + option.model.quantity,
-                      0
-                    )})
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={category === "GENERIC" ? "default" : "outline"}
-                    className="w-full"
-                    disabled={genericModels.length === 0}
-                    onClick={() => selectCategory("GENERIC")}
-                  >
-                    <Package /> Consumibles ({genericModels.reduce(
-                      (total, option) => total + option.model.quantity,
-                      0
-                    )})
-                  </Button>
-                </div>
-              )}
-            </WorkflowStep>
-          ) : null}
+          <Collapsible open={assignmentId !== null}>
+            <CollapsibleContent>
+              <WorkflowStep
+                number={3}
+                title="Categoría"
+                last={category === null}
+              >
+                <CategoryStepContent
+                  isLoading={isLoadingDetail || isFetchingDetail}
+                  isError={isDetailError}
+                  accountMismatch={detailAccountMismatch}
+                  specificModels={specificModels}
+                  genericModels={genericModels}
+                  category={category}
+                  onSelectCategory={selectCategory}
+                />
+  
+              </WorkflowStep>
+            </CollapsibleContent>
+          </Collapsible>
 
           {category !== null &&
-          !isLoadingDetail &&
-          !isFetchingDetail &&
-          !isDetailError &&
-          !detailAccountMismatch ? (
+            !isLoadingDetail &&
+            !isFetchingDetail &&
+            !isDetailError &&
+            !detailAccountMismatch ? (
             <WorkflowStep
               number={4}
               title={
@@ -1363,14 +1431,13 @@ export function ReturnPage() {
                   ? "Selección de productos"
                   : "Selección de consumibles"
               }
-              open
               last
             >
               <Collapsible open={activeModel === null}>
                 <CollapsibleContent>
                   {categoryModels.length > 0 ? (
                     <ScrollArea className="h-52 pr-3">
-                      <div className="space-y-2">
+                      <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
                         {categoryModels.map((option) => (
                           <Button
                             key={option.key}
@@ -1408,7 +1475,7 @@ export function ReturnPage() {
               <Collapsible open={activeModel !== null}>
                 <CollapsibleContent>
                   {activeModel ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
                       <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 p-2">
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold">
@@ -1556,7 +1623,7 @@ export function ReturnPage() {
       {desktop ? (
         <ResizablePanelGroup
           orientation="horizontal"
-          className="h-[calc(100dvh-10rem)] min-h-[38rem] gap-4 overflow-hidden bg-transparent"
+          className="h-[calc(100dvh-10rem)] min-h-152 gap-4 overflow-hidden bg-transparent"
         >
           <ResizablePanel defaultSize={36} minSize={28}>
             <ScrollArea className="h-full">{workflowPanel}</ScrollArea>

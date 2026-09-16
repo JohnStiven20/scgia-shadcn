@@ -19,10 +19,13 @@ function CollapsibleContent({
   return (
     <CollapsiblePrimitive.Panel
       data-slot="collapsible-content"
-      className="overflow-hidden data-open:animate-accordion-down data-closed:animate-accordion-up"
+      className={cn(
+        "overflow-hidden data-open:animate-collapsible-down data-closed:animate-collapsible-up",
+        className
+      )}
       {...props}
     >
-      <div className={cn("h-(--collapsible-panel-height)", className)}>
+      <div className="h-(--collapsible-panel-height)">
         {children}
       </div>
     </CollapsiblePrimitive.Panel>
