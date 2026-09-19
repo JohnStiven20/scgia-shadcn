@@ -10,10 +10,7 @@ import {
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type {
-  GenericEntryDraftItem,
-  SpecificEntryDraftItem,
-} from "../types"
+import type { GenericEntryDraftItem, SpecificEntryDraftItem } from "../types"
 
 type SpecificIdentifierGroup = {
   identifier: string
@@ -75,7 +72,7 @@ function groupSpecificItems(items: SpecificEntryDraftItem[]) {
     model: group.model,
     identifiers: Array.from(
       group.identifiers,
-      ([identifier, units]): SpecificIdentifierGroup => ({ identifier, units }),
+      ([identifier, units]): SpecificIdentifierGroup => ({ identifier, units })
     ),
     total: group.total,
   }))
@@ -116,11 +113,7 @@ function SpecificModelSection({
           ratio={4 / 3}
           className="w-14 shrink-0 overflow-hidden rounded-md bg-muted"
         >
-          <img
-            src={hguImage}
-            alt=""
-            className="size-full object-contain p-1"
-          />
+          <img src={hguImage} alt="" className="size-full object-contain p-1" />
         </AspectRatio>
         <span className="min-w-0 truncate text-sm font-semibold">
           {group.model}
@@ -157,7 +150,8 @@ function SpecificModelSection({
                 >
                   <Package className="size-3.5 shrink-0 text-muted-foreground" />
                   <span className="truncate text-xs font-medium">
-                    {unit.uniqueCodeType}: {unit.uniqueCode}
+                    {unit.uniqueCodeType ? `${unit.uniqueCodeType}: ` : ""}
+                    {unit.uniqueCode}
                   </span>
                   <Button
                     type="button"
@@ -214,7 +208,7 @@ function GenericModelSection({
                 <span className="mr-2 text-xs font-medium text-muted-foreground">
                   {item.identifierType}
                 </span>
-                <span className="break-all text-xs font-semibold">
+                <span className="text-xs font-semibold break-all">
                   {item.identifier}
                 </span>
               </div>
@@ -307,4 +301,3 @@ export function EntryDraftList({
     </Accordion>
   )
 }
-

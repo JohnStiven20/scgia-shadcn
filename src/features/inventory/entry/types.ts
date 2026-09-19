@@ -10,7 +10,7 @@ export interface SpecificEntryDraftItem {
   modelIdentifier: string
   provider: string
   uniqueCode: string
-  uniqueCodeType: IdentificationUniqueCodeType
+  uniqueCodeType?: IdentificationUniqueCodeType
 }
 
 export interface GenericEntryDraftItem {

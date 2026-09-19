@@ -1,6 +1,6 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithAuth } from "../../../api/rtkBaseQuery";
-import type { PageResponse } from "../../../types/api/page-response";
+import { createApi } from "@reduxjs/toolkit/query/react"
+import { baseQueryWithAuth } from "../../../api/rtkBaseQuery"
+import type { PageResponse } from "../../../types/api/page-response"
 import type {
   CreateIdentifierRequest,
   CreateModelRequest,
@@ -10,7 +10,7 @@ import type {
   TelecommunicationItemModelResponse,
   UpdateIdentifierRequest,
   UpdateModelRequest,
-} from "../../interface/models/types/model.types";
+} from "../../interface/models/types/model.types"
 import type {
   AvailableModelItemsParams,
   ModelIdentifierListResponse,
@@ -18,10 +18,9 @@ import type {
   TelecommunicationItemSelectionResponse,
   TelecommunicationModelSelectionParams,
   TelecommunicationModelSelectionResponse,
-} from "../../interface/models/types/selection.types";
+} from "../../interface/models/types/selection.types"
 
 export const modelsApi = createApi({
-  
   reducerPath: "modelsApi",
   baseQuery: baseQueryWithAuth,
   tagTypes: ["Model", "Provider", "Identifier"],
@@ -181,13 +180,14 @@ export const modelsApi = createApi({
       ],
     }),
   }),
-});
+})
 
 export const {
   useGetModelCatalogQuery,
   useGetProvidersQuery,
   useGetModelIdentifiersQuery,
   useGetTelecommunicationModelsSelectionQuery,
+  useLazyGetTelecommunicationModelsSelectionQuery,
   useGetSelectionModelIdentifiersQuery,
   useGetAvailableModelItemsQuery,
   useCreateModelMutation,
@@ -197,4 +197,4 @@ export const {
   useCreateIdentifierMutation,
   useUpdateIdentifierMutation,
   useDeleteIdentifierMutation,
-} = modelsApi;
+} = modelsApi

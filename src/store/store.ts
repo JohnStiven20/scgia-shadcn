@@ -14,6 +14,8 @@ import { workerContractApi } from "@/features/employees/worker/api/workerContrac
 import { workerDocumentApi } from "@/features/employees/worker/api/workerDocumentApi"
 import { traceabilityApi } from "@/features/inventory/traceability/api/traceabilityApi"
 import { modelsApi } from "@/features/inventory/api/modelsApi"
+import { genericItemApi } from "@/features/inventory/api/generic-items.service"
+import { identifiersApi } from "@/features/inventory/api/identifiers.service"
 import { identificationApi } from "@/features/inventory/api/identificationApi"
 import { operationsApi } from "@/features/inventory/api/operations.service"
 import { assignmentApi } from "@/features/inventory/assignment/api/assignmentApi"
@@ -45,6 +47,8 @@ export const store = configureStore({
     [workerDocumentApi.reducerPath]: workerDocumentApi.reducer,
     [traceabilityApi.reducerPath]: traceabilityApi.reducer,
     [modelsApi.reducerPath]: modelsApi.reducer,
+    [genericItemApi.reducerPath]: genericItemApi.reducer,
+    [identifiersApi.reducerPath]: identifiersApi.reducer,
     [identificationApi.reducerPath]: identificationApi.reducer,
     [operationsApi.reducerPath]: operationsApi.reducer,
     [assignmentApi.reducerPath]: assignmentApi.reducer,
@@ -77,6 +81,8 @@ export const store = configureStore({
       .concat(workerDocumentApi.middleware)
       .concat(traceabilityApi.middleware)
       .concat(modelsApi.middleware)
+      .concat(genericItemApi.middleware)
+      .concat(identifiersApi.middleware)
       .concat(identificationApi.middleware)
       .concat(operationsApi.middleware)
       .concat(assignmentApi.middleware)
