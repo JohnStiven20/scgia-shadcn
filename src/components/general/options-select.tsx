@@ -22,6 +22,7 @@ type OptionsSelectProps<TValue extends OptionValue = string> = {
   name?: string
   placeholder?: string
   className?: string
+  disabled?: boolean
 }
 
 export function OptionsSelect<TValue extends OptionValue = string>({
@@ -33,6 +34,7 @@ export function OptionsSelect<TValue extends OptionValue = string>({
   name,
   placeholder = "Selecciona una opcion",
   className,
+  disabled = false,
 }: OptionsSelectProps<TValue>) {
   const selectedLabel =
     options.find((option) => option.value === value)?.label ?? placeholder
@@ -43,6 +45,7 @@ export function OptionsSelect<TValue extends OptionValue = string>({
       <Select
         name={name}
         value={String(value)}
+        disabled={disabled}
         onValueChange={(nextValue) => {
           const selectedOption = options.find(
             (option) => String(option.value) === nextValue

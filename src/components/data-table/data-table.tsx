@@ -442,7 +442,7 @@ export function DataTable<TData extends RowData>({
 
   return (
     <section
-      className="flex min-w-0 max-w-full flex-col gap-4"
+      className="flex max-w-full min-w-0 flex-col gap-4"
       aria-label={ariaLabel}
       aria-busy={isLoading}
     >
@@ -450,7 +450,7 @@ export function DataTable<TData extends RowData>({
 
       <div
         ref={tableContainerRef}
-        className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-md border"
+        className="max-w-full min-w-0 overflow-x-auto overflow-y-hidden rounded-md border"
       >
         <DndContext
           id={sortableId}

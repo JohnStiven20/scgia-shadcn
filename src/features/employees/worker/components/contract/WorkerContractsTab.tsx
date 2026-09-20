@@ -12,6 +12,9 @@ import { CreateWorkerContractDialog } from "./CreateWorkerContractDialog"
 import { getContractReference } from "./contractPresentation"
 
 type WorkerContractsTabProps = {
+  canCancelContract: boolean
+  canCreateContract: boolean
+  canUpdateContract: boolean
   workerId: number
   workerName: string
   workerDni: string
@@ -20,6 +23,9 @@ type WorkerContractsTabProps = {
 type ContractView = { type: "list" } | { type: "detail"; contractId: number }
 
 export function WorkerContractsTab({
+  canCancelContract,
+  canCreateContract,
+  canUpdateContract,
   workerId,
   workerName,
   workerDni,
@@ -81,14 +87,16 @@ export function WorkerContractsTab({
               </p>
             </div>
 
-            <Button
-              type="button"
-              className="w-fit"
-              disabled={!canFetchContracts}
-              onClick={openCreateDialog}
-            >
-              <Plus /> Crear contrato para este trabajador
-            </Button>
+            {canCreateContract ? (
+              <Button
+                type="button"
+                className="w-fit"
+                disabled={!canFetchContracts}
+                onClick={openCreateDialog}
+              >
+                <Plus /> Crear contrato para este trabajador
+              </Button>
+            ) : null}
           </header>
 
           {isError ? (
@@ -116,6 +124,8 @@ export function WorkerContractsTab({
           contract={selectedContract}
           workerName={workerName}
           workerDni={workerDni}
+          canCancel={canCancelContract}
+          canUpdate={canUpdateContract}
           isDeleting={isDeletingContract}
           onBack={() => setView({ type: "list" })}
           onEdit={handleEditContract}
@@ -123,7 +133,7 @@ export function WorkerContractsTab({
         />
       ) : (
         <div className="rounded-lg border p-5 text-sm text-muted-foreground">
-          El contrato seleccionado ya no está disponible.
+          El contrato seleccionado ya no esta disponible.
           <Button
             type="button"
             variant="link"
@@ -135,28 +145,34 @@ export function WorkerContractsTab({
         </div>
       )}
 
-      <CreateWorkerContractDialog
-        open={isCreateDialogOpen}
-        workerId={workerId}
-        onCreated={handleContractCreated}
-        onOpenChange={handleCreateDialogOpenChange}
-      />
-      <CreateWorkerContractDialog
-        open={isEditDialogOpen}
-        workerId={workerId}
-        contract={contractToEdit}
-        onOpenChange={handleEditDialogOpenChange}
-      />
-      <ConfirmDeleteDialog
-        open={isDeleteDialogOpen}
-        title="Eliminar contrato"
-        subtitle={`¿Seguro que quieres eliminar "${
-          contractToDelete ? getContractReference(contractToDelete) : ""
-        }"?`}
-        loading={isDeletingContract}
-        onClose={handleDeleteDialogClose}
-        onDelete={handleConfirmedDelete}
-      />
+      {canCreateContract ? (
+        <CreateWorkerContractDialog
+          open={isCreateDialogOpen}
+          workerId={workerId}
+          onCreated={handleContractCreated}
+          onOpenChange={handleCreateDialogOpenChange}
+        />
+      ) : null}
+      {canUpdateContract ? (
+        <CreateWorkerContractDialog
+          open={isEditDialogOpen}
+          workerId={workerId}
+          contract={contractToEdit}
+          onOpenChange={handleEditDialogOpenChange}
+        />
+      ) : null}
+      {canCancelContract ? (
+        <ConfirmDeleteDialog
+          open={isDeleteDialogOpen}
+          title="Eliminar contrato"
+          subtitle={`Seguro que quieres eliminar "${
+            contractToDelete ? getContractReference(contractToDelete) : ""
+          }"?`}
+          loading={isDeletingContract}
+          onClose={handleDeleteDialogClose}
+          onDelete={handleConfirmedDelete}
+        />
+      ) : null}
     </section>
   )
 }

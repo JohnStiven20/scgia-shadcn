@@ -38,6 +38,7 @@ import {
   useFindAllVehiclesQuery,
 } from "@/features/fleet/api/apiVehicle"
 import { useSearchVehicleModelsQuery } from "@/features/fleet/api/apiVehicleModel"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import type { CreateVehicleRequest } from "@/features/interface/vehicle/request/create-vehicle-request"
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
 import { FleetPageHeader } from "../../components/InventoryPageHeader"
@@ -670,6 +671,8 @@ function formatDateValue(date: Date) {
 
 export const VehiclesPage = () => {
   const navigate = useNavigate()
+  const { hasPermission } = useAuthAccess()
+  const canCreateVehicle = hasPermission("fleet.vehicle.create")
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const { data: vehicles = [], isLoading, isError } = useFindAllVehiclesQuery()
   const [createVehicle, { isLoading: isCreating }] = useCreateVehicleMutation()
@@ -685,10 +688,12 @@ export const VehiclesPage = () => {
         title="Flota"
         description="Gestiona y supervisa todos los vehículos de tu flota."
         action={
-          <Button type="button" onClick={() => setCreateDialogOpen(true)}>
-            <Plus />
-            Nuevo vehículo
-          </Button>
+          canCreateVehicle ? (
+            <Button type="button" onClick={() => setCreateDialogOpen(true)}>
+              <Plus />
+              Nuevo vehículo
+            </Button>
+          ) : null
         }
       />
 
@@ -720,12 +725,15 @@ export const VehiclesPage = () => {
         />
       </section>
 
-      <CreateVehicleDialog
-        open={createDialogOpen}
-        loading={isCreating}
-        onClose={() => setCreateDialogOpen(false)}
-        onCreate={handleCreateVehicle}
-      />
+      {canCreateVehicle ? (
+        <CreateVehicleDialog
+          open={createDialogOpen}
+          loading={isCreating}
+          onClose={() => setCreateDialogOpen(false)}
+          onCreate={handleCreateVehicle}
+        />
+      ) : null}
     </section>
   )
 }
+

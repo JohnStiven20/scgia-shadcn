@@ -11,21 +11,23 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { WorkerContract } from "@/features/interface/worker-contract/type/worker-contract.interface"
 import { formatCurrency } from "@/utils/currencyUtils"
 import { formatDate } from "@/utils/dateUtils"
-import type { WorkerContract } from "@/features/interface/worker-contract/type/worker-contract.interface"
 
+import { canManageContract, getContractStatus } from "../../utils/contractUtils"
+import { ContractStatusBadge } from "./ContractStatusBadge"
+import { ContractTemplatePreview } from "./ContractTemplatePreview"
 import {
   getContractReference,
   getContractType,
   getSalaryPeriodLabel,
   getSalaryTypeLabel,
 } from "./contractPresentation"
-import { ContractStatusBadge } from "./ContractStatusBadge"
-import { ContractTemplatePreview } from "./ContractTemplatePreview"
-import { canManageContract, getContractStatus } from "../../utils/contractUtils"
 
 type ContractDetailProps = {
+  canCancel: boolean
+  canUpdate: boolean
   contract: WorkerContract
   workerName: string
   workerDni: string
@@ -45,6 +47,8 @@ function ContractDataItem({ label, value }: { label: string; value: string }) {
 }
 
 export function ContractDetail({
+  canCancel,
+  canUpdate,
   contract,
   workerName,
   workerDni,
@@ -94,24 +98,28 @@ export function ContractDetail({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canManage}
-            title={!canManage ? disabledReason : undefined}
-            onClick={() => onEdit(contract)}
-          >
-            <Pencil /> Editar
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canManage || isDeleting}
-            title={!canManage ? disabledReason : undefined}
-            onClick={() => onDelete(contract)}
-          >
-            <Trash2 /> {isDeleting ? "Eliminando..." : "Eliminar"}
-          </Button>
+          {canUpdate ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canManage}
+              title={!canManage ? disabledReason : undefined}
+              onClick={() => onEdit(contract)}
+            >
+              <Pencil /> Editar
+            </Button>
+          ) : null}
+          {canCancel ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canManage || isDeleting}
+              title={!canManage ? disabledReason : undefined}
+              onClick={() => onDelete(contract)}
+            >
+              <Trash2 /> {isDeleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          ) : null}
           <Button
             type="button"
             disabled={!pdfUrl}
@@ -136,11 +144,7 @@ export function ContractDetail({
         </CardHeader>
         <CardContent className="grid gap-x-8 gap-y-5 py-5 sm:grid-cols-3 lg:grid-cols-6">
           <ContractDataItem label="Referencia" value={reference} />
-        
-          <ContractDataItem
-            label="Estado"
-            value={getContractStatus(contract)}
-          />
+          <ContractDataItem label="Estado" value={getContractStatus(contract)} />
           <ContractDataItem
             label="Tipo de contrato"
             value={getContractType(contract)}
@@ -162,7 +166,7 @@ export function ContractDetail({
             value={getSalaryTypeLabel(contract.salaryType)}
           />
           <ContractDataItem
-            label="Período salarial"
+            label="Periodo salarial"
             value={getSalaryPeriodLabel(contract.salaryPeriod)}
           />
           <ContractDataItem
@@ -174,8 +178,8 @@ export function ContractDetail({
             value={formatCurrency(contract.employerCost)}
           />
           <ContractDataItem
-            label="Categoría salarial"
-            value={contract.salaryCategoryName || "Sin categoría"}
+            label="Categoria salarial"
+            value={contract.salaryCategoryName || "Sin categoria"}
           />
           <ContractDataItem
             label="Horas semanales"

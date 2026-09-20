@@ -28,6 +28,9 @@ import { canPreviewDocument, isImageDocument } from "../../utils/documentUtils"
 import { DocumentStatusBadge } from "./DocumentStatusBadge"
 
 type WorkerDocumentDetailPanelProps = {
+  canDeleteDocument: boolean
+  canDownloadDocument: boolean
+  canEditDocument: boolean
   document: WorkerTrainingDocumentViewModel | null
   onBack: () => void
   onEditDocument: () => void
@@ -46,8 +49,10 @@ const infoIcons = [
 ]
 
 function DocumentPreview({
+  canDownloadDocument,
   document,
 }: {
+  canDownloadDocument: boolean
   document: WorkerTrainingDocumentViewModel
 }) {
   const isMobile = useIsMobile()
@@ -128,15 +133,17 @@ function DocumentPreview({
         <p className="text-center text-sm text-muted-foreground">
           Abre el PDF para consultar su contenido completo.
         </p>
-        <a
-          href={document.documentPath}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mx-auto inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          <ExternalLink className="size-4" />
-          Abrir PDF
-        </a>
+        {canDownloadDocument ? (
+          <a
+            href={document.documentPath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mx-auto inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <ExternalLink className="size-4" />
+            Abrir PDF
+          </a>
+        ) : null}
       </article>
     )
   }
@@ -153,6 +160,9 @@ function DocumentPreview({
 }
 
 export function WorkerDocumentDetailPanel({
+  canDeleteDocument,
+  canDownloadDocument,
+  canEditDocument,
   document,
   onBack,
   onEditDocument,
@@ -191,35 +201,41 @@ export function WorkerDocumentDetailPanel({
             {document.documentName}
           </CardTitle>
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              disabled={!canOpen}
-              onClick={() => {
-                if (document.documentPath) {
-                  window.open(
-                    document.documentPath,
-                    "_blank",
-                    "noopener,noreferrer"
-                  )
-                }
-              }}
-            >
-              <ExternalLink />
-              Abrir en nueva ventana
-            </Button>
-            <Button type="button" variant="outline" onClick={onEditDocument}>
-              <Pencil />
-              Editar
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={onDeleteDocument}
-            >
-              <Trash2 />
-              Eliminar
-            </Button>
+            {canDownloadDocument ? (
+              <Button
+                type="button"
+                disabled={!canOpen}
+                onClick={() => {
+                  if (document.documentPath) {
+                    window.open(
+                      document.documentPath,
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
+                }}
+              >
+                <ExternalLink />
+                Abrir en nueva ventana
+              </Button>
+            ) : null}
+            {canEditDocument ? (
+              <Button type="button" variant="outline" onClick={onEditDocument}>
+                <Pencil />
+                Editar
+              </Button>
+            ) : null}
+            {canDeleteDocument ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={onDeleteDocument}
+              >
+                <Trash2 />
+                Eliminar
+              </Button>
+            ) : null}
           </div>
         </CardHeader>
 
@@ -255,7 +271,10 @@ export function WorkerDocumentDetailPanel({
               Vista previa del documento
             </h3>
           </section>
-          <DocumentPreview document={document} />
+          <DocumentPreview
+            document={document}
+            canDownloadDocument={canDownloadDocument}
+          />
         </CardContent>
       </Card>
     </section>

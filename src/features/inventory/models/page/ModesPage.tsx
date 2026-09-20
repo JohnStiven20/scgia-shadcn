@@ -12,6 +12,7 @@ import { useNotifications } from "@/components/notifications/NotificationsProvid
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import { Label } from "@/components/ui/label"
 import {
   InputGroup,
@@ -36,6 +37,7 @@ import type {
 } from "@/features/interface/models/types/model.types"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { InventoryPageHeader } from "../../components"
+import { INVENTORY_PERMISSIONS } from "../../permissions"
 import {
   useCreateIdentifierMutation,
   useCreateModelMutation,
@@ -231,6 +233,7 @@ type ModelsToolbarProps = {
   table: ModelsTable
   providers: ProviderResponse[]
   compact: boolean
+  canCreate: boolean
   onCreate: () => void
 }
 
@@ -245,6 +248,7 @@ function ModelsToolbar({
   table,
   providers,
   compact,
+  canCreate,
   onCreate,
 }: ModelsToolbarProps) {
   const globalFilter = String(table.state.globalFilter ?? "")
@@ -433,10 +437,12 @@ function ModelsToolbar({
             <RotateCcw />
             Limpiar
           </Button>
-          <Button type="button" onClick={onCreate}>
-            <Plus />
-            Nuevo modelo
-          </Button>
+          {canCreate ? (
+            <Button type="button" onClick={onCreate}>
+              <Plus />
+              Nuevo modelo
+            </Button>
+          ) : null}
         </div>
       </div>
     </section>
@@ -463,7 +469,11 @@ function getApiErrorMessage(error: unknown) {
 
 export const ModelsPage = () => {
   const notifications = useNotifications()
+  const { hasPermission } = useAuthAccess()
   const desktop = useMediaQuery("(min-width: 1024px)")
+  const canCreateModel = hasPermission(INVENTORY_PERMISSIONS.MODEL_CREATE)
+  const canUpdateModel = hasPermission(INVENTORY_PERMISSIONS.MODEL_UPDATE)
+  const canDeleteModel = hasPermission(INVENTORY_PERMISSIONS.MODEL_DELETE)
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null)
   const [panelMode, setPanelMode] = useState<SidePanelMode>("CLOSED")
   const [editingIdentifier, setEditingIdentifier] =
@@ -531,6 +541,7 @@ export const ModelsPage = () => {
 
     try {
       if (!selectedModel || panelMode === "CREATE_MODEL") {
+        if (!canCreateModel) return false
         await createModel({
           ...values,
           description: values.description || null,
@@ -539,6 +550,8 @@ export const ModelsPage = () => {
         closePanel()
         return true
       }
+
+      if (!canUpdateModel) return false
 
       if (selectedModel.editable) {
         await partialUpdateModel({
@@ -569,6 +582,7 @@ export const ModelsPage = () => {
 
   const handleSaveIdentifier = async (values: IdentifierFormValues) => {
     if (!selectedModel) return false
+    if (!canUpdateModel) return false
     setPanelError(null)
 
     try {
@@ -598,6 +612,7 @@ export const ModelsPage = () => {
   const handleConfirmModelDelete = async () => {
     if (!selectedModel || !selectedModel.editable || !selectedModel.deletable)
       return
+    if (!canDeleteModel) return
     setPanelError(null)
 
     try {
@@ -611,6 +626,7 @@ export const ModelsPage = () => {
 
   const handleConfirmIdentifierDelete = async () => {
     if (!selectedModel || !identifierToDelete?.mutable) return
+    if (!canUpdateModel) return
     setPanelError(null)
 
     try {
@@ -663,7 +679,9 @@ export const ModelsPage = () => {
                 table={table}
                 providers={providers}
                 compact={panelOpen}
+                canCreate={canCreateModel}
                 onCreate={() => {
+                  if (!canCreateModel) return
                   resetTransientState()
                   setSelectedModelId(null)
                   setPanelMode("CREATE_MODEL")
@@ -692,29 +710,35 @@ export const ModelsPage = () => {
           isLoadingIdentifiers={isLoadingIdentifiers}
           isSubmitting={isSubmitting}
           error={panelError}
+          canCreateModel={canCreateModel}
+          canUpdateModel={canUpdateModel}
+          canDeleteModel={canDeleteModel}
           onClose={closePanel}
           onBackToDetail={backToDetail}
           onCreateIdentifier={() => {
+            if (!canUpdateModel) return
             resetTransientState()
             setPanelMode("CREATE_IDENTIFIER")
           }}
           onEditModel={() => {
+            if (!canUpdateModel) return
             resetTransientState()
             setPanelMode("EDIT_MODEL")
           }}
           onDeleteModel={() => {
+            if (!canDeleteModel) return
             resetTransientState()
             setPanelMode("CONFIRM_MODEL_DELETE")
           }}
           onEditIdentifier={(identifier) => {
-            if (!identifier.mutable) return
+            if (!canUpdateModel || !identifier.mutable) return
             setPanelError(null)
             setIdentifierToDelete(null)
             setEditingIdentifier(identifier)
             setPanelMode("EDIT_IDENTIFIER")
           }}
           onDeleteIdentifier={(identifier) => {
-            if (!identifier.mutable) return
+            if (!canUpdateModel || !identifier.mutable) return
             setPanelError(null)
             setEditingIdentifier(null)
             setIdentifierToDelete(identifier)

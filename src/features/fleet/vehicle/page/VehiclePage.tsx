@@ -10,6 +10,7 @@ import {
   UserRound,
 } from "lucide-react"
 
+import vehicleImage from "@/assets/furgoneta.png"
 import { ConfirmDeleteDialog } from "@/components/general"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import vehicleImage from "@/assets/furgoneta.png"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import {
   useDeleteVehicleMutation,
   useFindVehicleByIdQuery,
@@ -43,7 +44,7 @@ function VehicleBreadcrumb() {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>Detalle del vehículo</BreadcrumbPage>
+          <BreadcrumbPage>Detalle del vehiculo</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -51,10 +52,14 @@ function VehicleBreadcrumb() {
 }
 
 function VehicleDetailsCard({
+  canDelete,
+  canUpdate,
   vehicle,
   onDelete,
   onEdit,
 }: {
+  canDelete: boolean
+  canUpdate: boolean
   vehicle: Vehicle
   onDelete: () => void
   onEdit: () => void
@@ -73,7 +78,7 @@ function VehicleDetailsCard({
           >
             <img
               src={vehicleImage}
-              alt="Imagen del vehículo"
+              alt="Imagen del vehiculo"
               className="absolute inset-0 size-full object-contain"
             />
           </AspectRatio>
@@ -85,13 +90,13 @@ function VehicleDetailsCard({
               {vehicle.internalCode}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {vehicle.brandName} {vehicle.modelName} - Año no disponible
+              {vehicle.brandName} {vehicle.modelName} - Ano no disponible
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
                 className="h-auto gap-0 overflow-hidden rounded-md p-0 text-xs font-normal"
-                aria-label={`Matrícula: ${vehicle.licensePlate || "Sin dato"}`}
+                aria-label={`Matricula: ${vehicle.licensePlate || "Sin dato"}`}
               >
                 <span className="flex min-h-8 w-7 flex-col items-center justify-center bg-blue-600 text-white">
                   <span className="size-1.5 rounded-full bg-yellow-400" />
@@ -106,21 +111,27 @@ function VehicleDetailsCard({
               </span>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 lg:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 />
-              Eliminar
-            </Button>
-            <Button type="button" onClick={onEdit}>
-              <Pencil />
-              Editar
-            </Button>
-          </div>
+          {canDelete || canUpdate ? (
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              {canDelete ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={onDelete}
+                >
+                  <Trash2 />
+                  Eliminar
+                </Button>
+              ) : null}
+              {canUpdate ? (
+                <Button type="button" onClick={onEdit}>
+                  <Pencil />
+                  Editar
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </CardHeader>
         <CardContent>
           <dl className="grid gap-x-8 gap-y-0 sm:grid-cols-2">
@@ -145,7 +156,7 @@ function VehicleDetailsCard({
             />
             <VehicleDetailItem
               icon={<CalendarDays />}
-              label="Primera matriculación"
+              label="Primera matriculacion"
               value={vehicle.firstRegistrationDate || "Sin dato"}
             />
           </dl>
@@ -178,6 +189,17 @@ function VehicleDetailItem({
 export const VehiclePage = () => {
   const navigate = useNavigate()
   const { id } = useParams()
+  const { hasPermission } = useAuthAccess()
+  const canUpdateVehicle = hasPermission("fleet.vehicle.update")
+  const canDeleteVehicle = hasPermission("fleet.vehicle.delete")
+  const canViewLiveTelemetry = hasPermission("fleet.telemetry.live.view")
+  const canViewTelemetryHistory = hasPermission("fleet.telemetry.history.view")
+  const canViewExpirations = hasPermission("fleet.expiration.view")
+  const canCreateExpiration = hasPermission("fleet.expiration.create")
+  const canUpdateExpiration = hasPermission("fleet.expiration.update")
+  const canDeleteExpiration = hasPermission("fleet.expiration.delete")
+  const canViewSettings = hasPermission("fleet.settings.view")
+  const canUpdateSettings = hasPermission("fleet.settings.update")
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const vehicleId = Number(id)
@@ -193,6 +215,8 @@ export const VehiclePage = () => {
   const [deleteVehicle, { isLoading: isDeleting }] = useDeleteVehicleMutation()
 
   async function handleUpdateVehicle(request: UpdateVehicleRequest) {
+    if (!canUpdateVehicle) return
+
     await updateVehicle({
       id: vehicleId,
       request,
@@ -201,63 +225,81 @@ export const VehiclePage = () => {
   }
 
   async function handleDeleteVehicle() {
+    if (!canDeleteVehicle) return
+
     await deleteVehicle({ id: vehicleId }).unwrap()
     navigate("/fleet")
   }
 
   if (!isValidVehicleId) {
     return (
-      <section aria-label="Detalle del vehículo">
-        <p>El identificador del vehículo no es válido.</p>
+      <section aria-label="Detalle del vehiculo">
+        <p>El identificador del vehiculo no es valido.</p>
       </section>
     )
   }
 
   if (isLoading) {
     return (
-      <section aria-label="Detalle del vehículo">
-        <p>Cargando vehículo...</p>
+      <section aria-label="Detalle del vehiculo">
+        <p>Cargando vehiculo...</p>
       </section>
     )
   }
 
   if (isError || !vehicle) {
     return (
-      <section aria-label="Detalle del vehículo">
-        <p>No se pudo cargar el vehículo.</p>
+      <section aria-label="Detalle del vehiculo">
+        <p>No se pudo cargar el vehiculo.</p>
       </section>
     )
   }
 
   return (
-    <section className="flex flex-col gap-4" aria-label="Detalle del vehículo">
+    <section className="flex flex-col gap-4" aria-label="Detalle del vehiculo">
       <VehicleBreadcrumb />
-      <h1 className="text-2xl font-semibold">Detalle del vehículo</h1>
+      <h1 className="text-2xl font-semibold">Detalle del vehiculo</h1>
 
       <VehicleDetailsCard
+        canDelete={canDeleteVehicle}
+        canUpdate={canUpdateVehicle}
         vehicle={vehicle}
         onDelete={() => setDeleteDialogOpen(true)}
         onEdit={() => setEditDialogOpen(true)}
       />
 
-      <VehicleTabs vehicle={vehicle} />
-
-      <VehicleEditDialog
-        open={editDialogOpen}
+      <VehicleTabs
         vehicle={vehicle}
-        loading={isUpdating}
-        onClose={() => setEditDialogOpen(false)}
-        onSubmit={handleUpdateVehicle}
+        canCreateExpiration={canCreateExpiration}
+        canDeleteExpiration={canDeleteExpiration}
+        canUpdateExpiration={canUpdateExpiration}
+        canUpdateSettings={canUpdateSettings}
+        canViewExpirations={canViewExpirations}
+        canViewLiveTelemetry={canViewLiveTelemetry}
+        canViewSettings={canViewSettings}
+        canViewTelemetryHistory={canViewTelemetryHistory}
       />
 
-      <ConfirmDeleteDialog
-        open={deleteDialogOpen}
-        title="Eliminar vehículo"
-        subtitle={`Vas a eliminar el vehículo ${vehicle.internalCode}.`}
-        loading={isDeleting}
-        onClose={() => setDeleteDialogOpen(false)}
-        onDelete={handleDeleteVehicle}
-      />
+      {canUpdateVehicle ? (
+        <VehicleEditDialog
+          open={editDialogOpen}
+          vehicle={vehicle}
+          loading={isUpdating}
+          onClose={() => setEditDialogOpen(false)}
+          onSubmit={handleUpdateVehicle}
+        />
+      ) : null}
+
+      {canDeleteVehicle ? (
+        <ConfirmDeleteDialog
+          open={deleteDialogOpen}
+          title="Eliminar vehiculo"
+          subtitle={`Vas a eliminar el vehiculo ${vehicle.internalCode}.`}
+          loading={isDeleting}
+          onClose={() => setDeleteDialogOpen(false)}
+          onDelete={handleDeleteVehicle}
+        />
+      ) : null}
     </section>
   )
 }

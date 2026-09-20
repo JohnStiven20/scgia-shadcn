@@ -59,10 +59,16 @@ import { downloadFile, formatBytes, formatDate, getFileKind } from "./utils"
 import { useVehicleDocuments } from "../../hooks/useVehicleDocuments"
 
 type VehicleDocumentsSectionProps = {
+  canCreateExpiration: boolean
+  canDeleteExpiration: boolean
+  canUpdateExpiration: boolean
   vehicle: Vehicle
 }
 
 export function VehicleDocumentsSection({
+  canCreateExpiration,
+  canDeleteExpiration,
+  canUpdateExpiration,
   vehicle,
 }: VehicleDocumentsSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -94,6 +100,8 @@ export function VehicleDocumentsSection({
   } = useVehicleDocuments(vehicle.id)
 
   async function handleCreate(request: CreateVehicleDocumentRequest) {
+    if (!canCreateExpiration) return
+
     await createVehicleDocument(request).unwrap()
     setDialogOpen(false)
   }
@@ -102,13 +110,16 @@ export function VehicleDocumentsSection({
     id: number,
     request: UpdateVehicleDocumentRequest
   ) {
+    if (!canUpdateExpiration) return
+
     await updateVehicleDocument({ id, request }).unwrap()
     setDialogOpen(false)
     setEditingDocument(null)
   }
 
   async function handleDelete() {
-    if (!deletingDocument) return
+    if (!canDeleteExpiration || !deletingDocument) return
+
     await deleteVehicleDocument(deletingDocument.id).unwrap()
     setDeletingDocument(null)
   }
@@ -130,15 +141,17 @@ export function VehicleDocumentsSection({
             <Filter />
             Filtrar
           </Button>
-          <Button
-            onClick={() => {
-              setEditingDocument(null)
-              setDialogOpen(true)
-            }}
-          >
-            <Plus />
-            Subir documento
-          </Button>
+          {canCreateExpiration ? (
+            <Button
+              onClick={() => {
+                setEditingDocument(null)
+                setDialogOpen(true)
+              }}
+            >
+              <Plus />
+              Subir documento
+            </Button>
+          ) : null}
         </CardAction>
       </CardHeader>
 
@@ -167,6 +180,7 @@ export function VehicleDocumentsSection({
             selectedDocumentId={selectedDocumentId}
             onRetry={refetch}
             onSelect={setSelectedDocumentId}
+            canCreate={canCreateExpiration}
             onCreate={() => {
               setEditingDocument(null)
               setDialogOpen(true)
@@ -174,6 +188,8 @@ export function VehicleDocumentsSection({
           />
           <DocumentDetail
             document={selectedDocument}
+            canDelete={canDeleteExpiration}
+            canUpdate={canUpdateExpiration}
             onEdit={(document) => {
               setEditingDocument(document)
               setDialogOpen(true)
@@ -183,18 +199,20 @@ export function VehicleDocumentsSection({
         </div>
       </CardContent>
 
-      <VehicleDocumentDialog
-        open={dialogOpen}
-        vehicleId={vehicle.id}
-        document={editingDocument}
-        isSubmitting={isCreating || isUpdating}
-        onClose={() => {
-          setDialogOpen(false)
-          setEditingDocument(null)
-        }}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-      />
+      {(canCreateExpiration || canUpdateExpiration) ? (
+        <VehicleDocumentDialog
+          open={dialogOpen}
+          vehicleId={vehicle.id}
+          document={editingDocument}
+          isSubmitting={isCreating || isUpdating}
+          onClose={() => {
+            setDialogOpen(false)
+            setEditingDocument(null)
+          }}
+          onCreate={handleCreate}
+          onUpdate={handleUpdate}
+        />
+      ) : null}
 
       <FilterDialog
         open={filtersOpen}
@@ -206,18 +224,20 @@ export function VehicleDocumentsSection({
         }}
       />
 
-      <ConfirmDeleteDialog
-        open={Boolean(deletingDocument)}
-        title="Eliminar documento"
-        subtitle={
-          deletingDocument
-            ? `Vas a eliminar "${deletingDocument.title}".`
-            : undefined
-        }
-        loading={isDeleting}
-        onClose={() => setDeletingDocument(null)}
-        onDelete={handleDelete}
-      />
+      {canDeleteExpiration ? (
+        <ConfirmDeleteDialog
+          open={Boolean(deletingDocument)}
+          title="Eliminar documento"
+          subtitle={
+            deletingDocument
+              ? `Vas a eliminar "${deletingDocument.title}".`
+              : undefined
+          }
+          loading={isDeleting}
+          onClose={() => setDeletingDocument(null)}
+          onDelete={handleDelete}
+        />
+      ) : null}
     </Card>
   )
 }
@@ -266,6 +286,7 @@ function DocumentToolbar({
 }
 
 function DocumentList({
+  canCreate,
   groups,
   loading,
   error,
@@ -274,6 +295,7 @@ function DocumentList({
   onSelect,
   onCreate,
 }: {
+  canCreate: boolean
   groups: VehicleDocumentGroupView[]
   loading: boolean
   error: boolean
@@ -316,10 +338,12 @@ function DocumentList({
         title="Sin documentos"
         description="Sube el primer documento asociado a este vehiculo."
         action={
-          <Button onClick={onCreate}>
-            <Plus />
-            Subir documento
-          </Button>
+          canCreate ? (
+            <Button onClick={onCreate}>
+              <Plus />
+              Subir documento
+            </Button>
+          ) : undefined
         }
       />
     )
@@ -420,10 +444,14 @@ function DocumentRow({
 }
 
 function DocumentDetail({
+  canDelete,
+  canUpdate,
   document,
   onEdit,
   onDelete,
 }: {
+  canDelete: boolean
+  canUpdate: boolean
   document: VehicleDocumentListItemView | null
   onEdit: (document: VehicleDocumentListItemView) => void
   onDelete: (document: VehicleDocumentListItemView) => void
@@ -456,27 +484,33 @@ function DocumentDetail({
           </div>
           <DocumentStatusBadge document={document} />
         </div>
-        <CardAction className="flex gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Editar documento"
-            onClick={() => onEdit(document)}
-          >
-            <Pencil />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Eliminar documento"
-            className="text-red-600"
-            onClick={() => onDelete(document)}
-          >
-            <Trash2 />
-          </Button>
-        </CardAction>
+        {canDelete || canUpdate ? (
+          <CardAction className="flex gap-1">
+            {canUpdate ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Editar documento"
+                onClick={() => onEdit(document)}
+              >
+                <Pencil />
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Eliminar documento"
+                className="text-red-600"
+                onClick={() => onDelete(document)}
+              >
+                <Trash2 />
+              </Button>
+            ) : null}
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="grid gap-3">
         <div className="grid gap-2 sm:grid-cols-3">

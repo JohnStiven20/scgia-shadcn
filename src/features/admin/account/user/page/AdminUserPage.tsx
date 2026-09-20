@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import {
   BadgeCheck,
@@ -39,6 +39,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useNotifications } from "@/components/notifications/NotificationsProvider"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import { useGlobalError } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -139,9 +140,11 @@ function AccountBreadcrumb({ account }: { account?: Account }) {
 
 function AccountProfile({
   account,
+  canDelete,
   onDelete,
 }: {
   account: Account
+  canDelete: boolean
   onDelete: () => void
 }) {
   const TypeIcon = ACCOUNT_TYPE_ICONS[account.typeAccount]
@@ -186,15 +189,17 @@ function AccountProfile({
         {account.isactive ? "Activa" : "Inactiva"}
       </Badge>
 
-      <Button
-        type="button"
-        variant="destructive"
-        className="sm:ml-2"
-        onClick={onDelete}
-      >
-        <Trash2 />
-        Eliminar
-      </Button>
+      {canDelete ? (
+        <Button
+          type="button"
+          variant="destructive"
+          className="sm:ml-2"
+          onClick={onDelete}
+        >
+          <Trash2 />
+          Eliminar
+        </Button>
+      ) : null}
     </header>
   )
 }
@@ -210,10 +215,12 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 
 function AccountGeneralTab({
   account,
+  canUpdate,
   isSaving,
   onSubmit,
 }: {
   account: Account
+  canUpdate: boolean
   isSaving: boolean
   onSubmit: (values: AccountFormValues) => Promise<void>
 }) {
@@ -225,6 +232,8 @@ function AccountGeneralTab({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!canUpdate) return
+
     await onSubmit({
       ...values,
       username: values.username.trim(),
@@ -259,7 +268,7 @@ function AccountGeneralTab({
               <Input
                 id="account-detail-username"
                 value={values.username}
-                disabled={isSaving}
+                disabled={!canUpdate || isSaving}
                 onChange={(event) =>
                   setValues((current) => ({
                     ...current,
@@ -274,6 +283,7 @@ function AccountGeneralTab({
               <Label htmlFor="account-detail-type">Tipo de cuenta</Label>
               <Select
                 value={values.typeAccount}
+                disabled={!canUpdate || isSaving}
                 onValueChange={(value) =>
                   setValues((current) => ({
                     ...current,
@@ -298,6 +308,7 @@ function AccountGeneralTab({
               <Label htmlFor="account-detail-status">Estado</Label>
               <Select
                 value={String(values.isactive)}
+                disabled={!canUpdate || isSaving}
                 onValueChange={(value) =>
                   setValues((current) => ({
                     ...current,
@@ -316,15 +327,17 @@ function AccountGeneralTab({
             </div>
           </div>
 
-          <footer className="flex justify-end border-t pt-4">
-            <Button
-              type="submit"
-              disabled={isSaving || !values.username.trim()}
-            >
-              <Save />
-              {isSaving ? "Guardando..." : "Guardar cambios"}
-            </Button>
-          </footer>
+          {canUpdate ? (
+            <footer className="flex justify-end border-t pt-4">
+              <Button
+                type="submit"
+                disabled={isSaving || !values.username.trim()}
+              >
+                <Save />
+                {isSaving ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </footer>
+          ) : null}
         </form>
       </CardContent>
     </Card>
@@ -334,6 +347,7 @@ function AccountGeneralTab({
 function AccountRolesTab({
   account,
   availableRoles,
+  canUpdateRoles,
   selectedRoleIds,
   persistedRoleIds,
   isLoadingRoles,
@@ -343,6 +357,7 @@ function AccountRolesTab({
 }: {
   account: Account
   availableRoles: Role[]
+  canUpdateRoles: boolean
   selectedRoleIds: number[]
   persistedRoleIds: number[]
   isLoadingRoles: boolean
@@ -363,14 +378,16 @@ function AccountRolesTab({
             Marca los roles que tendra esta cuenta y guarda los cambios.
           </p>
         </div>
-        <Button
-          type="button"
-          disabled={!isDirty || isSavingRoles}
-          onClick={() => void onSaveRoles()}
-        >
-          <Save />
-          {isSavingRoles ? "Guardando..." : "Guardar cambios"}
-        </Button>
+        {canUpdateRoles ? (
+          <Button
+            type="button"
+            disabled={!isDirty || isSavingRoles}
+            onClick={() => void onSaveRoles()}
+          >
+            <Save />
+            {isSavingRoles ? "Guardando..." : "Guardar cambios"}
+          </Button>
+        ) : null}
       </CardHeader>
       <CardContent>
         <section className="grid gap-4" aria-label="Roles de la cuenta">
@@ -387,7 +404,7 @@ function AccountRolesTab({
 
           {isLoadingRoles ? (
             <p className="text-sm text-muted-foreground">Cargando roles...</p>
-          ) : availableRoles.length ? (
+          ) : canUpdateRoles && availableRoles.length ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {availableRoles.map((role) => {
                 const assigned = selectedRoleIdsSet.has(role.id)
@@ -401,7 +418,7 @@ function AccountRolesTab({
                       type="checkbox"
                       className="mt-1 size-4 accent-blue-600"
                       checked={assigned}
-                      disabled={isSavingRoles}
+                      disabled={!canUpdateRoles || isSavingRoles}
                       onChange={() => onToggleRole(role.id)}
                     />
                     <span className="min-w-0 flex-1">
@@ -442,10 +459,12 @@ function AccountRolesTab({
 
 function AccountSettingsTab({
   accountId,
+  canUpdateSettings,
   settings,
   isLoading,
 }: {
   accountId: number
+  canUpdateSettings: boolean
   settings: AccountSetting | null
   isLoading: boolean
 }) {
@@ -453,16 +472,23 @@ function AccountSettingsTab({
   const { handleError } = useGlobalError()
   const [updateAccountSettingByAccountId, { isLoading: isSaving }] =
     useUpdateAccountSettingByAccountIdMutation()
-  const defaultValues: AccountSettingUpdateRequest = {
-    darkMode: settings?.darkMode ?? false,
-    emailNotificationsEnabled: settings?.emailNotificationsEnabled ?? false,
-  }
+  const defaultValues = useMemo<AccountSettingUpdateRequest>(
+    () => ({
+      darkMode: settings?.darkMode ?? false,
+      emailNotificationsEnabled: settings?.emailNotificationsEnabled ?? false,
+    }),
+    [settings?.darkMode, settings?.emailNotificationsEnabled]
+  )
   const [values, setValues] =
     useState<AccountSettingUpdateRequest>(defaultValues)
 
   useEffect(() => {
-    setValues(defaultValues)
-  }, [settings?.darkMode, settings?.emailNotificationsEnabled])
+    const timeoutId = window.setTimeout(() => {
+      setValues(defaultValues)
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [defaultValues])
 
   const isDirty =
     values.darkMode !== defaultValues.darkMode ||
@@ -470,6 +496,7 @@ function AccountSettingsTab({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!canUpdateSettings) return
 
     try {
       await updateAccountSettingByAccountId({
@@ -522,7 +549,7 @@ function AccountSettingsTab({
               </span>
               <Switch
                 checked={values.darkMode}
-                disabled={isSaving}
+                disabled={!canUpdateSettings || isSaving}
                 onCheckedChange={(checked) =>
                   setValues((current) => ({
                     ...current,
@@ -546,7 +573,7 @@ function AccountSettingsTab({
               </span>
               <Switch
                 checked={values.emailNotificationsEnabled}
-                disabled={isSaving}
+                disabled={!canUpdateSettings || isSaving}
                 onCheckedChange={(checked) =>
                   setValues((current) => ({
                     ...current,
@@ -557,20 +584,22 @@ function AccountSettingsTab({
             </label>
           </div>
 
-          <footer className="flex flex-wrap justify-end gap-2 border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSaving}
-              onClick={() => setValues(defaultValues)}
-            >
-              Restablecer
-            </Button>
-            <Button type="submit" disabled={!isDirty || isSaving}>
-              <Save />
-              {isSaving ? "Guardando..." : "Guardar configuraciones"}
-            </Button>
-          </footer>
+          {canUpdateSettings ? (
+            <footer className="flex flex-wrap justify-end gap-2 border-t pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSaving}
+                onClick={() => setValues(defaultValues)}
+              >
+                Restablecer
+              </Button>
+              <Button type="submit" disabled={!isDirty || isSaving}>
+                <Save />
+                {isSaving ? "Guardando..." : "Guardar configuraciones"}
+              </Button>
+            </footer>
+          ) : null}
         </form>
       </CardContent>
     </Card>
@@ -583,6 +612,11 @@ export function AdminUserPage() {
   const { id } = useParams()
   const notifications = useNotifications()
   const { handleError } = useGlobalError()
+  const { hasPermission } = useAuthAccess()
+  const canUpdateAccount = hasPermission("account.update")
+  const canDeleteAccount = hasPermission("account.delete")
+  const canUpdateAccountRoles = hasPermission("account.roles.update")
+  const canUpdateAccountSettings = hasPermission("account.settings.update")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([])
   const accountId = Number(id)
@@ -615,10 +649,16 @@ export function AdminUserPage() {
   const persistedRoleIds = accountRoles.map((role) => role.roleId)
 
   useEffect(() => {
-    setSelectedRoleIds(accountRoles.map((role) => role.roleId))
+    const timeoutId = window.setTimeout(() => {
+      setSelectedRoleIds(accountRoles.map((role) => role.roleId))
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [accountRoles])
 
   async function handleUpdateAccount(values: AccountFormValues) {
+    if (!canUpdateAccount) return
+
     try {
       await updateAccount({
         id: accountId,
@@ -631,6 +671,8 @@ export function AdminUserPage() {
   }
 
   async function handleDeleteAccount() {
+    if (!canDeleteAccount) return
+
     try {
       await deleteAccount({ id: accountId }).unwrap()
       notifications.success("Cuenta eliminada correctamente.")
@@ -641,6 +683,8 @@ export function AdminUserPage() {
   }
 
   function handleToggleRole(roleId: number) {
+    if (!canUpdateAccountRoles) return
+
     setSelectedRoleIds((current) =>
       current.includes(roleId)
         ? current.filter((id) => id !== roleId)
@@ -649,6 +693,8 @@ export function AdminUserPage() {
   }
 
   async function handleSaveRoles() {
+    if (!canUpdateAccountRoles) return
+
     try {
       await replaceAccountRoles({
         accountId,
@@ -691,6 +737,7 @@ export function AdminUserPage() {
       <div className="mt-4">
         <AccountProfile
           account={account}
+          canDelete={canDeleteAccount}
           onDelete={() => setDeleteDialogOpen(true)}
         />
       </div>
@@ -719,6 +766,7 @@ export function AdminUserPage() {
         <TabsContent value="general">
           <AccountGeneralTab
             account={account}
+            canUpdate={canUpdateAccount}
             isSaving={isUpdating}
             onSubmit={handleUpdateAccount}
           />
@@ -727,6 +775,7 @@ export function AdminUserPage() {
           <AccountRolesTab
             account={account}
             availableRoles={availableRoles}
+            canUpdateRoles={canUpdateAccountRoles}
             selectedRoleIds={selectedRoleIds}
             persistedRoleIds={persistedRoleIds}
             isLoadingRoles={isLoadingRoles || isLoadingAccountRoles}
@@ -738,20 +787,23 @@ export function AdminUserPage() {
         <TabsContent value="settings">
           <AccountSettingsTab
             accountId={account.id}
+            canUpdateSettings={canUpdateAccountSettings}
             settings={accountSetting ?? null}
             isLoading={isLoadingAccountSetting}
           />
         </TabsContent>
       </Tabs>
 
-      <ConfirmDeleteDialog
-        open={deleteDialogOpen}
-        title="Eliminar cuenta"
-        subtitle={`Vas a eliminar la cuenta ${account.username}.`}
-        loading={isDeleting}
-        onClose={() => setDeleteDialogOpen(false)}
-        onDelete={handleDeleteAccount}
-      />
+      {canDeleteAccount ? (
+        <ConfirmDeleteDialog
+          open={deleteDialogOpen}
+          title="Eliminar cuenta"
+          subtitle={`Vas a eliminar la cuenta ${account.username}.`}
+          loading={isDeleting}
+          onClose={() => setDeleteDialogOpen(false)}
+          onDelete={handleDeleteAccount}
+        />
+      ) : null}
     </article>
   )
 }
