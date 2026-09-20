@@ -23,6 +23,7 @@ import type {
 } from "../../interface/types/workerSettings"
 
 type WorkerSettingsTabProps = {
+  canUpdateSettings: boolean
   workerId: number
   currentAccount?: WorkerSystemAccount | null
 }
@@ -32,6 +33,7 @@ type WorkerAccountFormValues = {
 }
 
 export function WorkerSettingsTab({
+  canUpdateSettings,
   workerId,
   currentAccount = null,
 }: WorkerSettingsTabProps) {
@@ -74,6 +76,10 @@ export function WorkerSettingsTab({
   }, [accountOptions, selectedAccountId])
 
   async function handleSubmit(values: WorkerAccountFormValues) {
+    if (!canUpdateSettings) {
+      return
+    }
+
     const nextAccount =
       accountOptions.find((option) => option.value === values.accountId)
         ?.account ?? null
@@ -95,7 +101,7 @@ export function WorkerSettingsTab({
   }
 
   async function handleUnlinkAccount() {
-    if (!linkedAccount) {
+    if (!canUpdateSettings || !linkedAccount) {
       return
     }
 
@@ -182,29 +188,31 @@ export function WorkerSettingsTab({
               isLoading={isFetchingAccounts}
               emptyText="No hay cuentas disponibles"
               onSearchChange={setAccountSearch}
-              disabled={isAssigningAccount}
+              disabled={!canUpdateSettings || isAssigningAccount}
             />
 
            
 
-            <div className="grid content-start gap-2">
-              <Button
-                type="submit"
-                disabled={!selectedAccount || isAssigningAccount}
-              >
-                <Link2 />
-                {isAssigningAccount ? "Vinculando..." : "Vincular cuenta"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!linkedAccount || isAssigningAccount}
-                onClick={handleUnlinkAccount}
-              >
-                <Unlink />
-                Desvincular
-              </Button>
-            </div>
+            {canUpdateSettings ? (
+              <div className="grid content-start gap-2">
+                <Button
+                  type="submit"
+                  disabled={!selectedAccount || isAssigningAccount}
+                >
+                  <Link2 />
+                  {isAssigningAccount ? "Vinculando..." : "Vincular cuenta"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!linkedAccount || isAssigningAccount}
+                  onClick={handleUnlinkAccount}
+                >
+                  <Unlink />
+                  Desvincular
+                </Button>
+              </div>
+            ) : null}
           </form>
         </CardContent>
       </Card>

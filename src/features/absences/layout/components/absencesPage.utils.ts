@@ -1,10 +1,4 @@
 import type { AbsenceStatus } from "./absencesPage.types"
-
-type PermissionClaims = {
-  permissions?: unknown
-  authorities?: unknown
-}
-
 export function addOneDay(dateString: string) {
   const nextDate = new Date(`${dateString}T00:00:00`)
   nextDate.setDate(nextDate.getDate() + 1)
@@ -99,54 +93,4 @@ export function toInputDate(date: Date) {
 
 export function getDateFromInput(value: string) {
   return new Date(`${value}T12:00:00`)
-}
-
-function getPermissionValues(value: unknown) {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === "string")
-  }
-
-  if (typeof value === "string") {
-    return value.split(/[\s,]+/).filter(Boolean)
-  }
-
-  return []
-}
-
-export function hasPermission(permission: string) {
-  if (typeof window === "undefined") {
-    return false
-  }
-
-  const storedPermissions = window.localStorage.getItem("permissions")
-  if (storedPermissions) {
-    try {
-      const values = getPermissionValues(JSON.parse(storedPermissions))
-      return values.includes(permission) || values.includes("*")
-    } catch {
-      return false
-    }
-  }
-
-  const token =
-    window.localStorage.getItem("token") ??
-    window.sessionStorage.getItem("token")
-  if (!token) {
-    return true
-  }
-
-  try {
-    const payload = token.split(".")[1]
-    const claims = JSON.parse(atob(payload)) as PermissionClaims
-    const values = [
-      ...getPermissionValues(claims.permissions),
-      ...getPermissionValues(claims.authorities),
-    ]
-
-    return (
-      values.length === 0 || values.includes(permission) || values.includes("*")
-    )
-  } catch {
-    return false
-  }
 }

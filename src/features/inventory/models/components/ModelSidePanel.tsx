@@ -76,6 +76,7 @@ function PanelError({ message }: { message: string | null }) {
 type IdentifierListProps = {
   identifiers: TelecommunicationItemModelIdentifierResponse[]
   isLoading: boolean
+  canUpdateModel: boolean
   onEdit: (identifier: TelecommunicationItemModelIdentifierResponse) => void
   onDelete: (identifier: TelecommunicationItemModelIdentifierResponse) => void
 }
@@ -83,6 +84,7 @@ type IdentifierListProps = {
 function IdentifierList({
   identifiers,
   isLoading,
+  canUpdateModel,
   onEdit,
   onDelete,
 }: IdentifierListProps) {
@@ -132,29 +134,31 @@ function IdentifierList({
               {identifier.active ? "Activo" : "Inactivo"}
             </ItemDescription>
           </ItemContent>
-          <ItemActions>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              disabled={!identifier.mutable}
-              onClick={() => onEdit(identifier)}
-              aria-label={`Editar identificador ${identifier.code}`}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              disabled={!identifier.mutable}
-              className="text-destructive hover:text-destructive"
-              onClick={() => onDelete(identifier)}
-              aria-label={`Eliminar identificador ${identifier.code}`}
-            >
-              <Trash2 />
-            </Button>
-          </ItemActions>
+          {canUpdateModel ? (
+            <ItemActions>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                disabled={!identifier.mutable}
+                onClick={() => onEdit(identifier)}
+                aria-label={`Editar identificador ${identifier.code}`}
+              >
+                <Pencil />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                disabled={!identifier.mutable}
+                className="text-destructive hover:text-destructive"
+                onClick={() => onDelete(identifier)}
+                aria-label={`Eliminar identificador ${identifier.code}`}
+              >
+                <Trash2 />
+              </Button>
+            </ItemActions>
+          ) : null}
         </Item>
       ))}
     </ItemGroup>
@@ -163,6 +167,7 @@ function IdentifierList({
 
 type ModelDetailProps = IdentifierListProps & {
   model: TelecommunicationItemModelResponse
+  canDeleteModel: boolean
   onCreateIdentifier: () => void
   onEditModel: () => void
   onDeleteModel: () => void
@@ -172,42 +177,57 @@ function ModelDetail({
   model,
   identifiers,
   isLoading,
+  canUpdateModel,
+  canDeleteModel,
   onCreateIdentifier,
   onEdit,
   onDelete,
   onEditModel,
   onDeleteModel,
 }: ModelDetailProps) {
-  const canDelete = model.editable && model.deletable
+  const canDelete = canDeleteModel && model.editable && model.deletable
 
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap gap-1.5">
-        <Button
-          type="button"
-          size="sm"
-          variant="default"
-          onClick={onCreateIdentifier}
-        >
-          <Plus />
-          Nuevo identificador
-        </Button>
-        <Button type="button" size="sm" variant="default" onClick={onEditModel}>
-          <Pencil />
-          Editar
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="destructive"
-          className="text-destructive hover:text-destructive"
-          disabled={!canDelete}
-          onClick={onDeleteModel}
-        >
-          <Trash2 />
-          Eliminar
-        </Button>
-      </div>
+      {canUpdateModel || canDeleteModel ? (
+        <div className="flex flex-wrap gap-1.5">
+          {canUpdateModel ? (
+            <>
+              <Button
+                type="button"
+                size="sm"
+                variant="default"
+                onClick={onCreateIdentifier}
+              >
+                <Plus />
+                Nuevo identificador
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="default"
+                onClick={onEditModel}
+              >
+                <Pencil />
+                Editar
+              </Button>
+            </>
+          ) : null}
+          {canDeleteModel ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="text-destructive hover:text-destructive"
+              disabled={!canDelete}
+              onClick={onDeleteModel}
+            >
+              <Trash2 />
+              Eliminar
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex items-center gap-3">
         <AspectRatio
@@ -277,6 +297,7 @@ function ModelDetail({
         <IdentifierList
           identifiers={identifiers}
           isLoading={isLoading}
+          canUpdateModel={canUpdateModel}
           onEdit={onEdit}
           onDelete={onDelete}
         />
@@ -630,6 +651,9 @@ type ModelSidePanelProps = {
   isLoadingIdentifiers: boolean
   isSubmitting: boolean
   error: string | null
+  canCreateModel: boolean
+  canUpdateModel: boolean
+  canDeleteModel: boolean
   onClose: () => void
   onBackToDetail: () => void
   onCreateIdentifier: () => void
@@ -760,6 +784,9 @@ function PanelBody(props: ModelSidePanelProps) {
     isLoadingIdentifiers,
     isSubmitting,
     error,
+    canCreateModel,
+    canUpdateModel,
+    canDeleteModel,
     onClose,
     onBackToDetail,
     onCreateIdentifier,
@@ -773,7 +800,7 @@ function PanelBody(props: ModelSidePanelProps) {
     onConfirmIdentifierDelete,
   } = props
 
-  if (mode === "CREATE_MODEL") {
+  if (mode === "CREATE_MODEL" && canCreateModel) {
     return (
       <ModelForm
         key="create-model"
@@ -794,7 +821,7 @@ function PanelBody(props: ModelSidePanelProps) {
     )
   }
 
-  if (mode === "EDIT_MODEL") {
+  if (mode === "EDIT_MODEL" && canUpdateModel) {
     return (
       <ModelForm
         key={`edit-model-${model.id}`}
@@ -809,7 +836,10 @@ function PanelBody(props: ModelSidePanelProps) {
     )
   }
 
-  if (mode === "CREATE_IDENTIFIER" || mode === "EDIT_IDENTIFIER") {
+  if (
+    canUpdateModel &&
+    (mode === "CREATE_IDENTIFIER" || mode === "EDIT_IDENTIFIER")
+  ) {
     return (
       <IdentifierForm
         key={`${mode}-${model.id}-${editingIdentifier?.id ?? "new"}`}
@@ -828,7 +858,7 @@ function PanelBody(props: ModelSidePanelProps) {
     )
   }
 
-  if (mode === "CONFIRM_MODEL_DELETE") {
+  if (mode === "CONFIRM_MODEL_DELETE" && canDeleteModel) {
     return (
       <DeleteConfirmation
         title="Esta acción no se puede deshacer"
@@ -842,7 +872,11 @@ function PanelBody(props: ModelSidePanelProps) {
     )
   }
 
-  if (mode === "CONFIRM_IDENTIFIER_DELETE" && identifierToDelete) {
+  if (
+    mode === "CONFIRM_IDENTIFIER_DELETE" &&
+    canUpdateModel &&
+    identifierToDelete
+  ) {
     return (
       <DeleteConfirmation
         title="Esta acción no se puede deshacer"
@@ -861,6 +895,8 @@ function PanelBody(props: ModelSidePanelProps) {
       model={model}
       identifiers={identifiers}
       isLoading={isLoadingIdentifiers}
+      canUpdateModel={canUpdateModel}
+      canDeleteModel={canDeleteModel}
       onCreateIdentifier={onCreateIdentifier}
       onEditModel={onEditModel}
       onDeleteModel={onDeleteModel}

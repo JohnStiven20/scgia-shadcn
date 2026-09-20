@@ -20,10 +20,20 @@ import { WorkerDocumentDetailPanel } from "./WorkerDocumentDetailPanel"
 import { WorkerDocumentList } from "./WorkerDocumentList"
 
 type WorkerDocumentsTabProps = {
+  canCreateCredential: boolean
+  canDeleteCredential: boolean
+  canDownloadCredential: boolean
+  canUpdateCredential: boolean
   workerId: number
 }
 
-export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
+export function WorkerDocumentsTab({
+  canCreateCredential,
+  canDeleteCredential,
+  canDownloadCredential,
+  canUpdateCredential,
+  workerId,
+}: WorkerDocumentsTabProps) {
   const {
     canFetchDocuments,
     documents,
@@ -67,29 +77,31 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
             Formaciones y documentos
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Cursos, certificados y documentación con vencimiento del trabajador.
+            Cursos, certificados y documentacion con vencimiento del trabajador.
           </p>
         </div>
 
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canFetchDocuments}
-            onClick={openCreateDialog}
-          >
-            <Plus />
-            Añadir curso
-          </Button>
-          <Button
-            type="button"
-            disabled={!canFetchDocuments}
-            onClick={openCreateDialog}
-          >
-            <Upload />
-            Subir documento
-          </Button>
-        </div>
+        {canCreateCredential ? (
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canFetchDocuments}
+              onClick={openCreateDialog}
+            >
+              <Plus />
+              Anadir curso
+            </Button>
+            <Button
+              type="button"
+              disabled={!canFetchDocuments}
+              onClick={openCreateDialog}
+            >
+              <Upload />
+              Subir documento
+            </Button>
+          </div>
+        ) : null}
       </header>
 
       {isListView ? (
@@ -113,11 +125,7 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
             </div>
 
             <div className="w-full min-w-0 md:max-w-sm">
-              <label
-                htmlFor="worker-document-category"
-              >
-                Categoría
-              </label>
+              <label htmlFor="worker-document-category">Categoria</label>
               <Select
                 value={selectedCategory}
                 onValueChange={(value) =>
@@ -131,7 +139,7 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
                   className="h-10 w-full"
                 >
                   <Layers3 className="text-muted-foreground" />
-                  <SelectValue placeholder="Selecciona una categoría">
+                  <SelectValue placeholder="Selecciona una categoria">
                     {categoryOptions.find(
                       (option) => option.key === selectedCategory
                     )?.label ?? "Todos"}
@@ -172,6 +180,9 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
       ) : (
         <WorkerDocumentDetailPanel
           document={selectedDocument}
+          canDeleteDocument={canDeleteCredential}
+          canDownloadDocument={canDownloadCredential}
+          canEditDocument={canUpdateCredential}
           onBack={clearSelectedDocument}
           onEditDocument={() => {
             if (rawSelectedDocument) setDocumentToEdit(rawSelectedDocument)
@@ -182,7 +193,7 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
         />
       )}
 
-      {isCreateDialogOpen ? (
+      {canCreateCredential && isCreateDialogOpen ? (
         <CreateWorkerDocumentDialog
           open={isCreateDialogOpen}
           workerId={workerId}
@@ -190,7 +201,7 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
           onOpenChange={handleCreateDialogOpenChange}
         />
       ) : null}
-      {isEditDialogOpen ? (
+      {canUpdateCredential && isEditDialogOpen ? (
         <CreateWorkerDocumentDialog
           open={isEditDialogOpen}
           workerId={workerId}
@@ -199,16 +210,18 @@ export function WorkerDocumentsTab({ workerId }: WorkerDocumentsTabProps) {
           onOpenChange={handleEditDialogOpenChange}
         />
       ) : null}
-      <ConfirmDeleteDialog
-        open={isDeleteDialogOpen}
-        title="Eliminar documento"
-        subtitle={`¿Seguro que quieres eliminar "${
-          documentToDelete?.trainingTitle || documentToDelete?.fileName || ""
-        }"?`}
-        loading={isDeletingDocument}
-        onClose={handleDeleteDialogClose}
-        onDelete={confirmDeleteDocument}
-      />
+      {canDeleteCredential ? (
+        <ConfirmDeleteDialog
+          open={isDeleteDialogOpen}
+          title="Eliminar documento"
+          subtitle={`Seguro que quieres eliminar "${
+            documentToDelete?.trainingTitle || documentToDelete?.fileName || ""
+          }"?`}
+          loading={isDeletingDocument}
+          onClose={handleDeleteDialogClose}
+          onDelete={confirmDeleteDocument}
+        />
+      ) : null}
     </section>
   )
 }

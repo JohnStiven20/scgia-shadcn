@@ -19,48 +19,109 @@ import { VehicleSettingsSection } from "./settings/VehicleSettingsSection"
 import { VehicleTelemetryHistoryTab } from "./VehicleTelemetryHistoryTab"
 import { VehicleTelemetryTab } from "./telemetry/VehicleTelemetryTab"
 
-export function VehicleTabs({ vehicle }: { vehicle: Vehicle }) {
+type VehicleTabsProps = {
+  canCreateExpiration: boolean
+  canDeleteExpiration: boolean
+  canUpdateExpiration: boolean
+  canUpdateSettings: boolean
+  canViewExpirations: boolean
+  canViewLiveTelemetry: boolean
+  canViewSettings: boolean
+  canViewTelemetryHistory: boolean
+  vehicle: Vehicle
+}
+
+export function VehicleTabs({
+  canCreateExpiration,
+  canDeleteExpiration,
+  canUpdateExpiration,
+  canUpdateSettings,
+  canViewExpirations,
+  canViewLiveTelemetry,
+  canViewSettings,
+  canViewTelemetryHistory,
+  vehicle,
+}: VehicleTabsProps) {
   return (
     <Tabs defaultValue="datos" className="gap-4">
-      <VehicleTabsList />
+      <VehicleTabsList
+        canViewExpirations={canViewExpirations}
+        canViewLiveTelemetry={canViewLiveTelemetry}
+        canViewSettings={canViewSettings}
+        canViewTelemetryHistory={canViewTelemetryHistory}
+      />
 
       <TabsContent value="datos">
         <VehicleDataTab vehicle={vehicle} />
       </TabsContent>
-      <TabsContent value="telemetria">
-        <VehicleTelemetryTab vehicle={vehicle} />
-      </TabsContent>
-      <TabsContent value="historial-telemetria">
-        <VehicleTelemetryHistoryTab vehicleId={vehicle.id} vehicle={vehicle} />
-      </TabsContent>
-      <TabsContent value="documentos">
-        <VehicleDocumentsSection vehicle={vehicle} />
-      </TabsContent>
-      <TabsContent value="ajustes">
-        <VehicleSettingsSection vehicle={vehicle} />
-      </TabsContent>
+      {canViewLiveTelemetry ? (
+        <TabsContent value="telemetria">
+          <VehicleTelemetryTab vehicle={vehicle} />
+        </TabsContent>
+      ) : null}
+      {canViewTelemetryHistory ? (
+        <TabsContent value="historial-telemetria">
+          <VehicleTelemetryHistoryTab vehicleId={vehicle.id} vehicle={vehicle} />
+        </TabsContent>
+      ) : null}
+      {canViewExpirations ? (
+        <TabsContent value="documentos">
+          <VehicleDocumentsSection
+            vehicle={vehicle}
+            canCreateExpiration={canCreateExpiration}
+            canDeleteExpiration={canDeleteExpiration}
+            canUpdateExpiration={canUpdateExpiration}
+          />
+        </TabsContent>
+      ) : null}
+      {canViewSettings ? (
+        <TabsContent value="ajustes">
+          <VehicleSettingsSection
+            vehicle={vehicle}
+            canUpdateSettings={canUpdateSettings}
+          />
+        </TabsContent>
+      ) : null}
     </Tabs>
   )
 }
 
-function VehicleTabsList() {
+function VehicleTabsList({
+  canViewExpirations,
+  canViewLiveTelemetry,
+  canViewSettings,
+  canViewTelemetryHistory,
+}: {
+  canViewExpirations: boolean
+  canViewLiveTelemetry: boolean
+  canViewSettings: boolean
+  canViewTelemetryHistory: boolean
+}) {
   return (
     <TabsList className="h-10 w-full justify-start overflow-x-auto sm:h-8">
       <VehicleTabsTrigger value="datos" icon={<Car />}>
-        Datos del vehículo
+        Datos del vehiculo
       </VehicleTabsTrigger>
-      <VehicleTabsTrigger value="telemetria" icon={<Gauge />}>
-        Telemetría
-      </VehicleTabsTrigger>
-      <VehicleTabsTrigger value="historial-telemetria" icon={<History />}>
-        Historial
-      </VehicleTabsTrigger>
-      <VehicleTabsTrigger value="documentos" icon={<FileText />}>
-        Documentos
-      </VehicleTabsTrigger>
-      <VehicleTabsTrigger value="ajustes" icon={<SlidersHorizontal />}>
-        Ajustes
-      </VehicleTabsTrigger>
+      {canViewLiveTelemetry ? (
+        <VehicleTabsTrigger value="telemetria" icon={<Gauge />}>
+          Telemetria
+        </VehicleTabsTrigger>
+      ) : null}
+      {canViewTelemetryHistory ? (
+        <VehicleTabsTrigger value="historial-telemetria" icon={<History />}>
+          Historial
+        </VehicleTabsTrigger>
+      ) : null}
+      {canViewExpirations ? (
+        <VehicleTabsTrigger value="documentos" icon={<FileText />}>
+          Documentos
+        </VehicleTabsTrigger>
+      ) : null}
+      {canViewSettings ? (
+        <VehicleTabsTrigger value="ajustes" icon={<SlidersHorizontal />}>
+          Ajustes
+        </VehicleTabsTrigger>
+      ) : null}
     </TabsList>
   )
 }
@@ -96,32 +157,32 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
     <Card className="border-border/80 py-4 [--card-spacing:--spacing(4)]">
       <CardHeader className="gap-1">
         <CardTitle className="text-xl font-semibold">
-          Datos del vehículo
+          Datos del vehiculo
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Información registrada del vehículo y su operación actual.
+          Informacion registrada del vehiculo y su operacion actual.
         </p>
       </CardHeader>
       <CardContent>
         <div className="grid gap-3 lg:grid-cols-3">
           <VehicleInfoSection
             icon={<ClipboardList />}
-            title="Identificación"
+            title="Identificacion"
             rows={[
-              ["Código interno", valueOrFallback(vehicle.internalCode)],
-              ["Matrícula", valueOrFallback(vehicle.licensePlate)],
+              ["Codigo interno", valueOrFallback(vehicle.internalCode)],
+              ["Matricula", valueOrFallback(vehicle.licensePlate)],
               ["VIN", valueOrFallback(vehicle.vin)],
               [
                 "Kilometraje inicial",
                 formatKilometers(vehicle.initialOdometer),
               ],
-              ["Odómetro actual", formatKilometers(vehicle.currentOdometer)],
+              ["Odometro actual", formatKilometers(vehicle.currentOdometer)],
               [
-                "Primera matriculación",
+                "Primera matriculacion",
                 valueOrFallback(vehicle.firstRegistrationDate),
               ],
               [
-                "Dispositivo telemático",
+                "Dispositivo telematico",
                 valueOrFallback(
                   vehicle.telemetryDeviceIdentifier,
                   "Sin dispositivo"
@@ -132,7 +193,7 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
               <div className="mt-3 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
                 <Info className="mt-0.5 size-4 shrink-0" />
                 <span>
-                  El kilometraje mostrado corresponde al último valor disponible
+                  El kilometraje mostrado corresponde al ultimo valor disponible
                   en el sistema.
                 </span>
               </div>
@@ -141,12 +202,12 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
 
           <VehicleInfoSection
             icon={<Car />}
-            title="Características del vehículo"
+            title="Caracteristicas del vehiculo"
             rows={[
               ["Marca", valueOrFallback(vehicle.brandName)],
               ["Modelo", valueOrFallback(vehicle.modelName)],
               ["Tipo", "Furgoneta"],
-              ["Combustible", "Combustión"],
+              ["Combustible", "Combustion"],
               [
                 "Disponibilidad",
                 <AvailabilityBadge
@@ -154,21 +215,21 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
                   available={vehicle.available}
                 />,
               ],
-              ["Categoría operativa", "Transporte ligero"],
+              ["Categoria operativa", "Transporte ligero"],
               ["Color", valueOrFallback(vehicle.color, "Sin definir")],
             ]}
           />
 
           <VehicleInfoSection
             icon={<Settings />}
-            title="Gestión y operación"
+            title="Gestion y operacion"
             rows={[
               ["Estado", <StatusBadge key="status" status={vehicle.status} />],
               ["Empleado asignado", workerName || "Sin asignar"],
               ["Proveedor", "Sin proveedor"],
               [
-                "Almacén",
-                valueOrFallback(vehicle.warehouseName, "Sin almacén"),
+                "Almacen",
+                valueOrFallback(vehicle.warehouseName, "Sin almacen"),
               ],
               ["Centro de coste", "Sin definir"],
               ["Asignado desde", "Sin registro"],

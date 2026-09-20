@@ -52,6 +52,7 @@ import {
   useGetAbsenceRequestsByWorkerIdQuery,
 } from "@/features/absences/api/absenceRequestApi"
 import { useGetAbsenceTypesQuery } from "@/features/absences/api/absenceTypeApi"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import { useGlobalError } from "@/hooks"
 import { useNotifications } from "@/components/notifications/NotificationsProvider"
 import type { AbsenceRequestResponse } from "@/features/interface/absence-request/response/absence-request-response"
@@ -103,11 +104,6 @@ type EditAbsenceDialogProps = {
   isSubmitting: boolean
 }
 
-type PermissionClaims = {
-  permissions?: unknown
-  authorities?: unknown
-}
-
 function getInputDate(value: string) {
   if (!value) return undefined
 
@@ -136,52 +132,6 @@ function isImageFile(file: File) {
 function getFileMetadata(file: File) {
   const extension = file.name.split(".").pop()?.toUpperCase() ?? "FILE"
   return `${extension} · ${formatFileSize(file.size)}`
-}
-
-function getPermissionValues(value: unknown) {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === "string")
-  }
-
-  if (typeof value === "string") {
-    return value.split(/[\s,]+/).filter(Boolean)
-  }
-
-  return []
-}
-
-function hasPermission(permission: string) {
-  if (typeof window === "undefined") return false
-
-  const storedPermissions = window.localStorage.getItem("permissions")
-  if (storedPermissions) {
-    try {
-      const values = getPermissionValues(JSON.parse(storedPermissions))
-      return values.includes(permission) || values.includes("*")
-    } catch {
-      return false
-    }
-  }
-
-  const token =
-    window.localStorage.getItem("token") ??
-    window.sessionStorage.getItem("token")
-  if (!token) return true
-
-  try {
-    const payload = token.split(".")[1]
-    const claims = JSON.parse(atob(payload)) as PermissionClaims
-    const values = [
-      ...getPermissionValues(claims.permissions),
-      ...getPermissionValues(claims.authorities),
-    ]
-
-    return (
-      values.length === 0 || values.includes(permission) || values.includes("*")
-    )
-  } catch {
-    return false
-  }
 }
 
 function formatFileSize(size: number) {
@@ -873,7 +823,8 @@ export function MyAbsencesPage() {
     useCreateAbsenceRequestMutation()
   const { handleError } = useGlobalError()
   const { success } = useNotifications()
-  const canCreateOwnAbsence = hasPermission("absence.own.create")
+  const { hasPermission: hasAuthPermission } = useAuthAccess()
+  const canCreateOwnAbsence = hasAuthPermission("absence.own.create")
 
   async function handleEditSubmit(values: AbsenceFormValues) {
     if (
@@ -917,17 +868,19 @@ export function MyAbsencesPage() {
         title="Mis ausencias"
         description="Consulta y gestiona todas tus solicitudes de ausencia."
         action={
-          <Button
-            type="button"
-            disabled={!canCreateOwnAbsence || isCreating}
-            onClick={() => {
-              setEditingAbsenceId(null)
-              setEditDialogOpen(true)
-            }}
-          >
-            <Pencil />
-            Solicitar ausencia
-          </Button>
+          canCreateOwnAbsence ? (
+            <Button
+              type="button"
+              disabled={isCreating}
+              onClick={() => {
+                setEditingAbsenceId(null)
+                setEditDialogOpen(true)
+              }}
+            >
+              <Pencil />
+              Solicitar ausencia
+            </Button>
+          ) : null
         }
       />
 

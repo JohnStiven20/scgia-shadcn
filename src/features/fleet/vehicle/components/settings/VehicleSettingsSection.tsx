@@ -22,10 +22,12 @@ import {
 } from "./utils"
 
 type VehicleSettingsSectionProps = {
+  canUpdateSettings: boolean
   vehicle: Vehicle
 }
 
 export function VehicleSettingsSection({
+  canUpdateSettings,
   vehicle,
 }: VehicleSettingsSectionProps) {
   const initialSettings = useMemo(
@@ -49,10 +51,16 @@ export function VehicleSettingsSection({
   const hasChanges = hasVehicleSettingsChanged(formState, initialSettings)
 
   useEffect(() => {
-    setFormState(initialSettings)
+    const timeoutId = window.setTimeout(() => {
+      setFormState(initialSettings)
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [initialSettings])
 
   async function handleSave() {
+    if (!canUpdateSettings) return
+
     try {
       setError(null)
       await updateVehicleSettings({
@@ -90,6 +98,7 @@ export function VehicleSettingsSection({
             id="vehicle-worker"
             value={formState.workerId ?? UNASSIGNED_WORKER_ID}
             options={workerOptions}
+            disabled={!canUpdateSettings}
             onChange={(workerId) => {
               setFormState((current) => ({
                 ...current,
@@ -107,6 +116,7 @@ export function VehicleSettingsSection({
           <div className="flex items-center gap-3">
             <Switch
               checked={formState.available}
+              disabled={!canUpdateSettings}
               onCheckedChange={(available) => {
                 setFormState((current) => ({ ...current, available }))
               }}
@@ -129,29 +139,31 @@ export function VehicleSettingsSection({
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          disabled={isLoading || !hasChanges}
-          onClick={() => {
-            setError(null)
-            setFormState(initialSettings)
-          }}
-        >
-          Restablecer
-        </Button>
-        <Button
-          type="button"
-          size="lg"
-          disabled={isLoading || !hasChanges}
-          onClick={handleSave}
-          className="bg-neutral-950 text-white hover:bg-neutral-800"
-        >
-          {isLoading ? "Guardando..." : "Guardar"}
-        </Button>
-      </div>
+      {canUpdateSettings ? (
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={isLoading || !hasChanges}
+            onClick={() => {
+              setError(null)
+              setFormState(initialSettings)
+            }}
+          >
+            Restablecer
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            disabled={isLoading || !hasChanges}
+            onClick={handleSave}
+            className="bg-neutral-950 text-white hover:bg-neutral-800"
+          >
+            {isLoading ? "Guardando..." : "Guardar"}
+          </Button>
+        </div>
+      ) : null}
     </section>
   )
 }

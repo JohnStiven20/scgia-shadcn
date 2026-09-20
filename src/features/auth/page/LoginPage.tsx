@@ -82,10 +82,12 @@ export function LoginPage() {
     }
 
     try {
-      await login({
+      const pdd  =  await login({
         username: normalizedUsername,
         password,
       }).unwrap()
+
+      console.log(pdd);
 
       await loadCurrentAccount().unwrap()
       navigate(from, { replace: true })

@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import { useGlobalError } from "@/hooks"
 import type { Permission } from "@/features/interface/permission/type/permission-base"
 import type { Role } from "@/features/interface/role/type/role-base"
@@ -84,6 +85,7 @@ function isPermissionsDirty(
 }
 
 function RoleList({
+  canCreateRole,
   roles,
   totalRoles,
   selectedRoleId,
@@ -93,6 +95,7 @@ function RoleList({
   onSelectRole,
   onCreateRole,
 }: {
+  canCreateRole: boolean
   roles: Role[]
   totalRoles: number
   selectedRoleId: number | null
@@ -112,10 +115,12 @@ function RoleList({
               {isFetching ? "Actualizando roles..." : "Gestion de accesos"}
             </p>
           </div>
-          <Button type="button" size="sm" onClick={onCreateRole}>
-            <Plus />
-            Nuevo
-          </Button>
+          {canCreateRole ? (
+            <Button type="button" size="sm" onClick={onCreateRole}>
+              <Plus />
+              Nuevo
+            </Button>
+          ) : null}
         </div>
         <div className="relative mt-3">
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -271,11 +276,13 @@ function ModuleSelector({
 }
 
 function PermissionGroup({
+  canUpdatePermissions,
   group,
   permissionSelection,
   isSaving,
   onTogglePermission,
 }: {
+  canUpdatePermissions: boolean
   group: AuthorizationCatalogGroup
   permissionSelection: Record<string, boolean>
   isSaving: boolean
@@ -304,7 +311,7 @@ function PermissionGroup({
                 type="checkbox"
                 className="mt-1 size-4 accent-blue-600"
                 checked={checked}
-                disabled={isSaving}
+                disabled={!canUpdatePermissions || isSaving}
                 onChange={() => onTogglePermission(permission.id)}
               />
               <span className="min-w-0">
@@ -327,6 +334,9 @@ function PermissionGroup({
 }
 
 function RolePermissionsPanel({
+  canDeleteRole,
+  canUpdatePermissions,
+  canUpdateRole,
   selectedRole,
   selectedModule,
   authorizationCatalog,
@@ -342,6 +352,9 @@ function RolePermissionsPanel({
   onEditRole,
   onDeleteRole,
 }: {
+  canDeleteRole: boolean
+  canUpdatePermissions: boolean
+  canUpdateRole: boolean
   selectedRole: Role | null
   selectedModule: AuthorizationCatalogModule | null
   authorizationCatalog: AuthorizationCatalogModule[]
@@ -385,29 +398,37 @@ function RolePermissionsPanel({
             {selectedRole.description || "Sin descripcion"}
           </p>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onEditRole}>
-            <Pencil />
-            Editar rol
-          </Button>
-          <Button type="button" variant="destructive" onClick={onDeleteRole}>
-            <Trash2 />
-            Eliminar
-          </Button>
-          <Button
-            type="button"
-            disabled={
-              !isPermissionsDirty ||
-              isSavingPermissions ||
-              isLoadingPermissions ||
-              isLoadingCatalog
-            }
-            onClick={onSavePermissions}
-          >
-            <Save />
-            {isSavingPermissions ? "Guardando..." : "Guardar cambios"}
-          </Button>
-        </div>
+        {canDeleteRole || canUpdatePermissions || canUpdateRole ? (
+          <div className="flex flex-wrap justify-end gap-2">
+            {canUpdateRole ? (
+              <Button type="button" variant="outline" onClick={onEditRole}>
+                <Pencil />
+                Editar rol
+              </Button>
+            ) : null}
+            {canDeleteRole ? (
+              <Button type="button" variant="destructive" onClick={onDeleteRole}>
+                <Trash2 />
+                Eliminar
+              </Button>
+            ) : null}
+            {canUpdatePermissions ? (
+              <Button
+                type="button"
+                disabled={
+                  !isPermissionsDirty ||
+                  isSavingPermissions ||
+                  isLoadingPermissions ||
+                  isLoadingCatalog
+                }
+                onClick={onSavePermissions}
+              >
+                <Save />
+                {isSavingPermissions ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </CardHeader>
       <CardContent>
         <section className="grid gap-4" aria-label="Permisos del rol">
@@ -443,6 +464,7 @@ function RolePermissionsPanel({
               {selectedModule.groups.map((group) => (
                 <PermissionGroup
                   key={group.code}
+                  canUpdatePermissions={canUpdatePermissions}
                   group={group}
                   permissionSelection={permissionSelection}
                   isSaving={isSavingPermissions}
@@ -460,6 +482,11 @@ function RolePermissionsPanel({
 export function AdminRolesPage() {
   const notifications = useNotifications()
   const { handleError } = useGlobalError()
+  const { hasPermission } = useAuthAccess()
+  const canCreateRole = hasPermission("role.create")
+  const canUpdateRole = hasPermission("role.update")
+  const canUpdateRolePermissions = hasPermission("role.permissions.update")
+  const canDeleteRole = hasPermission("role.delete")
   const [search, setSearch] = useState("")
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null)
   const [selectedModuleCode, setSelectedModuleCode] = useState<string | null>(
@@ -580,15 +607,34 @@ export function AdminRolesPage() {
     useReplaceRolePermissionsMutation()
 
   useEffect(() => {
+    let timeoutId: number | undefined
+
     if (!selectedRole && selectedRoleId !== null) {
-      setSelectedRoleId(null)
+      timeoutId = window.setTimeout(() => {
+        setSelectedRoleId(null)
+      }, 0)
+    }
+
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
     }
   }, [selectedRole, selectedRoleId])
 
   useEffect(() => {
+    let timeoutId: number | undefined
+
     if (authorizationCatalog.length === 0) {
-      setSelectedModuleCode(null)
-      return
+      timeoutId = window.setTimeout(() => {
+        setSelectedModuleCode(null)
+      }, 0)
+
+      return () => {
+        if (timeoutId !== undefined) {
+          window.clearTimeout(timeoutId)
+        }
+      }
     }
 
     const hasSelectedModule = authorizationCatalog.some(
@@ -596,14 +642,31 @@ export function AdminRolesPage() {
     )
 
     if (!hasSelectedModule) {
-      setSelectedModuleCode(authorizationCatalog[0].code)
+      timeoutId = window.setTimeout(() => {
+        setSelectedModuleCode(authorizationCatalog[0].code)
+      }, 0)
+    }
+
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
     }
   }, [authorizationCatalog, selectedModuleCode])
 
   useEffect(() => {
+    let timeoutId: number | undefined
+
     if (authorizationCatalog.length === 0) {
-      setPermissionSelection({})
-      return
+      timeoutId = window.setTimeout(() => {
+        setPermissionSelection({})
+      }, 0)
+
+      return () => {
+        if (timeoutId !== undefined) {
+          window.clearTimeout(timeoutId)
+        }
+      }
     }
 
     const nextSelection = Object.fromEntries(
@@ -618,16 +681,28 @@ export function AdminRolesPage() {
       )
     )
 
-    setPermissionSelection(nextSelection)
+    timeoutId = window.setTimeout(() => {
+      setPermissionSelection(nextSelection)
+    }, 0)
+
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
+    }
   }, [assignedPermissionKeys, authorizationCatalog, selectedRole?.id])
 
   function handleOpenCreateRole() {
+    if (!canCreateRole) return
+
     setRoleFormMode("create")
     setRoleFormValues(emptyRoleFormValues)
     setIsRoleDialogOpen(true)
   }
 
   function handleOpenEditRole(role?: Role | null) {
+    if (!canUpdateRole) return
+
     const targetRole = role ?? selectedRole
 
     if (!targetRole) {
@@ -644,6 +719,8 @@ export function AdminRolesPage() {
   }
 
   function handleOpenDeleteRole(role?: Role | null) {
+    if (!canDeleteRole) return
+
     const targetRole = role ?? selectedRole
 
     if (!targetRole) {
@@ -655,6 +732,9 @@ export function AdminRolesPage() {
   }
 
   async function handleSubmitRole() {
+    if (roleFormMode === "create" && !canCreateRole) return
+    if (roleFormMode === "edit" && !canUpdateRole) return
+
     const name = roleFormValues.name.trim()
     const description = roleFormValues.description.trim()
 
@@ -686,7 +766,7 @@ export function AdminRolesPage() {
   }
 
   async function handleDeleteSelectedRole() {
-    if (!selectedRole) {
+    if (!canDeleteRole || !selectedRole) {
       return
     }
 
@@ -700,6 +780,8 @@ export function AdminRolesPage() {
   }
 
   function handleTogglePermission(permissionId: number) {
+    if (!canUpdateRolePermissions) return
+
     setPermissionSelection((current) => ({
       ...current,
       [String(permissionId)]: !current[String(permissionId)],
@@ -707,7 +789,7 @@ export function AdminRolesPage() {
   }
 
   async function handleSaveRolePermissions() {
-    if (!selectedRole) {
+    if (!canUpdateRolePermissions || !selectedRole) {
       return
     }
 
@@ -743,14 +825,17 @@ export function AdminRolesPage() {
             Gestiona roles, permisos y accesos por modulo.
           </p>
         </section>
-        <Button type="button" onClick={handleOpenCreateRole}>
-          <Plus />
-          Nuevo rol
-        </Button>
+        {canCreateRole ? (
+          <Button type="button" onClick={handleOpenCreateRole}>
+            <Plus />
+            Nuevo rol
+          </Button>
+        ) : null}
       </header>
 
       <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)_250px]">
         <RoleList
+          canCreateRole={canCreateRole}
           roles={filteredRoles}
           totalRoles={roles.length}
           selectedRoleId={selectedRole?.id ?? null}
@@ -762,6 +847,9 @@ export function AdminRolesPage() {
         />
 
         <RolePermissionsPanel
+          canDeleteRole={canDeleteRole}
+          canUpdatePermissions={canUpdateRolePermissions}
+          canUpdateRole={canUpdateRole}
           selectedRole={selectedRole}
           selectedModule={selectedModule}
           authorizationCatalog={authorizationCatalog}
@@ -786,28 +874,32 @@ export function AdminRolesPage() {
         />
       </div>
 
-      <RoleDialog
-        open={isRoleDialogOpen}
-        mode={roleFormMode}
-        values={roleFormValues}
-        isSubmitting={isCreatingRole || isUpdatingRole}
-        onClose={() => setIsRoleDialogOpen(false)}
-        onChange={setRoleFormValues}
-        onSubmit={() => void handleSubmitRole()}
-      />
+      {(canCreateRole || canUpdateRole) ? (
+        <RoleDialog
+          open={isRoleDialogOpen}
+          mode={roleFormMode}
+          values={roleFormValues}
+          isSubmitting={isCreatingRole || isUpdatingRole}
+          onClose={() => setIsRoleDialogOpen(false)}
+          onChange={setRoleFormValues}
+          onSubmit={() => void handleSubmitRole()}
+        />
+      ) : null}
 
-      <ConfirmDeleteDialog
-        open={isDeleteDialogOpen}
-        title="Eliminar rol"
-        subtitle={
-          selectedRole
-            ? `Si eliminas "${selectedRole.name}", dejara de estar disponible.`
-            : undefined
-        }
-        loading={isDeletingRole}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onDelete={handleDeleteSelectedRole}
-      />
+      {canDeleteRole ? (
+        <ConfirmDeleteDialog
+          open={isDeleteDialogOpen}
+          title="Eliminar rol"
+          subtitle={
+            selectedRole
+              ? `Si eliminas "${selectedRole.name}", dejara de estar disponible.`
+              : undefined
+          }
+          loading={isDeletingRole}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onDelete={handleDeleteSelectedRole}
+        />
+      ) : null}
     </section>
   )
 }

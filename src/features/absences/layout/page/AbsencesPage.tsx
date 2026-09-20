@@ -8,6 +8,7 @@ import {
   useGetCalendarVisibleAbsenceRequestsByRangeQuery,
   useRejectAbsenceRequestMutation,
 } from "@/features/absences/api/absenceRequestApi"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import type { AbsenceRequestResponse } from "@/features/interface/absence-request/response/absence-request-response"
 import { useGlobalError } from "@/hooks"
 
@@ -26,10 +27,7 @@ import type {
   CalendarViewMode,
   VisibleRange,
 } from "../components/absencesPage.types"
-import {
-  hasPermission,
-  subtractOneDay,
-} from "../components/absencesPage.utils"
+import { subtractOneDay } from "../components/absencesPage.utils"
 
 export function AbsencesPage() {
   const calendarRef = useRef<FullCalendar | null>(null)
@@ -52,6 +50,7 @@ export function AbsencesPage() {
     useApproveAbsenceRequestMutation()
   const [rejectAbsenceRequest, { isLoading: isRejecting }] =
     useRejectAbsenceRequestMutation()
+  const { hasPermission } = useAuthAccess()
   const canApproveAbsence = hasPermission("absence.management.approve")
   const canRejectAbsence = hasPermission("absence.management.reject")
   const isResolutionLoading = isApproving || isRejecting

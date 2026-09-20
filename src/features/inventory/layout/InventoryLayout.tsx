@@ -1,13 +1,11 @@
-
-
 import { Outlet } from "react-router-dom"
 import { layoutConfig } from "@/config/layout"
-import { EmployeesTopNav } from "@/features/employees/layout/components/EmployeesTopNav"
+import { InventoryTopNav } from "./InventoryTopNav"
 
 export const InventoryLayout = () => {
   return (
     <>
-      <EmployeesTopNav />
+      <InventoryTopNav />
       <main className={`${layoutConfig.content} min-w-0`}>
         <Outlet />
       </main>

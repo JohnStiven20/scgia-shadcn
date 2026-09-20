@@ -1,6 +1,6 @@
 import type { RouteObject } from "react-router-dom"
-import { Navigate } from "react-router-dom"
 import { PermissionRoute } from "@/features/auth/components/PermissionRoute"
+import { AbsencesIndexRedirect } from "@/features/absences/layout/AbsencesIndexRedirect"
 import { AbsencesLayout } from "@/features/absences/layout/AbsencesLayout"
 import { AbsenceTypesPage } from "@/features/absences/absence-type/page/AbsenceTypesPage"
 import { MyAbsencesPage } from "@/features/absences/my-absences/page/MyAbsencesPage"
@@ -13,19 +13,15 @@ const anyOf = (...permissions: string[]): PermissionRule => ({
 })
 
 const absencesModuleRule = anyOf(
-  // "absence.own.view",
-  // "absence.management.view",
-  // "absence.type.view"
+  "absence.own.view",
+  "absence.management.view",
+  "absence.type.view"
 )
-// const myAbsencesRule = anyOf("absence.own.view")
-const myAbsencesRule = anyOf()
+const myAbsencesRule = anyOf("absence.own.view")
 
-// const absenceRequestsRule = anyOf("absence.management.view")
-const absenceRequestsRule = anyOf()
+const absenceRequestsRule = anyOf("absence.management.view")
 
-// const absenceTypesRule = anyOf("absence.type.view")
-const absenceTypesRule = anyOf()
-
+const absenceTypesRule = anyOf("absence.type.view")
 
 export const absencesRoutes: RouteObject = {
   path: "absences",
@@ -35,7 +31,7 @@ export const absencesRoutes: RouteObject = {
     </PermissionRoute>
   ),
   children: [
-    { index: true, element: <Navigate to="my-absences" replace /> },
+    { index: true, element: <AbsencesIndexRedirect /> },
     {
       path: "my-absences",
       element: (
