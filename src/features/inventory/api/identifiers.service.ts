@@ -3,9 +3,14 @@ import { createApi } from "@reduxjs/toolkit/query/react"
 
 const OPERATION_BASE_URL = "/telecommunication-item-model-identifier"
 
+
+// TODO: Consume un recurso no muy recomendado, pero bueno para mirar
+// el futuro
 export interface IdentifierResponse {
-  identifierId: number
-  identifierCode: string
+  active: boolean
+  code: string
+  id: number,
+  mutable: boolean
 }
 
 export const identifiersApi = createApi({

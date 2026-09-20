@@ -8,7 +8,7 @@ export const InventoryLayout = () => {
   return (
     <>
       <EmployeesTopNav />
-      <main className={`${layoutConfig.content} min-w-0`}>
+      <main className={`${layoutConfig.wide} min-w-0`}>
         <Outlet />
       </main>
     </>

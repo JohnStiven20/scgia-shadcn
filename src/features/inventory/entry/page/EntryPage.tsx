@@ -233,13 +233,7 @@ function ModelCombobox({
   )
 }
 
-function createTemporaryId() {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
-    return globalThis.crypto.randomUUID()
-  }
 
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
-}
 
 function buildRegisterEntryRequest(
   specificItems: SpecificEntryDraftItem[],
@@ -269,283 +263,36 @@ function buildRegisterEntryRequest(
   }
 }
 
-function PreparationArea() {
+type PreparationAreaProps = {
+  hasProvider: boolean
+  hasPendingItems: boolean
+  isIdentifying: boolean
+  isRegistering: boolean
+  specificItems: SpecificEntryDraftItem[]
+  genericItems: GenericEntryDraftItem[]
+  onRequestClear: () => void
+  onRemoveSpecificItem: (id: string) => void
+  onRemoveGenericItem: (id: string) => void
+  onChangeGenericQuantity: (id: string, quantity: number) => void
+  onRegisterEntry: () => void
+}
 
-
-  const [providerId, setProviderId] = useState("")
-  const [pendingProviderId, setPendingProviderId] = useState<string | null>(
-    null
-  )
-  const [productType, setProductType] = useState<ProductType | null>(null)
-  const [selectedModel, setSelectedModel] = useState<FlowModel | null>(null)
-  const [selectedIdentifier, setSelectedIdentifier] =
-    useState<IdentifierResponse | null>(null)
-  const [uniqueCode, setUniqueCode] = useState("")
-  const [genericQuantity, setGenericQuantity] = useState(1)
-  const [specificItems, setSpecificItems] = useState<SpecificEntryDraftItem[]>(
-    []
-  )
-  const [genericItems, setGenericItems] = useState<GenericEntryDraftItem[]>([])
-  const [clearDialogOpen, setClearDialogOpen] = useState(false)
-  const identifyingRef = useRef(false)
-  const specificItemsRef = useRef<SpecificEntryDraftItem[]>([])
-  const genericItemsRef = useRef<GenericEntryDraftItem[]>([])
-  const notifications = useNotifications()
-  const { handleError } = useGlobalError()
-  const {
-    data: providers = [],
-    isLoading: isLoadingProviders,
-    isError: isProvidersError,
-  } = useGetProvidersQuery()
-  const [loadSpecificModels, specificModelsResult] =
-    useLazyGetTelecommunicationModelsSelectionQuery()
-  const [loadGenericItems, genericItemsResult] = useLazyGenericItemsQuery()
-  const [loadIdentifiers, identifiersResult] = useLazyIdentifiersQuery()
-  const [identifyProduct, { isLoading: isIdentifying }] =
-    useIdentifyProductMutation()
-  const [registerEntry, { isLoading: isRegistering }] =
-    useRegisterEntryMutation()
-
-  const activeProviders = providers.filter((provider) => provider.active)
-  const selectedProvider = activeProviders.find(
-    (provider) => String(provider.id) === providerId
-  )
-  const selectedProviderId = selectedProvider?.id
-  const selectedProviderName = selectedProvider?.name
-  const hasProvider = selectedProviderId !== undefined
-  const hasPendingItems = specificItems.length > 0 || genericItems.length > 0
-  const blocker = useBlocker(hasPendingItems)
-  const modelsLoading =
-    specificModelsResult.isFetching || genericItemsResult.isFetching
-  const activeStep = !hasProvider
-    ? 1
-    : !productType
-      ? 2
-      : !selectedModel
-        ? 3
-        : !selectedIdentifier
-          ? 4
-          : 5
-  const specificModelOptions: FlowModel[] = (
-    specificModelsResult.data ?? []
-  ).map((model) => ({ modelId: model.id, name: model.name }))
-  const genericModelOptions: FlowModel[] = (genericItemsResult.data ?? []).map(
-    (item: GenericItemResponse) => ({
-      modelId: item.modelId,
-      name: item.genericItemName,
-      genericItemId: item.genericItemId,
-    })
-  )
-  const modelOptions =
-    productType === "SPECIFIC" ? specificModelOptions : genericModelOptions
-
-  const replaceSpecificItems = useCallback(
-    (nextItems: SpecificEntryDraftItem[]) => {
-      specificItemsRef.current = nextItems
-      setSpecificItems(nextItems)
-    },
-    []
-  )
-  const replaceGenericItems = useCallback(
-    (nextItems: GenericEntryDraftItem[]) => {
-      genericItemsRef.current = nextItems
-      setGenericItems(nextItems)
-    },
-    []
-  )
-  const resetFlow = useCallback(() => {
-    setProductType(null)
-    setSelectedModel(null)
-    setSelectedIdentifier(null)
-    setUniqueCode("")
-    setGenericQuantity(1)
-  }, [])
-  const clearPreparation = useCallback(() => {
-    replaceSpecificItems([])
-    replaceGenericItems([])
-    resetFlow()
-  }, [replaceGenericItems, replaceSpecificItems, resetFlow])
-
-  const addIdentificationResult = useCallback(
-    (
-      result: IdentificationResponse,
-      providerName: string,
-      provider: number
-    ) => {
-      if (result.productType === "SPECIFIC") {
-        if (!result.uniqueCode || !result.uniqueCodeType) {
-          notifications.error(
-            "La respuesta no contiene el identificador único del producto."
-          )
-          return
-        }
-        if (
-          specificItemsRef.current.some(
-            (item) => item.uniqueCode === result.uniqueCode
-          )
-        ) {
-          notifications.notify(
-            `El código ${result.uniqueCode} ya está en la preparación.`,
-            "warning"
-          )
-          return
-        }
-        replaceSpecificItems([
-          ...specificItemsRef.current,
-          {
-            id: createTemporaryId(),
-            providerId: provider,
-            modelId: result.model.id,
-            identifierId: result.identifier.id,
-            telecommunicationItemId: result.telecommunicationItemId,
-            model: result.model.name,
-            modelIdentifier: result.identifier.code,
-            provider: providerName,
-            uniqueCode: result.uniqueCode,
-            uniqueCodeType: result.uniqueCodeType,
-          },
-        ])
-        notifications.success(`${result.model.name} añadido a la preparación.`)
-        return
-      }
-
-      const existingIndex = genericItemsRef.current.findIndex(
-        (item) =>
-          item.modelId === result.model.id &&
-          item.identifierId === result.identifier.id &&
-          item.telecommunicationGenericItemId ===
-          result.telecommunicationGenericItemId
-      )
-      if (existingIndex >= 0) {
-        replaceGenericItems(
-          genericItemsRef.current.map((item, index) =>
-            index === existingIndex
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          )
-        )
-      } else {
-        replaceGenericItems([
-          ...genericItemsRef.current,
-          {
-            id: createTemporaryId(),
-            providerId: provider,
-            modelId: result.model.id,
-            identifierId: result.identifier.id,
-            telecommunicationGenericItemId:
-              result.telecommunicationGenericItemId,
-            model: result.model.name,
-            provider: providerName,
-            identifier: result.identifier.code,
-            identifierType: "Código",
-            quantity: Math.max(1, result.quantity ?? 1),
-          },
-        ])
-      }
-      notifications.success(`${result.model.name} añadido a la preparación.`)
-    },
-    [notifications, replaceGenericItems, replaceSpecificItems]
-  )
-
-  async function handleScanCode(rawCode: string) {
-    const normalizedCode = rawCode.trim()
-    if (selectedProviderId === undefined || !selectedProviderName) {
-      notifications.error(
-        "Selecciona un proveedor antes de utilizar el escáner."
-      )
-      return
-    }
-    if (!normalizedCode) {
-      notifications.error("El código escaneado está vacío.")
-      return
-    }
-    if (identifyingRef.current) {
-      notifications.notify(
-        "Espera a que termine la identificación actual.",
-        "warning"
-      )
-      return
-    }
-
-    identifyingRef.current = true
-    try {
-      const result = await identifyProduct({
-        operationType: "ENTRY",
-        providerId: selectedProviderId,
-        rawCode: normalizedCode,
-      }).unwrap()
-      addIdentificationResult(result, selectedProviderName, selectedProviderId)
-    } catch (error) {
-      handleError(error, "No se pudo identificar el código escaneado.")
-    } finally {
-      identifyingRef.current = false
-    }
-  }
-
-  useInventoryScanner({ onScanCode: handleScanCode })
-
-  useEffect(() => {
-    if (!hasPendingItems) return
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      event.returnValue = ""
-    }
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
-  }, [hasPendingItems])
-
-
-  function confirmProviderChange() {
-    if (pendingProviderId === null) return
-    clearPreparation()
-    setProviderId(pendingProviderId)
-    setPendingProviderId(null)
-  }
-
-  function removeSpecificItem(id: string) {
-    replaceSpecificItems(
-      specificItemsRef.current.filter((item) => item.id !== id)
-    )
-  }
-
-  function removeGenericItem(id: string) {
-    replaceGenericItems(
-      genericItemsRef.current.filter((item) => item.id !== id)
-    )
-  }
-
-  function changeGenericQuantity(id: string, quantity: number) {
-    if (quantity < 1) return
-    replaceGenericItems(
-      genericItemsRef.current.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    )
-  }
-
-  async function handleRegisterEntry() {
-    const request = buildRegisterEntryRequest(
-      specificItemsRef.current,
-      genericItemsRef.current
-    )
-    if (!request) {
-      notifications.error(
-        "Uno de los productos genéricos no tiene un inventario asociado."
-      )
-      return
-    }
-    try {
-      await registerEntry(request).unwrap()
-      clearPreparation()
-      notifications.success("Entrada registrada correctamente.")
-    } catch (error) {
-      handleError(error, "No se pudo registrar la entrada.")
-    }
-  }
-
+function PreparationArea({
+  hasProvider,
+  hasPendingItems,
+  isIdentifying,
+  isRegistering,
+  specificItems,
+  genericItems,
+  onRequestClear,
+  onRemoveSpecificItem,
+  onRemoveGenericItem,
+  onChangeGenericQuantity,
+  onRegisterEntry,
+}: PreparationAreaProps) {
   return (
     <>
-      <article className="self-start h-fit rounded-xl border bg-card p-3 sm:p-4">
+      <article className="flex w-full min-w-0 flex-col rounded-xl border bg-card p-3 sm:p-4 min-h-146.25 lg:flex-2">
 
         <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -585,7 +332,7 @@ function PreparationArea() {
               variant="destructive"
               size="sm"
               disabled={!hasPendingItems || isIdentifying}
-              onClick={() => setClearDialogOpen(true)}
+              onClick={onRequestClear}
             >
               <Trash2 />
               Limpiar área
@@ -593,77 +340,48 @@ function PreparationArea() {
           </aside>
         </header>
 
-        {hasPendingItems ? (
-          <EntryDraftList
-            productItems={specificItems}
-            genericItems={genericItems}
-            onRemoveProduct={removeSpecificItem}
-            onRemoveGeneric={removeGenericItem}
-            onChangeGenericQuantity={changeGenericQuantity}
-          />
-        ) : (
-          <Empty className="mt-5 rounded-lg border border-dashed border-primary/20 bg-background px-4 py-6">
-            <EmptyHeader className="max-w-lg gap-2">
-              <EmptyMedia
-                variant="default"
-                className="mb-1 flex size-14 items-center justify-center rounded-full bg-primary/5 text-primary/70"
-              >
-                <Package className="size-7 stroke-[1.4]" />
-              </EmptyMedia>
-              <EmptyTitle className="text-sm font-semibold">
-                Listo para añadir productos
-              </EmptyTitle>
-              <EmptyDescription className="text-center text-xs">
-                {hasProvider
-                  ? "Completa el flujo o escanea un producto para comenzar la preparación."
-                  : "Selecciona un proveedor para activar el flujo y el escáner."}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
+        <section className="flex flex-col flex-1 gap-2 h-100">
+          {hasPendingItems ? (
+            <EntryDraftList
+              productItems={specificItems}
+              genericItems={genericItems}
+              onRemoveProduct={onRemoveSpecificItem}
+              onRemoveGeneric={onRemoveGenericItem}
+              onChangeGenericQuantity={onChangeGenericQuantity}
+            />
+          ) : (
+            <Empty className="mt-5 rounded-lg border border-dashed border-primary/20 bg-background px-4 py-6 flex-1">
+              <EmptyHeader className="max-w-lg gap-2">
+                <EmptyMedia
+                  variant="default"
+                  className="mb-1 flex size-14 items-center justify-center rounded-full bg-primary/5 text-primary/70"
+                >
+                  <Package className="size-7 stroke-[1.4]" />
+                </EmptyMedia>
+                <EmptyTitle className="text-sm font-semibold">
+                  Listo para añadir productos
+                </EmptyTitle>
+                <EmptyDescription className="text-center text-xs">
+                  {hasProvider
+                    ? "Completa el flujo o escanea un producto para comenzar la preparación."
+                    : "Selecciona un proveedor para activar el flujo y el escáner."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
 
-        <Button
-          type="button"
-          className="mt-4 w-full"
-          disabled={!hasPendingItems || isIdentifying || isRegistering}
-          onClick={() => void handleRegisterEntry()}
-        >
-          <Package />
-          {isRegistering ? "Registrando entrada..." : "Registrar entrada"}
-        </Button>
+          <Button
+            type="button"
+            className="mt-4 w-full"
+            disabled={!hasPendingItems || isIdentifying || isRegistering}
+            onClick={onRegisterEntry}
+          >
+            <Package />
+            {isRegistering ? "Registrando entrada..." : "Registrar entrada"}
+          </Button>
+        </section>
       </article>
 
-      <ConfirmationDialog
-        open={clearDialogOpen}
-        title="Limpiar área de preparación"
-        description="Se eliminarán todos los productos preparados. Esta acción no se puede deshacer."
-        confirmLabel="Limpiar área"
-        onCancel={() => setClearDialogOpen(false)}
-        onConfirm={() => {
-          clearPreparation()
-          setClearDialogOpen(false)
-        }}
-      />
-      <ConfirmationDialog
-        open={pendingProviderId !== null}
-        title="Cambiar proveedor"
-        description="Los productos preparados pertenecen al proveedor actual. Para cambiarlo es necesario limpiar el área."
-        confirmLabel="Limpiar y cambiar"
-        onCancel={() => setPendingProviderId(null)}
-        onConfirm={confirmProviderChange}
-      />
-      <ConfirmationDialog
-        open={blocker.state === "blocked"}
-        title="Preparación sin guardar"
-        description="Si abandonas esta pantalla perderás todos los productos preparados."
-        confirmLabel="Abandonar página"
-        onCancel={() => {
-          if (blocker.state === "blocked") blocker.reset()
-        }}
-        onConfirm={() => {
-          if (blocker.state === "blocked") blocker.proceed()
-        }}
-      />
     </>
   )
 }
@@ -846,7 +564,9 @@ export const EntryPage = () => {
   )
 
   async function handleScanCode(rawCode: string) {
+
     const normalizedCode = rawCode.trim()
+    
     if (selectedProviderId === undefined || !selectedProviderName) {
       notifications.error(
         "Selecciona un proveedor antes de utilizar el escáner."
@@ -866,19 +586,25 @@ export const EntryPage = () => {
     }
 
     identifyingRef.current = true
+
     try {
       const result = await identifyProduct({
         operationType: "ENTRY",
         providerId: selectedProviderId,
         rawCode: normalizedCode,
       }).unwrap()
+
+      
       addIdentificationResult(result, selectedProviderName, selectedProviderId)
+      
     } catch (error) {
       handleError(error, "No se pudo identificar el código escaneado.")
     } finally {
       identifyingRef.current = false
     }
   }
+
+  useInventoryScanner({ onScanCode: handleScanCode })
 
   useEffect(() => {
     if (!hasPendingItems) return
@@ -951,6 +677,7 @@ export const EntryPage = () => {
   }
 
   function addSpecificEntry() {
+    
     const normalizedUniqueCode = uniqueCode.trim()
     if (
       !selectedProviderId ||
@@ -977,7 +704,6 @@ export const EntryPage = () => {
     replaceSpecificItems([
       ...specificItemsRef.current,
       {
-        id: createTemporaryId(),
         providerId: selectedProviderId,
         modelId: selectedModel.modelId,
         identifierId: selectedIdentifier.identifierId,
@@ -1070,39 +796,46 @@ export const EntryPage = () => {
   }
 
   async function handleRegisterEntry() {
+
     const request = buildRegisterEntryRequest(
       specificItemsRef.current,
       genericItemsRef.current
     )
+
     if (!request) {
       notifications.error(
         "Uno de los productos genéricos no tiene un inventario asociado."
       )
       return
     }
+
     try {
+      
       await registerEntry(request).unwrap()
+
       clearPreparation()
+
       notifications.success("Entrada registrada correctamente.")
+
     } catch (error) {
       handleError(error, "No se pudo registrar la entrada.")
     }
+
   }
 
 
 
-
   return (
-    <main className="flex flex-col gap-4" aria-label="Entrada de inventario">
+    <article className="flex flex-col gap-4" aria-label="Entrada de inventario">
+
       <InventoryPageHeader
         title="Entrada"
         description="Registra los productos que ingresan al inventario."
       />
 
-      <section className="flex flex-column gap-4">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start">
 
-        <article className="bg-card p-5 border rounded-xl">
-
+        <article className="w-full min-w-0 rounded-xl border bg-card p-5 lg:flex-1">
           {isProvidersError ? (
             <Alert variant="destructive" className="mb-5">
               <Info />
@@ -1255,14 +988,14 @@ export const EntryPage = () => {
                           <Select
                             value={
                               selectedIdentifier
-                                ? String(selectedIdentifier.identifierId)
+                                ? String(selectedIdentifier.code)
                                 : ""
                             }
                             onValueChange={(value) => {
                               const identifier = (
                                 identifiersResult.data ?? []
                               ).find(
-                                (item) => String(item.identifierId) === value
+                                (item) => String(item.code) === value
                               )
                               setSelectedIdentifier(identifier ?? null)
                               setUniqueCode("")
@@ -1281,17 +1014,17 @@ export const EntryPage = () => {
                                     : "Selecciona un identificador"
                                 }
                               >
-                                {selectedIdentifier?.identifierCode}
+                                {selectedIdentifier?.code}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent align="start">
                               {(identifiersResult.data ?? []).map(
                                 (identifier) => (
                                   <SelectItem
-                                    key={identifier.identifierId}
-                                    value={String(identifier.identifierId)}
+                                    key={identifier.id}
+                                    value={String(identifier.code)}
                                   >
-                                    {identifier.identifierCode}
+                                    {identifier.code}
                                   </SelectItem>
                                 )
                               )}
@@ -1392,14 +1125,56 @@ export const EntryPage = () => {
               </StepperNav>
             </Stepper>
           </section>
-
-
         </article>
 
-        <PreparationArea />
-     
+        <PreparationArea
+          hasProvider={hasProvider}
+          hasPendingItems={hasPendingItems}
+          isIdentifying={isIdentifying}
+          isRegistering={isRegistering}
+          specificItems={specificItems}
+          genericItems={genericItems}
+          onRequestClear={() => setClearDialogOpen(true)}
+          onRemoveSpecificItem={removeSpecificItem}
+          onRemoveGenericItem={removeGenericItem}
+          onChangeGenericQuantity={changeGenericQuantity}
+          onRegisterEntry={() => void handleRegisterEntry()}
+        />
+
       </section>
-    </main>
+
+      <ConfirmationDialog
+        open={clearDialogOpen}
+        title="Limpiar área de preparación"
+        description="Se eliminarán todos los productos preparados. Esta acción no se puede deshacer."
+        confirmLabel="Limpiar área"
+        onCancel={() => setClearDialogOpen(false)}
+        onConfirm={() => {
+          clearPreparation()
+          setClearDialogOpen(false)
+        }}
+      />
+      <ConfirmationDialog
+        open={pendingProviderId !== null}
+        title="Cambiar proveedor"
+        description="Los productos preparados pertenecen al proveedor actual. Para cambiarlo es necesario limpiar el área."
+        confirmLabel="Limpiar y cambiar"
+        onCancel={() => setPendingProviderId(null)}
+        onConfirm={confirmProviderChange}
+      />
+      <ConfirmationDialog
+        open={blocker.state === "blocked"}
+        title="Preparación sin guardar"
+        description="Si abandonas esta pantalla perderás todos los productos preparados."
+        confirmLabel="Abandonar página"
+        onCancel={() => {
+          if (blocker.state === "blocked") blocker.reset()
+        }}
+        onConfirm={() => {
+          if (blocker.state === "blocked") blocker.proceed()
+        }}
+      />
+    </article>
   )
 
 }

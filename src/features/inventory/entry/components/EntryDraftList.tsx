@@ -274,30 +274,32 @@ export function EntryDraftList({
   ]
 
   return (
-    <Accordion
-      key={defaultOpenGroups.join("|")}
-      multiple
-      defaultValue={defaultOpenGroups}
-      className="mt-4"
-    >
-      {specificGroups.map((group) => (
-        <SpecificModelSection
-          key={`specific-${group.modelId}`}
-          value={`specific-${group.modelId}`}
-          group={group}
-          onRemoveProduct={onRemoveProduct}
-        />
-      ))}
+    <article className="flex-1">
+      <Accordion
+        key={defaultOpenGroups.join("|")}
+        multiple
+        defaultValue={defaultOpenGroups}
+        className="mt-4 "
+      >
+        {specificGroups.map((group) => (
+          <SpecificModelSection
+            key={`specific-${group.modelId}`}
+            value={`specific-${group.modelId}`}
+            group={group}
+            onRemoveProduct={onRemoveProduct}
+          />
+        ))}
 
-      {genericGroups.map((group) => (
-        <GenericModelSection
-          key={`generic-${group.modelId}`}
-          value={`generic-${group.modelId}`}
-          group={group}
-          onRemoveGeneric={onRemoveGeneric}
-          onChangeGenericQuantity={onChangeGenericQuantity}
-        />
-      ))}
-    </Accordion>
+        {genericGroups.map((group) => (
+          <GenericModelSection
+            key={`generic-${group.modelId}`}
+            value={`generic-${group.modelId}`}
+            group={group}
+            onRemoveGeneric={onRemoveGeneric}
+            onChangeGenericQuantity={onChangeGenericQuantity}
+          />
+        ))}
+      </Accordion>
+    </article>
   )
 }
