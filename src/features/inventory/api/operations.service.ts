@@ -1,6 +1,5 @@
 import { baseQueryWithAuth } from "@/api/rtkBaseQuery"
 import { createApi } from "@reduxjs/toolkit/query/react"
-import type { IdentificationUniqueCodeType } from "@/features/interface/identification/types"
 
 const OPERATION_BASE_URL = "/telecommunication-item"
 
@@ -12,7 +11,6 @@ export interface RegisterGenericEntryItemRequest {
 
 export interface RegisterSpecificEntryItemRequest {
   uniqueCode: string
-  uniqueCodeType: IdentificationUniqueCodeType
   telecommunicationItemModelId: number
   telecommunicationItemModelIdentifierId: number
 }

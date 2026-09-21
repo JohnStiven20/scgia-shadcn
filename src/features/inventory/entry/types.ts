@@ -1,8 +1,6 @@
 import type { IdentificationUniqueCodeType } from "@/features/interface/identification/types"
 
 export interface SpecificEntryDraftItem {
-  id: string
-  providerId: number
   modelId: number
   identifierId: number
   telecommunicationItemId: number | null
@@ -10,7 +8,7 @@ export interface SpecificEntryDraftItem {
   modelIdentifier: string
   provider: string
   uniqueCode: string
-  uniqueCodeType: IdentificationUniqueCodeType
+  uniqueCodeType?: IdentificationUniqueCodeType
 }
 
 export interface GenericEntryDraftItem {

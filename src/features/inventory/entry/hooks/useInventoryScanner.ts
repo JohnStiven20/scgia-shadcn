@@ -18,6 +18,7 @@ export function useInventoryScanner({
   }, [onScanCode])
 
   useEffect(() => {
+
     if (!enabled) return
 
     const scanTarget = document
@@ -28,10 +29,13 @@ export function useInventoryScanner({
       minLength: 3,
       avgTimeByChar: 20,
       suffixKeyCodes: [9, 13],
+      ignoreIfFocusOn: "input, textarea, select, [contenteditable='true']",
+      onKeyDetect: (keyCode) => keyCode !== 116,
       preventDefault: true,
       stopPropagation: true,
       onScan: (scannedCode) => {
-        void onScanCodeRef.current(scannedCode)
+        //TODO: FUERZO QUE TODO SE A MAYUSCULAS
+        void onScanCodeRef.current(scannedCode.toUpperCase())
         console.log(scannedCode);
       },
       onScanError: (scannedCode) => {

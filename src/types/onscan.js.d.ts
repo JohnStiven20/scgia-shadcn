@@ -2,6 +2,7 @@ declare module "onscan.js" {
   interface OnScanOptions {
     onScan: (scannedCode: string, quantity: number) => void
     onScanError?: (debug: unknown) => void
+    onKeyDetect?: (keyCode: number, event: KeyboardEvent) => boolean | void
     minLength?: number
     /** Maximum average time in milliseconds allowed between scanned characters. */
     avgTimeByChar?: number
