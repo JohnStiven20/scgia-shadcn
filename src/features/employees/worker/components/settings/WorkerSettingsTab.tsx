@@ -1,5 +1,5 @@
 import { Info, Link2, Unlink, UserRound } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 
 import {
@@ -40,6 +40,8 @@ export function WorkerSettingsTab({
   const [accountSearch, setAccountSearch] = useState("")
   const [linkedAccount, setLinkedAccount] =
     useState<WorkerSystemAccount | null>(currentAccount)
+  const [selectedAccountOption, setSelectedAccountOption] =
+    useState<WorkerSystemAccount | null>(currentAccount)
   const { data: accounts = [], isFetching: isFetchingAccounts } =
     useFindTop5AccountsByUsernameQuery({
       search: accountSearch,
@@ -53,12 +55,20 @@ export function WorkerSettingsTab({
       accountId: currentAccount?.id ?? null,
     },
   })
+  useEffect(() => {
+    setLinkedAccount(currentAccount)
+    setSelectedAccountOption(currentAccount)
+    form.reset({
+      accountId: currentAccount?.id ?? null,
+    })
+  }, [currentAccount, form])
+
   const selectedAccountId = useWatch({
     control: form.control,
     name: "accountId",
   })
   const accountOptions = useMemo(() => {
-    return accounts.map((account) => ({
+    const options = accounts.map((account) => ({
       label: account.username,
       value: account.id,
       account: {
@@ -67,7 +77,37 @@ export function WorkerSettingsTab({
         status: "Activa" as const,
       },
     }))
-  }, [accounts])
+
+    if (
+      currentAccount &&
+      !options.some((option) => option.value === currentAccount.id)
+    ) {
+      return [
+        {
+          label: currentAccount.username,
+          value: currentAccount.id,
+          account: currentAccount,
+        },
+        ...options,
+      ]
+    }
+
+    if (
+      selectedAccountOption &&
+      !options.some((option) => option.value === selectedAccountOption.id)
+    ) {
+      return [
+        {
+          label: selectedAccountOption.username,
+          value: selectedAccountOption.id,
+          account: selectedAccountOption,
+        },
+        ...options,
+      ]
+    }
+
+    return options
+  }, [accounts, currentAccount, selectedAccountOption])
   const selectedAccount = useMemo(() => {
     return (
       accountOptions.find((option) => option.value === selectedAccountId)
@@ -94,6 +134,7 @@ export function WorkerSettingsTab({
         workerId,
       }).unwrap()
       setLinkedAccount(nextAccount)
+      setSelectedAccountOption(nextAccount)
       notifications.success("Cuenta vinculada correctamente.")
     } catch (error) {
       handleError(error, "No se ha podido vincular la cuenta.")
@@ -111,6 +152,7 @@ export function WorkerSettingsTab({
         workerId: null,
       }).unwrap()
       setLinkedAccount(null)
+      setSelectedAccountOption(null)
       form.setValue("accountId", null)
       notifications.success("Cuenta desvinculada correctamente.")
     } catch (error) {
@@ -188,6 +230,12 @@ export function WorkerSettingsTab({
               isLoading={isFetchingAccounts}
               emptyText="No hay cuentas disponibles"
               onSearchChange={setAccountSearch}
+              onOptionChange={(option) => {
+                const account =
+                  accountOptions.find((item) => item.value === option.value)
+                    ?.account ?? null
+                setSelectedAccountOption(account)
+              }}
               disabled={!canUpdateSettings || isAssigningAccount}
             />
 

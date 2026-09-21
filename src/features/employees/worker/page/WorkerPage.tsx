@@ -32,22 +32,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
+import type { Worker } from "@/features/interface/worker/type/worker.inteface"
 
+import { useGetWorkerByIdQuery } from "../api/workerApi"
 import { WorkerContractsTab } from "../components/contract/WorkerContractsTab"
 import { WorkerDocumentsTab } from "../components/document/WorkerDocumentsTab"
 import { WorkerSettingsTab } from "../components/settings/WorkerSettingsTab"
-
-const worker = {
-  id: "9203847562",
-  firstName: "Pepee",
-  lastName: "Solano",
-  initials: "PS",
-  dni: "48642965P",
-  email: "solanom@gmail.com",
-  phone: "",
-  workerType: "Casa de papelII",
-  observations: "Informacion adicional sobre el trabajador.",
-}
 
 const workerTabs = [
   { value: "personal", label: "Datos personales", icon: UserRound },
@@ -56,20 +46,34 @@ const workerTabs = [
   { value: "settings", label: "Ajustes", icon: Settings2 },
 ] as const
 
-function WorkerProfile() {
+function getWorkerFullName(worker: Worker) {
+  return `${worker.name} ${worker.surname}`.trim()
+}
+
+function getWorkerInitials(worker: Worker) {
+  const firstInitial = worker.name.trim().charAt(0)
+  const lastInitial = worker.surname.trim().charAt(0)
+  return `${firstInitial}${lastInitial}`.toUpperCase() || "TR"
+}
+
+function WorkerProfile({ worker }: { worker: Worker }) {
+  const fullName = getWorkerFullName(worker)
+
   return (
     <header className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center">
-      <Avatar className="size-16" aria-label={`Avatar de ${worker.firstName}`}>
+      <Avatar className="size-16" aria-label={`Avatar de ${fullName}`}>
         <AvatarImage
           src={`https://i.pravatar.cc/160?u=${worker.id}`}
-          alt={`Avatar de ${worker.firstName} ${worker.lastName}`}
+          alt={`Avatar de ${fullName}`}
         />
-        <AvatarFallback className="text-lg">{worker.initials}</AvatarFallback>
+        <AvatarFallback className="text-lg">
+          {getWorkerInitials(worker)}
+        </AvatarFallback>
       </Avatar>
 
       <section className="min-w-0 flex-1" aria-labelledby="worker-name">
         <h1 id="worker-name" className="text-2xl font-semibold tracking-tight">
-          {worker.firstName} {worker.lastName}
+          {fullName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Gestiona la informacion y documentacion del trabajador.
@@ -81,7 +85,7 @@ function WorkerProfile() {
             className="inline-flex items-center gap-1.5 hover:text-foreground"
           >
             <Mail className="size-3.5" />
-            {worker.email}
+            {worker.email || "Sin email"}
           </a>
           <span className="inline-flex items-center gap-1.5">
             <Phone className="size-3.5" />
@@ -89,7 +93,7 @@ function WorkerProfile() {
           </span>
           <span className="inline-flex items-center gap-1.5">
             <BriefcaseBusiness className="size-3.5" />
-            {worker.workerType}
+            {worker.workerTypeName || "Sin tipo"}
           </span>
         </address>
       </section>
@@ -114,11 +118,13 @@ function FormField({
 }
 
 type PersonalDataFormProps = {
+  worker: Worker
   canDeleteEmployee: boolean
   canUpdateEmployee: boolean
 }
 
 function PersonalDataForm({
+  worker,
   canDeleteEmployee,
   canUpdateEmployee,
 }: PersonalDataFormProps) {
@@ -137,16 +143,16 @@ function PersonalDataForm({
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             id="worker-first-name"
-            name="firstName"
+            name="name"
             label="Nombre"
-            defaultValue={worker.firstName}
+            defaultValue={worker.name}
             disabled={!canUpdateEmployee}
           />
           <FormField
             id="worker-last-name"
-            name="lastName"
+            name="surname"
             label="Apellidos"
-            defaultValue={worker.lastName}
+            defaultValue={worker.surname}
             disabled={!canUpdateEmployee}
           />
           <FormField
@@ -160,25 +166,24 @@ function PersonalDataForm({
             id="worker-code"
             name="code"
             label="Codigo de empleado"
-            defaultValue={worker.id}
+            defaultValue={worker.employeeCode}
             disabled={!canUpdateEmployee}
           />
 
           <div className="grid gap-1.5">
             <Label htmlFor="worker-type">Tipo de trabajador</Label>
             <Select
-              defaultValue={worker.workerType}
-              name="workerType"
+              defaultValue={String(worker.workerTypeId)}
+              name="workerTypeId"
               disabled={!canUpdateEmployee}
             >
               <SelectTrigger id="worker-type" className="w-full">
                 <SelectValue placeholder="Selecciona un tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Casa de papelII">Casa de papelII</SelectItem>
-                <SelectItem value="Operaciones">Operaciones</SelectItem>
-                <SelectItem value="Administracion">Administracion</SelectItem>
-                <SelectItem value="Soporte tecnico">Soporte tecnico</SelectItem>
+                <SelectItem value={String(worker.workerTypeId)}>
+                  {worker.workerTypeName || "Tipo actual"}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -206,7 +211,7 @@ function PersonalDataForm({
             <Textarea
               id="worker-observations"
               name="observations"
-              defaultValue={worker.observations}
+              defaultValue={worker.observations ?? ""}
               placeholder="Anade informacion relevante..."
               className="min-h-24"
               disabled={!canUpdateEmployee}
@@ -240,6 +245,14 @@ function PersonalDataForm({
 export function WorkerPage() {
   const { id } = useParams()
   const workerId = Number(id)
+  const hasValidWorkerId = Number.isFinite(workerId) && workerId > 0
+  const {
+    data: worker,
+    isLoading,
+    isError,
+  } = useGetWorkerByIdQuery(workerId, {
+    skip: !hasValidWorkerId,
+  })
   const { hasPermission } = useAuthAccess()
   const canUpdateEmployee = hasPermission("employee.update")
   const canDeleteEmployee = hasPermission("employee.delete")
@@ -261,6 +274,64 @@ export function WorkerPage() {
     return true
   })
 
+  if (!hasValidWorkerId) {
+    return (
+      <article className="rounded-xl border bg-background p-3 sm:p-5">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link to="/employees" />}>
+                Empleados
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Trabajador no valido</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <p className="text-sm text-muted-foreground">
+          No existe un identificador valido para cargar el trabajador.
+        </p>
+      </article>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <article className="rounded-xl border bg-background p-3 sm:p-5">
+        <p className="text-sm text-muted-foreground">
+          Cargando informacion del trabajador...
+        </p>
+      </article>
+    )
+  }
+
+  if (isError || !worker) {
+    return (
+      <article className="rounded-xl border bg-background p-3 sm:p-5">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link to="/employees" />}>
+                Empleados
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Trabajador no encontrado</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <p className="text-sm text-muted-foreground">
+          No se pudo cargar la informacion del trabajador seleccionado.
+        </p>
+      </article>
+    )
+  }
+
+  const workerFullName = getWorkerFullName(worker)
+
   return (
     <article className="rounded-xl border bg-background p-3 sm:p-5">
       <Breadcrumb className="mb-4">
@@ -272,15 +343,17 @@ export function WorkerPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>
-              {worker.firstName} {worker.lastName}
-            </BreadcrumbPage>
+            <BreadcrumbPage>{workerFullName}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
 
-      <WorkerProfile />
-      <Tabs defaultValue="personal" className="mt-5 min-w-0 flex-col gap-5">
+      <WorkerProfile worker={worker} />
+      <Tabs
+        key={worker.id}
+        defaultValue="personal"
+        className="mt-5 min-w-0 flex-col gap-5"
+      >
         <TabsList
           variant="default"
           className="w-full max-w-full items-stretch justify-start overflow-x-auto overflow-y-hidden md:w-fit"
@@ -299,6 +372,7 @@ export function WorkerPage() {
 
         <TabsContent value="personal">
           <PersonalDataForm
+            worker={worker}
             canDeleteEmployee={canDeleteEmployee}
             canUpdateEmployee={canUpdateEmployee}
           />
@@ -307,7 +381,7 @@ export function WorkerPage() {
           <TabsContent value="contracts">
             <WorkerContractsTab
               workerId={workerId}
-              workerName={`${worker.firstName} ${worker.lastName}`}
+              workerName={workerFullName}
               workerDni={worker.dni}
               canCancelContract={canCancelContract}
               canCreateContract={canCreateContract}
@@ -330,6 +404,15 @@ export function WorkerPage() {
           <TabsContent value="settings">
             <WorkerSettingsTab
               workerId={workerId}
+              currentAccount={
+                worker.accountId && worker.accountUsername
+                  ? {
+                      id: worker.accountId,
+                      username: worker.accountUsername,
+                      status: "Activa",
+                    }
+                  : null
+              }
               canUpdateSettings={canUpdateSettings}
             />
           </TabsContent>

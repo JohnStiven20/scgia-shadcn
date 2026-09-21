@@ -1,13 +1,15 @@
 import {
-  BarChart3,
   Boxes,
   CalendarX2,
   LayoutDashboard,
-  Settings,
   ShieldCheck,
   Truck,
   Users,
+  type LucideIcon,
 } from "lucide-react"
+import { useEffect } from "react"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
+
 import {
   Sidebar,
   SidebarContent,
@@ -19,24 +21,34 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { useEffect } from "react"
-import { Outlet, useLocation, useNavigate } from "react-router-dom"
+import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
+import {
+  getAccessibleNavigationItems,
+  type AuthorizedNavigationItem,
+} from "@/features/auth/utils/authorized-navigation"
 
-const workspaceMenus = [
-  { title: "Dashboard", icon: LayoutDashboard, href: undefined },
-  { title: "Admin", icon: ShieldCheck, href: "/admin" },
-  { title: "Inventario", icon: Boxes, href: "/inventory" },
-  { title: "Trabajadores", icon: Users, href: "/employees" },
-  { title: "Ausencias", icon: CalendarX2, href: "/absences" },
-  { title: "Flota", icon: Truck, href: "/fleet" },
-]
+type WorkspaceMenu = {
+  title: string
+  icon: LucideIcon
+  href: string
+}
 
-const supportMenus = [
-  { title: "Analíticas", icon: BarChart3 },
-  { title: "Configuración", icon: Settings },
-]
+const workspaceMenuIcons: Record<string, LucideIcon> = {
+  Admin: ShieldCheck,
+  Inventario: Boxes,
+  Trabajadores: Users,
+  Ausencias: CalendarX2,
+  Flota: Truck,
+}
+
+function toWorkspaceMenu(item: AuthorizedNavigationItem): WorkspaceMenu {
+  return {
+    title: item.title,
+    icon: workspaceMenuIcons[item.title] ?? LayoutDashboard,
+    href: item.href,
+  }
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -51,6 +63,10 @@ function ScrollToTop() {
 export const AppLayout = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { permissions } = useAuthAccess()
+  const workspaceMenus = getAccessibleNavigationItems(permissions).map(
+    toWorkspaceMenu
+  )
 
   return (
     <SidebarProvider>
@@ -65,33 +81,9 @@ export const AppLayout = () => {
                   <SidebarMenuItem key={menu.title}>
                     <SidebarMenuButton
                       tooltip={menu.title}
-                      isActive={
-                        menu.href
-                          ? location.pathname.startsWith(menu.href)
-                          : false
-                      }
-                      onClick={() => {
-                        if (menu.href) navigate(menu.href)
-                      }}
+                      isActive={location.pathname.startsWith(menu.href)}
+                      onClick={() => navigate(menu.href)}
                     >
-                      <menu.icon />
-                      <span>{menu.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarSeparator />
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Soporte</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {supportMenus.map((menu) => (
-                  <SidebarMenuItem key={menu.title}>
-                    <SidebarMenuButton tooltip={menu.title}>
                       <menu.icon />
                       <span>{menu.title}</span>
                     </SidebarMenuButton>

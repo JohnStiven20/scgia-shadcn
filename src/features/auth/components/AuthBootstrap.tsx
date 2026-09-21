@@ -6,14 +6,26 @@ import type { AppDispatch, RootState } from "@/store/store"
 import { useMeQuery } from "../api/authApi"
 import { clearAuth, setAuthInitialized } from "../store/authSlice"
 
+function isUnauthorizedError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 401
+  )
+}
+
 export function AuthBootstrap({ children }: { children: ReactNode }) {
   const dispatch = useDispatch<AppDispatch>()
   const { isAuthenticated, isInitialized } = useSelector(
     (state: RootState) => state.auth
   )
-  const { isLoading, isFetching, isSuccess, isError } = useMeQuery(undefined, {
-    skip: !isAuthenticated,
-  })
+  const { error, isLoading, isFetching, isSuccess, isError } = useMeQuery(
+    undefined,
+    {
+      skip: !isAuthenticated,
+    }
+  )
 
   useEffect(() => {
     if (!isAuthenticated && !isInitialized) {
@@ -28,10 +40,10 @@ export function AuthBootstrap({ children }: { children: ReactNode }) {
   }, [dispatch, isSuccess])
 
   useEffect(() => {
-    if (isError) {
+    if (isError && isUnauthorizedError(error)) {
       dispatch(clearAuth())
     }
-  }, [dispatch, isError])
+  }, [dispatch, error, isError])
 
   if (isAuthenticated && (!isInitialized || isLoading || isFetching)) {
     return (

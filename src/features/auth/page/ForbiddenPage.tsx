@@ -1,10 +1,19 @@
-import { Link } from "react-router-dom"
+import { Link, Navigate } from "react-router-dom"
 import { ShieldAlert } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useAuthAccess } from "../hooks/useAuthAccess"
+import { getFirstAccessibleRoute } from "../utils/authorized-navigation"
 
 export function ForbiddenPage() {
+  const { permissions } = useAuthAccess()
+  const firstAccessibleRoute = getFirstAccessibleRoute(permissions)
+
+  if (!firstAccessibleRoute) {
+    return <Navigate to="/sin-permisos" replace />
+  }
+
   return (
     <main className="grid min-h-svh place-items-center bg-background p-4">
       <Card className="w-[min(100%,34rem)] border-border/80 py-8 shadow-sm">
@@ -17,11 +26,11 @@ export function ForbiddenPage() {
               Acceso no autorizado
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tu cuenta no tiene permisos para acceder a esta seccion.
+              Tu cuenta no tiene permisos para acceder a esta sección.
             </p>
           </div>
-          <Link className={buttonVariants()} to="/">
-            Volver al inicio
+          <Link className={buttonVariants()} to={firstAccessibleRoute}>
+            Ir a una sección permitida
           </Link>
         </CardContent>
       </Card>

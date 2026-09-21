@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import {
   useController,
   type Control,
@@ -49,6 +49,9 @@ type SelectFieldRHFProps<
   }
   rules?: ControllerProps<TFieldValues, TName>["rules"]
   onChangeField?: FieldOnChange<TFieldValues, TName>
+  onOptionChange?: (
+    option: SelectOption<FieldPathValue<TFieldValues, TName>>
+  ) => void
   onSearchChange?: (value: string) => void
   setValue?: UseFormSetValue<TFieldValues>
   getValues?: UseFormGetValues<TFieldValues>
@@ -75,12 +78,16 @@ export function SelectFieldRHF<
   adornment,
   rules,
   onChangeField,
+  onOptionChange,
   onSearchChange,
   setValue,
   getValues,
   resetField,
 }: SelectFieldRHFProps<TFieldValues, TName>) {
   const [internalSearch, setInternalSearch] = useState("")
+  const [selectedFallback, setSelectedFallback] = useState<
+    SelectOption<FieldPathValue<TFieldValues, TName>> | null
+  >(null)
   const search = searchValue ?? internalSearch
 
   function handleSearchChange(value: string) {
@@ -111,7 +118,21 @@ export function SelectFieldRHF<
   }
 
   const selectedOption =
-    options.find((option) => option.value === field.value) ?? null
+    options.find((option) => option.value === field.value) ??
+    (selectedFallback?.value === field.value ? selectedFallback : null)
+
+  useEffect(() => {
+    const option = options.find((option) => option.value === field.value)
+
+    if (option) {
+      setSelectedFallback(option)
+      return
+    }
+
+    if (field.value == null) {
+      setSelectedFallback(null)
+    }
+  }, [field.value, options])
 
   return (
     <Combobox
@@ -124,10 +145,11 @@ export function SelectFieldRHF<
       itemToStringValue={(option) => String(option.value)}
       onInputValueChange={(value) => handleSearchChange(value)}
       onValueChange={(option) => {
-
         if (!option) return
 
+        setSelectedFallback(option)
         field.onChange(option.value)
+        onOptionChange?.(option)
         handleSearchChange("")
 
         if (onChangeField && setValue && getValues && resetField) {

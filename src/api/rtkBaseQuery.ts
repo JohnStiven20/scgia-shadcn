@@ -1,7 +1,13 @@
-import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {
+  fetchBaseQuery,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "./apiConfig";
+import { clearAuth } from "@/features/auth/store/authSlice";
 
-export const baseQueryWithAuth = fetchBaseQuery({
+const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   timeout: 10000,
   prepareHeaders: (headers) => {
@@ -12,3 +18,17 @@ export const baseQueryWithAuth = fetchBaseQuery({
     return headers;
   },
 });
+
+export const baseQueryWithAuth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const result = await rawBaseQuery(args, api, extraOptions)
+
+  if (result.error?.status === 401) {
+    api.dispatch(clearAuth())
+  }
+
+  return result
+}
