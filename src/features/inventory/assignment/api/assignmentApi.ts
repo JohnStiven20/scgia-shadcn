@@ -6,6 +6,37 @@ import type {
   AssignmentSummaryResponse,
 } from "../types/assignment-api.types"
 
+export interface TelecommunicationItemSelectionResponse {
+  id: number
+  uniqueCode: string
+  uniqueCodeType: string
+  identifierId: number
+  identifier: string
+  createdAt: string
+}
+
+export interface AvailableModelItemsParams {
+  modelId: number
+  page: number
+}
+
+export interface SpringPageResponse<T> {
+  content: T[]
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  numberOfElements: number
+  first: boolean
+  last: boolean
+  empty: boolean
+}
+
+export interface ModelsResponse {
+  modelId: number
+  modelName: string
+}
+
 export const assignmentApi = createApi({
   reducerPath: "assignmentApi",
   baseQuery: baseQueryWithAuth,
@@ -42,11 +73,32 @@ export const assignmentApi = createApi({
         { type: "Assignment", id: assignmentId },
       ],
     }),
+    //TODO: Creo que se puede quitar este servicio, ya he creado otro
+    // llamado getAllModels() por que este servicio tiene una paginacion inncesaria
+    getAvailableModelItems: builder.query<
+      SpringPageResponse<TelecommunicationItemSelectionResponse>,
+      AvailableModelItemsParams
+    >({
+      query: ({ modelId, page }) => ({
+        url: `/telecommunication-models/${modelId}/available-items`,
+        method: "GET",
+        params: { page },
+      }),
+    }),
+    getAllModels: builder.query<ModelsResponse[], void>({
+      query: () => ({
+        url: `/telecomunication-model/all`,
+        method: "GET",
+      }),
+    }),
   }),
 })
 
 export const {
+  useGetAllModelsQuery,
+  useLazyGetAllModelsQuery,
   useGetAssignableWorkersQuery,
   useGetReturnAssignmentsByAccountQuery,
   useGetReturnAssignmentDetailQuery,
+  useGetAvailableModelItemsQuery,
 } = assignmentApi

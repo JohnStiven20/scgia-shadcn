@@ -186,6 +186,7 @@ export const {
   useGetModelCatalogQuery,
   useGetProvidersQuery,
   useGetModelIdentifiersQuery,
+  useLazyGetModelIdentifiersQuery,
   useGetTelecommunicationModelsSelectionQuery,
   useLazyGetTelecommunicationModelsSelectionQuery,
   useGetSelectionModelIdentifiersQuery,

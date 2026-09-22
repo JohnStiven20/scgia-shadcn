@@ -53,6 +53,7 @@ function formatMovementDate(value: string) {
 }
 
 function EventCell({ transaction }: { transaction: MovementTransaction }) {
+  
   const style = traceabilityEventStyles[transaction.inventoryMovementType]
   const EventIcon = style.icon
 
@@ -396,6 +397,7 @@ export function TraceabilityPage() {
         }`}
       >
         <section className="min-w-0" aria-label="Movimientos de inventario">
+          
           <DataTable
             data={rows}
             columns={traceabilityColumns}

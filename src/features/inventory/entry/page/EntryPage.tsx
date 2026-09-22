@@ -62,7 +62,10 @@ import {
   useLazyGenericItemsQuery,
   type GenericItemResponse,
 } from "@/features/inventory/api/generic-items.service"
-import { useIdentifyProductMutation } from "@/features/inventory/api/identificationApi"
+import {
+  useIdentifyProductManualMutation,
+  useIdentifyProductMutation,
+} from "@/features/inventory/api/identificationApi"
 import {
   useLazyIdentifiersQuery,
   type IdentifierResponse,
@@ -86,6 +89,14 @@ type FlowModel = {
   modelId: number
   name: string
   genericItemId?: number
+}
+
+function createTemporaryId() {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
 type ConfirmationDialogProps = {
@@ -190,7 +201,7 @@ function ModelCombobox({
       <ComboboxTrigger
         id={id}
         disabled={disabled}
-        className="flex h-14 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-left text-sm shadow-xs transition-[color,box-shadow] outline-none hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-left text-sm shadow-xs transition-[color,box-shadow] outline-none hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50"
       >
         {value ? (
           <span className="flex min-w-0 items-center gap-3">
@@ -217,7 +228,7 @@ function ModelCombobox({
             <ComboboxItem
               key={model.modelId}
               value={model}
-              className="min-h-14 gap-3 px-3 py-2 text-sm"
+              className="gap-3 px-3 py-1 text-sm"
             >
               <img
                 src={hguImage}
@@ -232,8 +243,6 @@ function ModelCombobox({
     </Combobox>
   )
 }
-
-
 
 function buildRegisterEntryRequest(
   specificItems: SpecificEntryDraftItem[],
@@ -292,8 +301,7 @@ function PreparationArea({
 }: PreparationAreaProps) {
   return (
     <>
-      <article className="flex w-full min-w-0 flex-col rounded-xl border bg-card p-3 sm:p-4 min-h-146.25 lg:flex-2">
-
+      <article className="flex min-h-146.25 w-full min-w-0 flex-col rounded-xl border bg-card p-3 sm:p-4 lg:flex-2">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Área de preparación</h2>
@@ -309,12 +317,13 @@ function PreparationArea({
               variant="secondary"
               role="status"
               aria-live="polite"
-              className={`h-7 gap-2 px-3 text-xs font-medium ${isIdentifying
-                ? "bg-blue-50 text-blue-700"
-                : hasProvider
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-muted text-muted-foreground"
-                }`}
+              className={`h-7 gap-2 px-3 text-xs font-medium ${
+                isIdentifying
+                  ? "bg-blue-50 text-blue-700"
+                  : hasProvider
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-muted text-muted-foreground"
+              }`}
             >
               {isIdentifying ? (
                 <LoaderCircle className="animate-spin" />
@@ -340,7 +349,7 @@ function PreparationArea({
           </aside>
         </header>
 
-        <section className="flex flex-col flex-1 gap-2 h-100">
+        <section className="flex h-100 flex-1 flex-col gap-2">
           {hasPendingItems ? (
             <EntryDraftList
               productItems={specificItems}
@@ -350,7 +359,7 @@ function PreparationArea({
               onChangeGenericQuantity={onChangeGenericQuantity}
             />
           ) : (
-            <Empty className="mt-5 rounded-lg border border-dashed border-primary/20 bg-background px-4 py-6 flex-1">
+            <Empty className="mt-5 flex-1 rounded-lg border border-dashed border-primary/20 bg-background px-4 py-6">
               <EmptyHeader className="max-w-lg gap-2">
                 <EmptyMedia
                   variant="default"
@@ -381,12 +390,15 @@ function PreparationArea({
           </Button>
         </section>
       </article>
-
     </>
   )
 }
 
 export const EntryPage = () => {
+  const [identifyProduct, { isLoading: isIdentifying }] =
+    useIdentifyProductMutation()
+  const [identifyProductManual, { isLoading: isIdentifyingManual }] =
+    useIdentifyProductManualMutation()
 
   const [providerId, setProviderId] = useState("")
   const [pendingProviderId, setPendingProviderId] = useState<string | null>(
@@ -408,17 +420,17 @@ export const EntryPage = () => {
   const genericItemsRef = useRef<GenericEntryDraftItem[]>([])
   const notifications = useNotifications()
   const { handleError } = useGlobalError()
+
   const {
     data: providers = [],
     isLoading: isLoadingProviders,
     isError: isProvidersError,
   } = useGetProvidersQuery()
+
   const [loadSpecificModels, specificModelsResult] =
     useLazyGetTelecommunicationModelsSelectionQuery()
   const [loadGenericItems, genericItemsResult] = useLazyGenericItemsQuery()
   const [loadIdentifiers, identifiersResult] = useLazyIdentifiersQuery()
-  const [identifyProduct, { isLoading: isIdentifying }] =
-    useIdentifyProductMutation()
   const [registerEntry, { isLoading: isRegistering }] =
     useRegisterEntryMutation()
 
@@ -433,18 +445,19 @@ export const EntryPage = () => {
   const blocker = useBlocker(hasPendingItems)
   const modelsLoading =
     specificModelsResult.isFetching || genericItemsResult.isFetching
-  const activeStep = !hasProvider
-    ? 1
-    : !productType
-      ? 2
-      : !selectedModel
-        ? 3
-        : !selectedIdentifier
-          ? 4
-          : 5
+
+  const activeStep = (() => {
+    if (!hasProvider) return 1
+    if (!productType) return 2
+    if (!selectedModel) return 3
+    if (!selectedIdentifier) return 4
+    return 5
+  })()
+
   const specificModelOptions: FlowModel[] = (
     specificModelsResult.data ?? []
   ).map((model) => ({ modelId: model.id, name: model.name }))
+
   const genericModelOptions: FlowModel[] = (genericItemsResult.data ?? []).map(
     (item: GenericItemResponse) => ({
       modelId: item.modelId,
@@ -462,6 +475,7 @@ export const EntryPage = () => {
     },
     []
   )
+
   const replaceGenericItems = useCallback(
     (nextItems: GenericEntryDraftItem[]) => {
       genericItemsRef.current = nextItems
@@ -469,6 +483,7 @@ export const EntryPage = () => {
     },
     []
   )
+
   const resetFlow = useCallback(() => {
     setProductType(null)
     setSelectedModel(null)
@@ -476,6 +491,7 @@ export const EntryPage = () => {
     setUniqueCode("")
     setGenericQuantity(1)
   }, [])
+
   const clearPreparation = useCallback(() => {
     replaceSpecificItems([])
     replaceGenericItems([])
@@ -487,24 +503,18 @@ export const EntryPage = () => {
       result: IdentificationResponse,
       providerName: string,
       provider: number
-    ) => {
-      if (result.productType === "SPECIFIC") {
-        if (!result.uniqueCode || !result.uniqueCodeType) {
-          notifications.error(
-            "La respuesta no contiene el identificador único del producto."
-          )
-          return
-        }
+    ): boolean => {
+      if (result.model.productType === "SPECIFIC") {
         if (
           specificItemsRef.current.some(
-            (item) => item.uniqueCode === result.uniqueCode
+            (item) => item.uniqueCode === result.unitCode.code
           )
         ) {
           notifications.notify(
-            `El código ${result.uniqueCode} ya está en la preparación.`,
+            `El código ${result.unitCode.code} ya está en la preparación.`,
             "warning"
           )
-          return
+          return false
         }
         replaceSpecificItems([
           ...specificItemsRef.current,
@@ -517,12 +527,12 @@ export const EntryPage = () => {
             model: result.model.name,
             modelIdentifier: result.identifier.code,
             provider: providerName,
-            uniqueCode: result.uniqueCode,
-            uniqueCodeType: result.uniqueCodeType,
+            uniqueCode: result.unitCode.code,
+            uniqueCodeType: result.unitCode.productType,
           },
         ])
         notifications.success(`${result.model.name} añadido a la preparación.`)
-        return
+        return true
       }
 
       const existingIndex = genericItemsRef.current.findIndex(
@@ -530,13 +540,14 @@ export const EntryPage = () => {
           item.modelId === result.model.id &&
           item.identifierId === result.identifier.id &&
           item.telecommunicationGenericItemId ===
-          result.telecommunicationGenericItemId
+            result.telecommunicationGenericItemId
       )
       if (existingIndex >= 0) {
+        const quantityToAdd = Math.max(1, result.quantity ?? 1)
         replaceGenericItems(
           genericItemsRef.current.map((item, index) =>
             index === existingIndex
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: item.quantity + quantityToAdd }
               : item
           )
         )
@@ -559,14 +570,14 @@ export const EntryPage = () => {
         ])
       }
       notifications.success(`${result.model.name} añadido a la preparación.`)
+      return true
     },
     [notifications, replaceGenericItems, replaceSpecificItems]
   )
 
   async function handleScanCode(rawCode: string) {
-
     const normalizedCode = rawCode.trim()
-    
+
     if (selectedProviderId === undefined || !selectedProviderName) {
       notifications.error(
         "Selecciona un proveedor antes de utilizar el escáner."
@@ -594,9 +605,7 @@ export const EntryPage = () => {
         rawCode: normalizedCode,
       }).unwrap()
 
-      
       addIdentificationResult(result, selectedProviderName, selectedProviderId)
-      
     } catch (error) {
       handleError(error, "No se pudo identificar el código escaneado.")
     } finally {
@@ -676,8 +685,7 @@ export const EntryPage = () => {
     }
   }
 
-  function addSpecificEntry() {
-    
+  async function addSpecificEntry() {
     const normalizedUniqueCode = uniqueCode.trim()
     if (
       !selectedProviderId ||
@@ -701,21 +709,29 @@ export const EntryPage = () => {
       )
       return
     }
-    replaceSpecificItems([
-      ...specificItemsRef.current,
-      {
+    if (identifyingRef.current) return
+
+    identifyingRef.current = true
+
+    try {
+      const result = await identifyProductManual({
+        operationType: "ENTRY",
         providerId: selectedProviderId,
-        modelId: selectedModel.modelId,
-        identifierId: selectedIdentifier.identifierId,
-        telecommunicationItemId: null,
-        model: selectedModel.name,
-        modelIdentifier: selectedIdentifier.identifierCode,
-        provider: selectedProviderName,
-        uniqueCode: normalizedUniqueCode,
-      },
-    ])
-    setUniqueCode("")
-    notifications.success(`${selectedModel.name} añadido a la preparación.`)
+        identification: selectedIdentifier.code,
+        unitCode: normalizedUniqueCode,
+      }).unwrap()
+
+      const wasAdded = addIdentificationResult(
+        result,
+        selectedProviderName,
+        selectedProviderId
+      )
+      if (wasAdded) setUniqueCode("")
+    } catch (error) {
+      handleError(error, "No se pudo validar el producto.")
+    } finally {
+      identifyingRef.current = false
+    }
   }
 
   function addGenericEntry() {
@@ -742,7 +758,7 @@ export const EntryPage = () => {
     const existingIndex = genericItemsRef.current.findIndex(
       (item) =>
         item.modelId === selectedModel.modelId &&
-        item.identifierId === selectedIdentifier.identifierId &&
+        item.identifierId === selectedIdentifier.id &&
         item.telecommunicationGenericItemId === selectedModel.genericItemId
     )
     if (existingIndex >= 0) {
@@ -760,11 +776,11 @@ export const EntryPage = () => {
           id: createTemporaryId(),
           providerId: selectedProviderId,
           modelId: selectedModel.modelId,
-          identifierId: selectedIdentifier.identifierId,
+          identifierId: selectedIdentifier.id,
           telecommunicationGenericItemId: selectedModel.genericItemId,
           model: selectedModel.name,
           provider: selectedProviderName,
-          identifier: selectedIdentifier.identifierCode,
+          identifier: selectedIdentifier.code,
           identifierType: "Identificador asociado",
           quantity: genericQuantity,
         },
@@ -796,7 +812,6 @@ export const EntryPage = () => {
   }
 
   async function handleRegisterEntry() {
-
     const request = buildRegisterEntryRequest(
       specificItemsRef.current,
       genericItemsRef.current
@@ -810,31 +825,24 @@ export const EntryPage = () => {
     }
 
     try {
-      
       await registerEntry(request).unwrap()
 
       clearPreparation()
 
       notifications.success("Entrada registrada correctamente.")
-
     } catch (error) {
       handleError(error, "No se pudo registrar la entrada.")
     }
-
   }
-
-
 
   return (
     <article className="flex flex-col gap-4" aria-label="Entrada de inventario">
-
       <InventoryPageHeader
         title="Entrada"
         description="Registra los productos que ingresan al inventario."
       />
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start">
-
         <article className="w-full min-w-0 rounded-xl border bg-card p-5 lg:flex-1">
           {isProvidersError ? (
             <Alert variant="destructive" className="mb-5">
@@ -849,7 +857,7 @@ export const EntryPage = () => {
           <section aria-label="Flujo de alta manual">
             <Stepper value={activeStep} orientation="vertical">
               <StepperNav className="w-full">
-                <WorkflowStep number={1} title="Proveedor">
+                <WorkflowStep number={1} title="Proveedor" last={!hasProvider}>
                   <FieldSet>
                     <legend className="sr-only">Selección de proveedor</legend>
                     <Field>
@@ -877,7 +885,9 @@ export const EntryPage = () => {
                               key={provider.id}
                               value={String(provider.id)}
                             >
-                              <span className="font-medium">{provider.name}</span>
+                              <span className="font-medium">
+                                {provider.name}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -907,7 +917,7 @@ export const EntryPage = () => {
                             }
                           >
                             <Package />
-                            Productos específicos
+                            Productos
                           </Button>
                           <Button
                             type="button"
@@ -921,7 +931,7 @@ export const EntryPage = () => {
                             }
                           >
                             <Package />
-                            Productos genéricos
+                            Genéricos
                           </Button>
                         </nav>
                       </FieldSet>
@@ -939,7 +949,7 @@ export const EntryPage = () => {
                           : "Modelo genérico"
                       }
                     >
-                      <FieldSet>
+                      <FieldSet  className="w-full min-w-0">
                         <legend className="sr-only">Selección de modelo</legend>
                         <Field>
                           <FieldLabel htmlFor="entry-model">
@@ -957,11 +967,13 @@ export const EntryPage = () => {
                                 ? "Cargando modelos..."
                                 : "Selecciona un modelo"
                             }
-                            disabled={modelsLoading || modelOptions.length === 0}
+                            disabled={
+                              modelsLoading || modelOptions.length === 0
+                            }
                           />
                         </Field>
                         {specificModelsResult.isError ||
-                          genericItemsResult.isError ? (
+                        genericItemsResult.isError ? (
                           <Alert variant="destructive">
                             <Info />
                             <AlertDescription>
@@ -994,9 +1006,7 @@ export const EntryPage = () => {
                             onValueChange={(value) => {
                               const identifier = (
                                 identifiersResult.data ?? []
-                              ).find(
-                                (item) => String(item.code) === value
-                              )
+                              ).find((item) => String(item.code) === value)
                               setSelectedIdentifier(identifier ?? null)
                               setUniqueCode("")
                               setGenericQuantity(1)
@@ -1096,7 +1106,9 @@ export const EntryPage = () => {
                               onChange={(event) => {
                                 const value = Number(event.target.value)
                                 setGenericQuantity(
-                                  Number.isFinite(value) ? Math.max(1, value) : 1
+                                  Number.isFinite(value)
+                                    ? Math.max(1, value)
+                                    : 1
                                 )
                               }}
                             />
@@ -1110,9 +1122,11 @@ export const EntryPage = () => {
                               : addGenericEntry
                           }
                           disabled={
-                            productType === "SPECIFIC"
+                            isIdentifying ||
+                            isIdentifyingManual ||
+                            (productType === "SPECIFIC"
                               ? !uniqueCode.trim()
-                              : genericQuantity < 1
+                              : genericQuantity < 1)
                           }
                         >
                           <Package />
@@ -1130,7 +1144,7 @@ export const EntryPage = () => {
         <PreparationArea
           hasProvider={hasProvider}
           hasPendingItems={hasPendingItems}
-          isIdentifying={isIdentifying}
+          isIdentifying={isIdentifying || isIdentifyingManual}
           isRegistering={isRegistering}
           specificItems={specificItems}
           genericItems={genericItems}
@@ -1140,7 +1154,6 @@ export const EntryPage = () => {
           onChangeGenericQuantity={changeGenericQuantity}
           onRegisterEntry={() => void handleRegisterEntry()}
         />
-
       </section>
 
       <ConfirmationDialog
@@ -1176,5 +1189,4 @@ export const EntryPage = () => {
       />
     </article>
   )
-
 }

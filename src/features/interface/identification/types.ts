@@ -20,9 +20,17 @@ export interface IdentificationRequest {
   rawCode: string
 }
 
+export interface IdentificationManualRequest {
+  operationType: IdentificationOperationType
+  providerId: number
+  identification: string
+  unitCode: string
+}
+
 export interface IdentificationModelReference {
   id: number
   name: string
+  productType: IdentificationProductType
 }
 
 export interface IdentificationIdentifierReference {
@@ -30,14 +38,18 @@ export interface IdentificationIdentifierReference {
   code: string
 }
 
+export interface IdentificationUnitCodeReference {
+  code: string
+  productType: IdentificationUniqueCodeType
+  status: IdentificationItemStatus
+}
+
 export interface IdentificationResponse {
-  productType: IdentificationProductType
-  model: IdentificationModelReference
   identifier: IdentificationIdentifierReference
-  uniqueCode: string | null
-  uniqueCodeType: IdentificationUniqueCodeType | null
+  model: IdentificationModelReference
+  unitCode: IdentificationUnitCodeReference
   quantity: number | null
   telecommunicationItemId: number | null
   telecommunicationGenericItemId: number | null
-  status: IdentificationItemStatus | null
 }
+

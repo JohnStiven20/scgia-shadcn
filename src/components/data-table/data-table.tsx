@@ -78,6 +78,7 @@ interface DataTableProps<TData extends RowData> {
   emptyMessage?: string
   onDataChange?: (data: TData[]) => void
   onRowClick?: (row: TData) => void
+  isRowDisabled?: (row: TData) => boolean
   selectedRowId?: string
   serverPagination?: DataTableServerPagination
   fitColumns?: boolean
@@ -201,6 +202,7 @@ function DataTableRow<TData extends RowData>({
   orderingEnabled,
   columnWidths,
   onRowClick,
+  disabled,
   selected,
   fitColumns,
 }: {
@@ -208,6 +210,7 @@ function DataTableRow<TData extends RowData>({
   orderingEnabled: boolean
   columnWidths: Record<string, number>
   onRowClick?: (row: TData) => void
+  disabled: boolean
   selected: boolean
   fitColumns: boolean
 }) {
@@ -227,20 +230,24 @@ function DataTableRow<TData extends RowData>({
     <DragHandleContext.Provider value={{ attributes, listeners }}>
       <TableRow
         ref={setNodeRef}
-        tabIndex={onRowClick ? 0 : undefined}
+        tabIndex={onRowClick && !disabled ? 0 : undefined}
         data-state={selected ? "selected" : undefined}
         aria-selected={selected || undefined}
+        aria-disabled={disabled || undefined}
         className={
           [
             isDragging && "relative z-10 opacity-80",
             onRowClick &&
               "cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none",
+            disabled && "cursor-not-allowed opacity-50",
           ]
             .filter(Boolean)
             .join(" ") || undefined
         }
         style={{ transform: CSS.Transform.toString(transform), transition }}
         onClick={(event) => {
+          if (disabled) return
+
           const target = event.target
           const interactiveElement =
             target instanceof Element
@@ -254,7 +261,11 @@ function DataTableRow<TData extends RowData>({
           onRowClick?.(row.original)
         }}
         onKeyDown={(event) => {
-          if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) {
+          if (
+            disabled ||
+            !onRowClick ||
+            (event.key !== "Enter" && event.key !== " ")
+          ) {
             return
           }
 
@@ -287,6 +298,7 @@ export function DataTable<TData extends RowData>({
   emptyMessage = "No hay resultados.",
   onDataChange,
   onRowClick,
+  isRowDisabled,
   selectedRowId,
   serverPagination,
   fitColumns = false,
@@ -529,6 +541,7 @@ export function DataTable<TData extends RowData>({
                       orderingEnabled={enableRowOrdering}
                       columnWidths={columnWidths}
                       onRowClick={onRowClick}
+                      disabled={isRowDisabled?.(row.original) ?? false}
                       selected={row.id === selectedRowId}
                       fitColumns={fitColumns}
                     />

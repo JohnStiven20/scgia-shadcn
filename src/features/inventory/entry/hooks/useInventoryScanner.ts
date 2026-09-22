@@ -27,7 +27,7 @@ export function useInventoryScanner({
       // A scanner sends several characters almost instantaneously. This
       // prevents regular keyboard typing from being treated as a scan.
       minLength: 3,
-      avgTimeByChar: 20,
+      avgTimeByChar: 60,
       suffixKeyCodes: [9, 13],
       ignoreIfFocusOn: "input, textarea, select, [contenteditable='true']",
       onKeyDetect: (keyCode) => keyCode !== 116,
