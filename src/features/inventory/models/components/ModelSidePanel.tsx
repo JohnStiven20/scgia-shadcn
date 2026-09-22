@@ -562,6 +562,8 @@ function IdentifierForm({
           Identificadores asociados
         </h3>
         <IdentifierList
+          canUpdateModel={ true}
+           
           identifiers={identifiers}
           isLoading={isLoading}
           onEdit={onEdit}
@@ -842,6 +844,7 @@ function PanelBody(props: ModelSidePanelProps) {
   ) {
     return (
       <IdentifierForm
+         canUpdateModel={true}
         key={`${mode}-${model.id}-${editingIdentifier?.id ?? "new"}`}
         mode={mode}
         model={model}
