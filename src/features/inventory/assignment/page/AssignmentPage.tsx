@@ -177,7 +177,7 @@ function buildAssignmentOperation(
 
   return {
     request: {
-      accountId: draft.worker.id,
+      workerId: draft.worker.id,
       notes: draft.notes.trim(),
       imageKeys,
       generalItems,
