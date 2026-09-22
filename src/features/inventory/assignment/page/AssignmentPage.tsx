@@ -470,7 +470,7 @@ type GenericModelsBrowserProps = {
   models: TelecommunicationModelSelectionResponse[]
   selectedModel: TelecommunicationModelSelectionResponse | null
   identifiers: TelecommunicationItemModelIdentifierResponse[]
-  selectedIdentifierId: string
+  selectedIdentifierId: string | undefined
   quantity: number
   isLoadingIdentifiers: boolean
   onSelectModel: (model: TelecommunicationModelSelectionResponse) => void
@@ -602,9 +602,7 @@ function GenericModelsBrowser({
             <Button
               key={model.modelId}
               type="button"
-              variant={
-                selectedModel?.modelId === model.modelId ? "default" : "outline"
-              }
+              variant="outline"
               className="h-auto justify-between py-3 text-left"
               onClick={() => onSelectModel(model)}
             >
@@ -771,7 +769,7 @@ export const AssignmentPage = () => {
   const [selectedGenericModel, setSelectedGenericModel] =
     useState<TelecommunicationModelSelectionResponse | null>(null)
   const [selectedGenericIdentifierId, setSelectedGenericIdentifierId] =
-    useState("")
+    useState<string | undefined>("")
   const [genericQuantity, setGenericQuantity] = useState(1)
   const [availableItemsPageIndex, setAvailableItemsPageIndex] = useState(0)
   const [selectedAvailableItems, setSelectedAvailableItems] = useState<
@@ -791,13 +789,11 @@ export const AssignmentPage = () => {
   const {
     data: workers = [],
     isLoading: isLoadingWorkers,
-    isError: isWorkersError,
   } = useGetAssignableWorkersQuery()
 
   const {
     data: providers = [],
     isLoading: isLoadingProviders,
-    isError: isProvidersError,
   } = useGetProvidersQuery()
 
   const {

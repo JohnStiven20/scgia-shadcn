@@ -150,7 +150,7 @@ function ExitReasonDialog({
   onCancel,
   onConfirm,
 }: ExitReasonDialogProps) {
-  const isSpecific = identification?.productType === "SPECIFIC"
+  const isSpecific = identification?.model.productType === "SPECIFIC"
 
   return (
     <Dialog
@@ -193,9 +193,9 @@ function ExitReasonDialog({
               <h3 className="truncate text-sm font-semibold">
                 {identification.model.name}
               </h3>
-              {identification.uniqueCode ? (
+              {identification.unitCode.code ? (
                 <p className="mt-1 break-all text-muted-foreground">
-                  Código único: {identification.uniqueCode}
+                  Código único: {identification.unitCode.code}
                 </p>
               ) : null}
               <p className="mt-1 break-all text-muted-foreground">
@@ -341,7 +341,7 @@ function PreparationArea() {
         rawCode: normalizedCode,
       }).unwrap()
 
-      if (result.productType === "SPECIFIC") {
+      if (result.model.productType === "SPECIFIC") {
         if (result.telecommunicationItemId === null) {
           notifications.error(
             "La unidad identificada no tiene un registro de inventario."
@@ -349,14 +349,14 @@ function PreparationArea() {
           return
         }
 
-        if (result.status !== "AVAILABLE") {
+        if (result.unitCode.status !== "AVAILABLE") {
           notifications.error(
             "La unidad identificada no está disponible para una salida."
           )
           return
         }
 
-        if (!result.uniqueCode || !result.uniqueCodeType) {
+        if (!result.unitCode.code || !result.unitCode.productType) {
           notifications.error(
             "La respuesta no contiene el código único de la unidad."
           )
@@ -371,7 +371,7 @@ function PreparationArea() {
 
         if (isDuplicate) {
           notifications.notify(
-            `La unidad ${result.uniqueCode} ya está en la preparación.`,
+            `La unidad ${result.unitCode.code} ya está en la preparación.`,
             "warning"
           )
           return
@@ -439,9 +439,13 @@ function PreparationArea() {
       return
     }
 
-    if (identification.productType === "SPECIFIC") {
-      const { telecommunicationItemId, uniqueCode, uniqueCodeType, status } =
-        identification
+    if (identification.model.productType === "SPECIFIC") {
+      const { telecommunicationItemId } = identification
+      const {
+        code: uniqueCode,
+        productType: uniqueCodeType,
+        status,
+      } = identification.unitCode
 
       if (
         telecommunicationItemId === null ||
