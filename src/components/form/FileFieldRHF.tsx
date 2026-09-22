@@ -79,7 +79,9 @@ export function FileFieldRHF<
       rules={rules}
       control={control}
       render={({ field: { value, onChange, ref, ...field }, fieldState }) => {
-        const file = value instanceof File ? value : null
+
+    
+        const file = (value as unknown) instanceof File ? (value as File) : null
         const inputId = String(name)
 
         return (

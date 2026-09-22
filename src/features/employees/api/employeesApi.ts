@@ -5,6 +5,7 @@ import type {
   CreateWorkerRequest,
   SearchWorkersParams,
 } from "@/features/interface/worker/request/create-worker-request"
+import type { Worker } from "@/features/interface/worker/type/worker.inteface"
 
 export const employeesApi = createApi({
   reducerPath: "employeesApi",
