@@ -333,7 +333,7 @@ function StepperTrigger({
   return useRender({
     defaultTagName: "button",
     render,
-    ref: setTriggerNode,
+    ref: (node) => setTriggerNode(node as HTMLButtonElement | null),
     props: mergeProps<"button">(defaultProps, props),
   })
 }

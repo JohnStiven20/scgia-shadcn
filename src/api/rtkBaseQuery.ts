@@ -6,6 +6,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "./apiConfig";
 import { clearAuth } from "@/features/auth/store/authSlice";
+import { isUnauthorizedApiError } from "@/features/auth/utils/auth-errors";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -26,7 +27,7 @@ export const baseQueryWithAuth: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   const result = await rawBaseQuery(args, api, extraOptions)
 
-  if (result.error?.status === 401) {
+  if (isUnauthorizedApiError(result.error)) {
     api.dispatch(clearAuth())
   }
 

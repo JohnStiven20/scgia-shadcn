@@ -178,13 +178,16 @@ export function SelectFieldRHF<
       >
         <span className="flex min-w-0 items-center gap-2">
           {adornment?.start}
-          <ComboboxValue
-            placeholder={inlineLabel ? label : placeholder}
+          <span
             className={cn(
               "truncate",
               !selectedOption && "text-muted-foreground"
             )}
-          />
+          >
+            <ComboboxValue
+              placeholder={inlineLabel ? label : placeholder}
+            />
+          </span>
           {adornment?.end}
         </span>
       </ComboboxTrigger>

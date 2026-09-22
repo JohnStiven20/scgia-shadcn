@@ -50,7 +50,7 @@ export interface AssignmentSpecificItemRequest {
 }
 
 export interface AssignmentCreateRequest {
-  accountId: number
+  workerId: number
   notes: string
   imageKeys: string[]
   generalItems: AssignmentGenericItemRequest[]

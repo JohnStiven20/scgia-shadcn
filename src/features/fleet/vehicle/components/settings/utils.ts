@@ -1,7 +1,7 @@
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
-import type { Worker } from "@/features/interface/worker/type/worker.inteface"
 
 import type { VehicleSettingsFormState, WorkerOption } from "./types"
+import type { Worker } from "@/features/interface/worker/type/worker.inteface"
 
 export const UNASSIGNED_WORKER_ID = 0
 

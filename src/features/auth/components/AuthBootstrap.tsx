@@ -5,15 +5,7 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/store/store"
 import { useMeQuery } from "../api/authApi"
 import { clearAuth, setAuthInitialized } from "../store/authSlice"
-
-function isUnauthorizedError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    error.status === 401
-  )
-}
+import { isUnauthorizedApiError } from "../utils/auth-errors"
 
 export function AuthBootstrap({ children }: { children: ReactNode }) {
   const dispatch = useDispatch<AppDispatch>()
@@ -40,7 +32,7 @@ export function AuthBootstrap({ children }: { children: ReactNode }) {
   }, [dispatch, isSuccess])
 
   useEffect(() => {
-    if (isError && isUnauthorizedError(error)) {
+    if (isError && isUnauthorizedApiError(error)) {
       dispatch(clearAuth())
     }
   }, [dispatch, error, isError])
