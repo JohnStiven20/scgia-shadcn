@@ -4,7 +4,7 @@ import type { CurrentAccountResponse } from "../types/current-account-response"
 
 const storedToken =
   typeof window !== "undefined"
-    ? localStorage.getItem("token") ?? sessionStorage.getItem("token")
+    ? (localStorage.getItem("token") ?? sessionStorage.getItem("token"))
     : null
 
 export type AuthState = {
@@ -29,6 +29,25 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    setAuthSession(
+      state,
+      action: PayloadAction<{
+        token: string
+        currentAccount: CurrentAccountResponse
+      }>
+    ) {
+      state.token = action.payload.token
+      state.currentAccount = action.payload.currentAccount
+      state.roles = action.payload.currentAccount.roles
+      state.permissions = action.payload.currentAccount.permissions
+      state.isAuthenticated = true
+      state.isInitialized = true
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("token", action.payload.token)
+        sessionStorage.removeItem("token")
+      }
+    },
     setToken(state, action: PayloadAction<string | null>) {
       state.token = action.payload
       state.isAuthenticated = Boolean(action.payload)
@@ -72,6 +91,11 @@ const authSlice = createSlice({
   },
 })
 
-export const { clearAuth, setAuthInitialized, setCurrentAccount, setToken } =
-  authSlice.actions
+export const {
+  clearAuth,
+  setAuthInitialized,
+  setAuthSession,
+  setCurrentAccount,
+  setToken,
+} = authSlice.actions
 export const authReducer = authSlice.reducer
