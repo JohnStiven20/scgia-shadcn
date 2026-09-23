@@ -185,7 +185,7 @@ function ModelDetail({
   onEditModel,
   onDeleteModel,
 }: ModelDetailProps) {
-  const canDelete = canDeleteModel && model.editable && model.deletable
+  const canDelete = canDeleteModel && model.deletable
 
   return (
     <div className="grid gap-4">
@@ -335,7 +335,7 @@ function ModelForm({
   onSubmit,
 }: ModelFormProps) {
   const editing = mode === "EDIT_MODEL"
-  const structuralLocked = editing && model !== null && model.editable
+  const structuralLocked = editing && model !== null && !model.editable
   const [name, setName] = useState(model?.name ?? "")
   const [description, setDescription] = useState(model?.description ?? "")
   const [providerId, setProviderId] = useState(
@@ -346,6 +346,9 @@ function ModelForm({
   )
   const [active, setActive] = useState(model?.active ?? true)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const selectedProvider = providers.find(
+    (provider) => String(provider.id) === providerId
+  )
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -414,7 +417,9 @@ function ModelForm({
           onValueChange={(value) => setProviderId(value ?? "")}
         >
           <SelectTrigger id="model-provider" className="w-full">
-            <SelectValue placeholder="Selecciona un proveedor" />
+            <SelectValue placeholder="Selecciona un proveedor">
+              {selectedProvider?.name ?? model?.provider?.name}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {providers.map((provider) => (
@@ -554,16 +559,13 @@ function IdentifierForm({
 
       <PanelError message={validationError ?? error} />
 
-      <section
-        className="grid"
-        aria-labelledby="identifier-form-list-title"
-      >
+      <section className="grid" aria-labelledby="identifier-form-list-title">
         <h3 id="identifier-form-list-title" className="text-sm font-semibold">
           Identificadores asociados
         </h3>
         <IdentifierList
-          canUpdateModel={ true}
-           
+          canUpdateModel={true}
+
           identifiers={identifiers}
           isLoading={isLoading}
           onEdit={onEdit}
@@ -844,7 +846,7 @@ function PanelBody(props: ModelSidePanelProps) {
   ) {
     return (
       <IdentifierForm
-         canUpdateModel={true}
+        canUpdateModel={true}
         key={`${mode}-${model.id}-${editingIdentifier?.id ?? "new"}`}
         mode={mode}
         model={model}

@@ -553,7 +553,7 @@ export const ModelsPage = () => {
 
       if (!canUpdateModel) return false
 
-      if (selectedModel.editable) {
+      if (!selectedModel.editable) {
         await partialUpdateModel({
           id: selectedModel.id,
           request: {
@@ -610,8 +610,7 @@ export const ModelsPage = () => {
   }
 
   const handleConfirmModelDelete = async () => {
-    if (!selectedModel || !selectedModel.editable || !selectedModel.deletable)
-      return
+    if (!selectedModel || !selectedModel.deletable) return
     if (!canDeleteModel) return
     setPanelError(null)
 
