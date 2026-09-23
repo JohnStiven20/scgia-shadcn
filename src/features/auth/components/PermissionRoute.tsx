@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Navigate, Outlet, useLocation } from "react-router-dom"
+import { Navigate, Outlet } from "react-router-dom"
 
 import { useAuthAccess } from "../hooks/useAuthAccess"
 import type { PermissionRule } from "../utils/permission.utils"
@@ -11,15 +11,16 @@ type PermissionRouteProps = {
 }
 
 export function PermissionRoute({ rule, children }: PermissionRouteProps) {
-  const location = useLocation()
   const { matchesRule, permissions } = useAuthAccess()
 
   if (!matchesRule(rule)) {
-    if (getFirstAccessibleRoute(permissions) === null) {
+    const firstAccessibleRoute = getFirstAccessibleRoute(permissions)
+
+    if (firstAccessibleRoute === null) {
       return <Navigate to="/sin-permisos" replace />
     }
 
-    return <Navigate to="/403" replace state={{ from: location }} />
+    return <Navigate to={firstAccessibleRoute} replace />
   }
 
   if (children) {

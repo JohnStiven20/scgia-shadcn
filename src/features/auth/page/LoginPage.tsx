@@ -10,7 +10,7 @@ import {
   UserRound,
 } from "lucide-react"
 import { useDispatch } from "react-redux"
-import { useLocation, useNavigate, type Location } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 import heroImage from "@/assets/login-hero-scgia.png"
 import { useNotifications } from "@/components/notifications/NotificationsProvider"
@@ -21,12 +21,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import type { AppDispatch } from "@/store/store"
-import { useLazyMeQuery, useLoginMutation } from "../api/authApi"
-import { clearAuth } from "../store/authSlice"
-
-type LocationState = {
-  from?: Location
-}
+import { authApi, useLazyMeQuery, useLoginMutation } from "../api/authApi"
+import { clearAuth, setAuthSession } from "../store/authSlice"
+import { getFirstAccessibleRoute } from "../utils/authorized-navigation"
 
 type ApiErrorData = {
   message?: unknown
@@ -37,6 +34,10 @@ type ApiError = {
 }
 
 function getApiErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message
+  }
+
   const data = (error as ApiError | undefined)?.data
 
   if (typeof data === "string") {
@@ -57,7 +58,6 @@ function getApiErrorMessage(error: unknown) {
 export function LoginPage() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
-  const location = useLocation()
   const notifications = useNotifications()
   const [login, { isLoading, error }] = useLoginMutation()
   const [loadCurrentAccount, { isFetching: isLoadingAccount }] =
@@ -67,7 +67,6 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const from = (location.state as LocationState | null)?.from?.pathname ?? "/"
   const isSubmitting = isLoading || isLoadingAccount
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -82,15 +81,28 @@ export function LoginPage() {
     }
 
     try {
-      const pdd  =  await login({
+      const loginResponse = await login({
         username: normalizedUsername,
         password,
       }).unwrap()
+      const nextToken = loginResponse.token ?? loginResponse.accessToken ?? null
 
-      console.log(pdd);
+      if (!nextToken) {
+        throw new Error("No se recibio un token de autenticacion")
+      }
 
-      await loadCurrentAccount().unwrap()
-      navigate(from, { replace: true })
+      dispatch(authApi.util.resetApiState())
+      localStorage.setItem("token", nextToken)
+      sessionStorage.removeItem("token")
+
+      const currentAccount = await loadCurrentAccount().unwrap()
+      dispatch(setAuthSession({ token: nextToken, currentAccount }))
+
+      const firstAccessibleRoute = getFirstAccessibleRoute(
+        currentAccount.permissions
+      )
+
+      navigate(firstAccessibleRoute ?? "/sin-permisos", { replace: true })
     } catch (submitError) {
       dispatch(clearAuth())
       const message = getApiErrorMessage(submitError || error)
@@ -165,9 +177,7 @@ export function LoginPage() {
                 <div className="grid gap-1.5">
                   <div className="flex items-center justify-between gap-3">
                     <Label htmlFor="password">Contrasena</Label>
-                    <span className="text-xs text-muted-foreground">
-                      SCGIA
-                    </span>
+                    <span className="text-xs text-muted-foreground">SCGIA</span>
                   </div>
                   <div className="relative">
                     <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -212,7 +222,7 @@ export function LoginPage() {
               <div className="grid gap-3">
                 <div className="flex items-center gap-3">
                   <Separator className="flex-1" />
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
+                  <span className="text-xs whitespace-nowrap text-muted-foreground">
                     Control de acceso
                   </span>
                   <Separator className="flex-1" />
