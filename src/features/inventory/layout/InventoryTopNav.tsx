@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom"
 import { INVENTORY_PERMISSIONS } from "../permissions"
 
 export function InventoryTopNav() {
+  
   const navigate = useNavigate()
   const { hasPermission } = useAuthAccess()
 
