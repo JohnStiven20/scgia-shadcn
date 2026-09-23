@@ -298,7 +298,7 @@ export function ProductsPage() {
 
   const specificRows = specificProducts.map(toSpecificProductRow)
   const consumableRows = models
-    .filter((model) => model.telecommunicationItemType === "GENERIC")
+    .filter((model) => model.modelType === "GENERIC")
     .map(toConsumableRow)
 
   async function lookupUnit(unitCode: string) {

@@ -156,7 +156,7 @@ const modelColumns = columnHelper.columns([
         "Sin proveedor"
       ),
   }),
-  columnHelper.accessor("telecommunicationItemType", {
+  columnHelper.accessor("modelType", {
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
@@ -169,7 +169,7 @@ const modelColumns = columnHelper.columns([
     enableGlobalFilter: false,
     filterFn: "equals",
     cell: ({ row }) =>
-      row.original.telecommunicationItemType === "SPECIFIC"
+      row.original.modelType === "SPECIFIC"
         ? "Específico"
         : "Genérico",
   }),
@@ -548,6 +548,7 @@ export const ModelsPage = () => {
           ...values,
           description: values.description || null,
         }).unwrap()
+        
         notifications.success("Modelo creado correctamente.")
         closePanel()
         return true

@@ -243,7 +243,7 @@ function ModelDetail({
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold">{model.name}</h3>
           <p className="text-xs text-muted-foreground">
-            {categoryLabel(model.telecommunicationItemType)}
+            {categoryLabel(model.modelType)}
           </p>
         </div>
       </div>
@@ -342,7 +342,7 @@ function ModelForm({
     model?.provider ? String(model.provider.id) : ""
   )
   const [category, setCategory] = useState<ModelCategory>(
-    model?.telecommunicationItemType ?? "SPECIFIC"
+    model?.modelType ?? "SPECIFIC"
   )
   const [active, setActive] = useState(model?.active ?? true)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -368,7 +368,7 @@ function ModelForm({
       name: name.trim(),
       description: description.trim(),
       providerId: Number(providerId),
-      telecommunicationItemType: category,
+      modelType: category,
       active,
     })
   }
@@ -501,7 +501,7 @@ function IdentifierForm({
 }: IdentifierFormProps) {
   const editing = mode === "EDIT_IDENTIFIER"
   const requiredLength =
-    model.telecommunicationItemType === "SPECIFIC" ? 12 : 32
+    model.modelType === "SPECIFIC" ? 12 : 32
   const [code, setCode] = useState(identifier?.code ?? "")
   const [active, setActive] = useState(identifier?.active ?? true)
   const [validationError, setValidationError] = useState<string | null>(null)

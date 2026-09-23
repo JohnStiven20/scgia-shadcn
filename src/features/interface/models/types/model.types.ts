@@ -24,7 +24,7 @@ export interface TelecommunicationItemModelResponse {
   name: string
   description: string | null
   provider: ProviderResponse | null
-  telecommunicationItemType: ModelCategory
+  modelType: ModelCategory
   identifierCount: number
   createdDate: string
   updatedDate: string
@@ -44,7 +44,7 @@ export interface ModelFormValues {
   name: string
   description: string
   providerId: number
-  telecommunicationItemType: ModelCategory
+  modelType: ModelCategory
   active: boolean
 }
 
