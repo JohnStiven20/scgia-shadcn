@@ -10,9 +10,18 @@ export interface RegisterGenericEntryItemRequest {
 }
 
 export interface RegisterSpecificEntryItemRequest {
-  uniqueCode: string
-  telecommunicationItemModelId: number
-  telecommunicationItemModelIdentifierId: number
+  modelId: number
+  identifiers: RegisterSpecificEntryIdentifierRequest[]
+}
+
+export interface RegisterSpecificEntryIdentifierRequest {
+  identifierId: number
+  units: RegisterSpecificEntryUnitRequest[]
+}
+
+export interface RegisterSpecificEntryUnitRequest {
+  unitCode: string
+  itemType: string
 }
 
 export interface RegisterTelecommunicationsItemsRequest {

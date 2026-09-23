@@ -76,6 +76,7 @@ import {
 } from "@/features/inventory/api/modelsApi"
 import {
   useRegisterEntryMutation,
+  type RegisterSpecificEntryItemRequest,
   type RegisterTelecommunicationsItemsRequest,
 } from "@/features/inventory/api/operations.service"
 import { InventoryPageHeader } from "../../components"
@@ -258,16 +259,45 @@ function buildRegisterEntryRequest(
 
   if (validGenericItems.length !== genericItems.length) return null
 
+  const specificItemsByModel = new Map<
+    number,
+    Map<number, RegisterSpecificEntryItemRequest["identifiers"][number]["units"]>
+  >()
+
+  specificItems.forEach((item) => {
+
+    let identifiers = specificItemsByModel.get(item.modelId)
+    
+    if (!identifiers) {
+      identifiers = new Map()
+      specificItemsByModel.set(item.modelId, identifiers)
+    }
+
+    let units = identifiers.get(item.identifierId)
+    
+    if (!units) {
+      units = []
+      identifiers.set(item.identifierId, units)
+    }
+
+    units.push({
+      unitCode: item.uniqueCode,
+      itemType: item.uniqueCodeType ?? "SERIAL",
+    })
+  })
+
   return {
     genericItems: validGenericItems.map((item) => ({
       quantity: item.quantity,
       telecommunicationGenericId: item.telecommunicationGenericItemId,
       identifierId: item.identifierId,
     })),
-    specificItems: specificItems.map((item) => ({
-      uniqueCode: item.uniqueCode,
-      telecommunicationItemModelId: item.modelId,
-      telecommunicationItemModelIdentifierId: item.identifierId,
+    specificItems: Array.from(specificItemsByModel, ([modelId, identifiers]) => ({
+      modelId,
+      identifiers: Array.from(identifiers, ([identifierId, units]) => ({
+        identifierId,
+        units,
+      })),
     })),
   }
 }
