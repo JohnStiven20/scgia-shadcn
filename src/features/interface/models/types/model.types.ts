@@ -52,7 +52,7 @@ export interface CreateModelRequest {
   name: string
   description: string | null
   providerId: number
-  telecommunicationItemType: ModelCategory
+  modelType: ModelCategory
   active: boolean
 }
 

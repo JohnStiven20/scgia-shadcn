@@ -468,6 +468,7 @@ function getApiErrorMessage(error: unknown) {
 }
 
 export const ModelsPage = () => {
+
   const notifications = useNotifications()
   const { hasPermission } = useAuthAccess()
   const desktop = useMediaQuery("(min-width: 1024px)")
@@ -488,6 +489,7 @@ export const ModelsPage = () => {
     selectedModelId === null
       ? null
       : (models.find((model) => model.id === selectedModelId) ?? null)
+      
   const { data: identifiers = [], isLoading: isLoadingIdentifiers } =
     useGetModelIdentifiersQuery(selectedModelId ?? 0, {
       skip: selectedModelId === null,

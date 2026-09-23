@@ -716,6 +716,8 @@ function getPanelMeta(mode: SidePanelMode) {
 }
 
 export function ModelSidePanel(props: ModelSidePanelProps) {
+
+  
   const { desktop, mode, onClose } = props
   const open = mode !== "CLOSED"
   const meta = getPanelMeta(mode)
