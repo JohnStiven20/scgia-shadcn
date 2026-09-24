@@ -46,6 +46,7 @@ import {
   useGetModelCatalogQuery,
   useGetModelIdentifiersQuery,
   useGetProvidersQuery,
+  usePartialUpdateIdentifierMutation,
   usePartialUpdateModelMutation,
   useUpdateIdentifierMutation,
   useUpdateModelMutation,
@@ -169,9 +170,7 @@ const modelColumns = columnHelper.columns([
     enableGlobalFilter: false,
     filterFn: "equals",
     cell: ({ row }) =>
-      row.original.modelType === "SPECIFIC"
-        ? "Específico"
-        : "Genérico",
+      row.original.modelType === "SPECIFIC" ? "Específico" : "Genérico",
   }),
   columnHelper.accessor("identifierCount", {
     header: ({ column }) => (
@@ -468,7 +467,6 @@ function getApiErrorMessage(error: unknown) {
 }
 
 export const ModelsPage = () => {
-
   const notifications = useNotifications()
   const { hasPermission } = useAuthAccess()
   const desktop = useMediaQuery("(min-width: 1024px)")
@@ -489,7 +487,7 @@ export const ModelsPage = () => {
     selectedModelId === null
       ? null
       : (models.find((model) => model.id === selectedModelId) ?? null)
-      
+
   const { data: identifiers = [], isLoading: isLoadingIdentifiers } =
     useGetModelIdentifiersQuery(selectedModelId ?? 0, {
       skip: selectedModelId === null,
@@ -504,6 +502,8 @@ export const ModelsPage = () => {
     useCreateIdentifierMutation()
   const [updateIdentifier, updateIdentifierState] =
     useUpdateIdentifierMutation()
+  const [partialUpdateIdentifier, partialUpdateIdentifierState] =
+    usePartialUpdateIdentifierMutation()
   const [deleteIdentifier, deleteIdentifierState] =
     useDeleteIdentifierMutation()
   const isSubmitting =
@@ -513,6 +513,7 @@ export const ModelsPage = () => {
     deleteModelState.isLoading ||
     createIdentifierState.isLoading ||
     updateIdentifierState.isLoading ||
+    partialUpdateIdentifierState.isLoading ||
     deleteIdentifierState.isLoading
 
   const resetTransientState = () => {
@@ -548,7 +549,7 @@ export const ModelsPage = () => {
           ...values,
           description: values.description || null,
         }).unwrap()
-        
+
         notifications.success("Modelo creado correctamente.")
         closePanel()
         return true
@@ -590,11 +591,19 @@ export const ModelsPage = () => {
 
     try {
       if (panelMode === "EDIT_IDENTIFIER" && editingIdentifier) {
-        await updateIdentifier({
-          id: editingIdentifier.id,
-          modelId: selectedModel.id,
-          request: values,
-        }).unwrap()
+        if (editingIdentifier.mutable) {
+          await updateIdentifier({
+            id: editingIdentifier.id,
+            modelId: selectedModel.id,
+            request: values,
+          }).unwrap()
+        } else {
+          await partialUpdateIdentifier({
+            id: editingIdentifier.id,
+            modelId: selectedModel.id,
+            request: { active: values.active },
+          }).unwrap()
+        }
         notifications.success("Identificador actualizado correctamente.")
         setPanelMode("DETAIL")
         setEditingIdentifier(null)
@@ -733,7 +742,7 @@ export const ModelsPage = () => {
             setPanelMode("CONFIRM_MODEL_DELETE")
           }}
           onEditIdentifier={(identifier) => {
-            if (!canUpdateModel || !identifier.mutable) return
+            if (!canUpdateModel) return
             setPanelError(null)
             setIdentifierToDelete(null)
             setEditingIdentifier(identifier)

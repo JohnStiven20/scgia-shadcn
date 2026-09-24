@@ -79,6 +79,10 @@ export interface UpdateIdentifierRequest {
   active: boolean
 }
 
+export interface IdentifierPartialUpdateRequest {
+  active: boolean
+}
+
 export interface ClientModelPage {
   content: TelecommunicationItemModelResponse[]
   page: number

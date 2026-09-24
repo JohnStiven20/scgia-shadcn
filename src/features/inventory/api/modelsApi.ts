@@ -4,6 +4,7 @@ import type { PageResponse } from "../../../types/api/page-response"
 import type {
   CreateIdentifierRequest,
   CreateModelRequest,
+  IdentifierPartialUpdateRequest,
   PartialUpdateModelRequest,
   ProviderResponse,
   TelecommunicationItemModelIdentifierResponse,
@@ -168,6 +169,21 @@ export const modelsApi = createApi({
         { type: "Model", id: "LIST" },
       ],
     }),
+    partialUpdateIdentifier: builder.mutation<
+      void,
+      { id: number; modelId: number; request: IdentifierPartialUpdateRequest }
+    >({
+      query: ({ id, request }) => ({
+        url: `/telecommunication-item-model-identifier/partial/${id}`,
+        method: "PUT",
+        body: request,
+      }),
+      invalidatesTags: (_result, _error, { id, modelId }) => [
+        { type: "Identifier", id },
+        { type: "Identifier", id: `LIST-${modelId}` },
+        { type: "Model", id: "LIST" },
+      ],
+    }),
     deleteIdentifier: builder.mutation<void, { id: number; modelId: number }>({
       query: ({ id }) => ({
         url: `/telecommunication-item-model-identifier/${id}`,
@@ -197,5 +213,6 @@ export const {
   useDeleteModelMutation,
   useCreateIdentifierMutation,
   useUpdateIdentifierMutation,
+  usePartialUpdateIdentifierMutation,
   useDeleteIdentifierMutation,
 } = modelsApi

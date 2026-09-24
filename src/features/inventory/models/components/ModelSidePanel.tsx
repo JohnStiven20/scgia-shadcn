@@ -140,7 +140,6 @@ function IdentifierList({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                disabled={!identifier.mutable}
                 onClick={() => onEdit(identifier)}
                 aria-label={`Editar identificador ${identifier.code}`}
               >
@@ -500,8 +499,7 @@ function IdentifierForm({
   onDelete,
 }: IdentifierFormProps) {
   const editing = mode === "EDIT_IDENTIFIER"
-  const requiredLength =
-    model.modelType === "SPECIFIC" ? 12 : 32
+  const codeLocked = editing && identifier !== null && !identifier.mutable
   const [code, setCode] = useState(identifier?.code ?? "")
   const [active, setActive] = useState(identifier?.active ?? true)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -509,13 +507,6 @@ function IdentifierForm({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setValidationError(null)
-
-    if (code.trim().length !== requiredLength) {
-      setValidationError(
-        `El identificador debe tener exactamente ${requiredLength} caracteres.`
-      )
-      return
-    }
 
     const saved = await onSubmit({ code: code.trim(), active })
 
@@ -537,14 +528,15 @@ function IdentifierForm({
         <Input
           id="identifier-code"
           value={code}
-          maxLength={requiredLength}
-          disabled={isSubmitting}
-          placeholder={`${requiredLength} caracteres`}
+          disabled={codeLocked || isSubmitting}
           onChange={(event) => setCode(event.target.value)}
         />
-        <span className="text-right text-xs text-muted-foreground">
-          {code.length}/{requiredLength}
-        </span>
+        {codeLocked ? (
+          <p className="text-xs text-muted-foreground">
+            Este identificador está protegido. Solo se puede modificar su
+            estado.
+          </p>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2">
@@ -582,10 +574,7 @@ function IdentifierForm({
         >
           Cancelar
         </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting || code.trim().length !== requiredLength}
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {editing ? <Save /> : <Plus />}
           {editing ? "Guardar cambios" : "Crear identificador"}
         </Button>
@@ -716,8 +705,6 @@ function getPanelMeta(mode: SidePanelMode) {
 }
 
 export function ModelSidePanel(props: ModelSidePanelProps) {
-
-  
   const { desktop, mode, onClose } = props
   const open = mode !== "CLOSED"
   const meta = getPanelMeta(mode)
