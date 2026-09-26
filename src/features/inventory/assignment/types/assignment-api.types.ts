@@ -42,7 +42,7 @@ export interface AssignmentGenericModelResponse {
 
 export interface AssignmentDetailResponse {
   id: number
-  accountId: number
+  workerId: number
   dateAssigned: string
   notes: string | null
   specificModels: AssignmentSpecificModelResponse[]

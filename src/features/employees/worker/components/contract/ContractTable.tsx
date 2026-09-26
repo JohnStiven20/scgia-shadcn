@@ -94,7 +94,7 @@ export function ContractTable({
           columns={columns}
           data={contracts}
           isLoading={isLoading}
-          showPagination={false}
+          pageSize={10}
           getRowId={(contract) => String(contract.id)}
           onRowClick={onSelectContract}
           ariaLabel="Listado de contratos del trabajador"

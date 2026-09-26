@@ -49,7 +49,7 @@ import { useIdentifyProductMutation } from "@/features/inventory/api/identificat
 import {
   useLazyGetModelIdentifiersQuery,
   useGetProvidersQuery,
-  useLazyGetTelecommunicationModelsSelectionQuery,
+  useLazyGetModelsSelectionQuery,
 } from "@/features/inventory/api/modelsApi"
 import type { TelecommunicationModelSelectionResponse } from "@/features/interface/models/types/selection.types"
 import type { TelecommunicationItemModelIdentifierResponse } from "@/features/interface/models/types/model.types"
@@ -98,6 +98,7 @@ import {
 import { createColumnHelper } from "@tanstack/react-table"
 import type { DataTableFeatures } from "@/components/data-table/data-table-features"
 import { skipToken } from "@reduxjs/toolkit/query"
+import { WorkflowStep } from "../../entry/page/EntryPage"
 
 type ConfirmationDialogProps = {
   open: boolean
@@ -305,32 +306,34 @@ function AssignmentPreparationArea({
               {quantityText(totalQuantity)}
             </p>
           </header>
-          <AssignmentDraftList
-            specificProducts={draft.specificProducts}
-            consumables={draft.consumables}
-            onRemoveSpecific={onRemoveSpecific}
-            onRemoveConsumable={onRemoveConsumable}
-            onChangeConsumableQuantity={onChangeConsumableQuantity}
-            onAddSpecificEvidence={onAddSpecificEvidence}
-            onRemoveSpecificEvidence={onRemoveSpecificEvidence}
-            onAddConsumableEvidence={onAddConsumableEvidence}
-            onRemoveConsumableEvidence={onRemoveConsumableEvidence}
-          />
-          <section className="mt-4 grid gap-4 rounded-lg border p-3 lg:grid-cols-2">
-            <label className="text-xs font-medium">
-              Nota general
-              <Textarea
-                value={draft.notes}
-                onChange={(event) => onNotesChange(event.target.value)}
-                className="mt-1 min-h-24"
-              />
-            </label>
-            <EvidenceUploader
-              evidence={draft.generalEvidence}
-              onAdd={onAddGeneralEvidence}
-              onRemove={onRemoveGeneralEvidence}
+          <div className="max-h-[70vh] overflow-y-auto pr-2">
+            <AssignmentDraftList
+              specificProducts={draft.specificProducts}
+              consumables={draft.consumables}
+              onRemoveSpecific={onRemoveSpecific}
+              onRemoveConsumable={onRemoveConsumable}
+              onChangeConsumableQuantity={onChangeConsumableQuantity}
+              onAddSpecificEvidence={onAddSpecificEvidence}
+              onRemoveSpecificEvidence={onRemoveSpecificEvidence}
+              onAddConsumableEvidence={onAddConsumableEvidence}
+              onRemoveConsumableEvidence={onRemoveConsumableEvidence}
             />
-          </section>
+            <section className="mt-4 grid gap-4 rounded-lg border p-3 lg:grid-cols-2">
+              <label className="text-xs font-medium">
+                Nota general
+                <Textarea
+                  value={draft.notes}
+                  onChange={(event) => onNotesChange(event.target.value)}
+                  className="mt-1 min-h-24"
+                />
+              </label>
+              <EvidenceUploader
+                evidence={draft.generalEvidence}
+                onAdd={onAddGeneralEvidence}
+                onRemove={onRemoveGeneralEvidence}
+              />
+            </section>
+          </div>
         </section>
       ) : (
         <Empty className="mt-4 min-h-56 rounded-lg border border-dashed">
@@ -368,36 +371,6 @@ type WorkflowStepProps = {
   children: React.ReactNode
 }
 
-function WorkflowStep({
-  number,
-  title,
-  last = false,
-  children,
-}: WorkflowStepProps) {
-  return (
-    <StepperItem step={number} className="block flex-none">
-      <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-3">
-        <div className="flex flex-col items-center">
-          <StepperIndicator className="bg-black text-white data-[state=active]:bg-black data-[state=active]:text-white data-[state=completed]:bg-black data-[state=completed]:text-white">
-            {number}
-          </StepperIndicator>
-          {!last ? (
-            <StepperSeparator className="m-0 mt-2 min-h-6 flex-1 bg-border data-[state=completed]:bg-black" />
-          ) : null}
-        </div>
-        <section
-          className={last ? "pb-0" : "pb-5"}
-          aria-labelledby={`entry-step-${number}`}
-        >
-          <StepperTitle id={`entry-step-${number}`} className="pt-1">
-            {title}
-          </StepperTitle>
-          <div className="pt-0">{children}</div>
-        </section>
-      </div>
-    </StepperItem>
-  )
-}
 
 const columnHelper = createColumnHelper<
   DataTableFeatures,
@@ -812,11 +785,11 @@ export const AssignmentPage = () => {
   const [
     loadSpecificModels,
     { data: models = [], isFetching: isLoadingSpecificModels },
-  ] = useLazyGetTelecommunicationModelsSelectionQuery()
+  ] = useLazyGetModelsSelectionQuery()
   const [
     loadGenericModels,
     { data: genericModels = [], isFetching: isLoadingGenericModels },
-  ] = useLazyGetTelecommunicationModelsSelectionQuery()
+  ] = useLazyGetModelsSelectionQuery()
   const [
     loadGenericIdentifiers,
     { data: genericIdentifiers = [], isFetching: isLoadingGenericIdentifiers },
@@ -1287,7 +1260,7 @@ export const AssignmentPage = () => {
   function applyWorker(value: string) {
     const worker = workers.find((item) => String(item.id) === value)
     const workerOption: WorkerOption | null = worker
-      ? { id: worker.id, name: worker.username }
+      ? { id: worker.id, name: worker.name }
       : null
     updateDraft((current) => ({ ...current, worker: workerOption }))
   }
@@ -1471,7 +1444,7 @@ export const AssignmentPage = () => {
         <article className="w-full min-w-0 rounded border p-4 lg:flex-1">
           <Stepper orientation="vertical">
             <StepperNav className="w-full">
-              <WorkflowStep title="Trabajador" number={1}>
+              <WorkflowStep title="Trabajador" number={1} last={!draft.worker}>
                 <label className="min-w-0 text-xs font-medium">
                   <Select
                     value={draft.worker ? String(draft.worker.id) : ""}
@@ -1491,7 +1464,12 @@ export const AssignmentPage = () => {
                     <SelectContent align="start">
                       {workers.map((worker) => (
                         <SelectItem key={worker.id} value={String(worker.id)}>
-                          {worker.username}
+                          <span className="flex min-w-0 flex-col">
+                            <span>{worker.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {worker.surname}
+                            </span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1500,7 +1478,7 @@ export const AssignmentPage = () => {
               </WorkflowStep>
               <Collapsible open={Boolean(draft.worker)}>
                 <CollapsibleContent>
-                  <WorkflowStep title="Proveedor" number={2}>
+                  <WorkflowStep title="Proveedor" number={2} last={!providerId}>
                     <label className="min-w-0 text-xs font-medium">
                       <Select
                         value={providerId}
@@ -1537,7 +1515,7 @@ export const AssignmentPage = () => {
               </Collapsible>
               <Collapsible open={Boolean(selectedProvider)}>
                 <CollapsibleContent>
-                  <WorkflowStep title="Tipo de producto" number={3}>
+                  <WorkflowStep title="Tipo de producto" number={3} last={!productType}>
                     <FieldSet>
                       <legend className="sr-only">Tipo de producto</legend>
                       <nav

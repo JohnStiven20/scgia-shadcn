@@ -27,7 +27,7 @@ export const employeeFiltersDefaultValues: SearchWorkersParams = {
   sort: undefined,
 }
 
-export const CARD_PAGE_SIZE_OPTIONS = [8, 16, 24]
+export const CARD_PAGE_SIZE_OPTIONS = [10, 20, 30]
 
 function useEmployeesNavigation() {
   const navigate = useNavigate()

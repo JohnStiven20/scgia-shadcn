@@ -104,8 +104,7 @@ export function AbsenceTypesPage() {
       <DataTable
         columns={absenceTypeColumns}
         data={absenceTypes}
-        pageSize={100}
-        showPagination={false}
+        pageSize={10}
         getRowId={(absenceType) => String(absenceType.id)}
         selectedRowId={
           selectedTypeId === null ? undefined : String(selectedTypeId)

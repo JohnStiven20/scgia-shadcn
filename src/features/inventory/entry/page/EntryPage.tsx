@@ -58,10 +58,7 @@ import {
 } from "@/components/reui/stepper"
 import { useGlobalError } from "@/hooks"
 import type { IdentificationResponse } from "@/features/interface/identification/types"
-import {
-  useLazyGenericItemsQuery,
-  type GenericItemResponse,
-} from "@/features/inventory/api/generic-items.service"
+import type { ProviderResponse } from "@/features/interface/models/types/model.types"
 import {
   useIdentifyProductManualMutation,
   useIdentifyProductMutation,
@@ -72,7 +69,7 @@ import {
 } from "@/features/inventory/api/identifiers.service"
 import {
   useGetProvidersQuery,
-  useLazyGetTelecommunicationModelsSelectionQuery,
+  useLazyGetModelsSelectionQuery,
 } from "@/features/inventory/api/modelsApi"
 import {
   useRegisterEntryMutation,
@@ -125,6 +122,21 @@ type ModelComboboxProps = {
   disabled?: boolean
 }
 
+type ProviderSelectorProps = {
+  providers: ProviderResponse[]
+  value: string
+  selectedProviderName?: string
+  isLoading: boolean
+  isIdentifying: boolean
+  onValueChange: (value: string | null) => void
+}
+
+type ProductTypeSelectorProps = {
+  productType: ProductType | null
+  modelsLoading: boolean
+  onValueChange: (productType: ProductType) => void | Promise<void>
+}
+
 function ConfirmationDialog({
   open,
   title,
@@ -153,7 +165,7 @@ function ConfirmationDialog({
   )
 }
 
-function WorkflowStep({
+export function WorkflowStep({
   number,
   title,
   last = false,
@@ -167,7 +179,7 @@ function WorkflowStep({
             {number}
           </StepperIndicator>
           {!last ? (
-            <StepperSeparator className="m-0 mt-2 min-h-6 flex-1 bg-border data-[state=completed]:bg-black" />
+            <StepperSeparator className="m-0 mt-2 min-h-6 flex-1 bg-black" />
           ) : null}
         </div>
         <section
@@ -245,6 +257,81 @@ function ModelCombobox({
   )
 }
 
+function ProviderSelector({
+  providers,
+  value,
+  selectedProviderName,
+  isLoading,
+  isIdentifying,
+  onValueChange,
+}: ProviderSelectorProps) {
+  return (
+    <FieldSet>
+      <legend className="sr-only">Selección de proveedor</legend>
+      <Field>
+        <FieldLabel htmlFor="entry-provider">Proveedor de lectura</FieldLabel>
+        <Select value={value} onValueChange={onValueChange}>
+          <SelectTrigger
+            id="entry-provider"
+            className="h-11 w-full"
+            disabled={isLoading || isIdentifying}
+            aria-label="Proveedor de lectura"
+          >
+            <Truck className="size-4 text-muted-foreground" />
+            <SelectValue placeholder="Selecciona un proveedor">
+              {selectedProviderName}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent align="start">
+            {providers.map((provider) => (
+              <SelectItem key={provider.id} value={String(provider.id)}>
+                <span className="font-medium">{provider.name}</span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+    </FieldSet>
+  )
+}
+
+function ProductTypeSelector({
+  productType,
+  modelsLoading,
+  onValueChange,
+}: ProductTypeSelectorProps) {
+  return (
+    <FieldSet>
+      <legend className="sr-only">Tipo de producto</legend>
+      <nav
+        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+        aria-label="Selecciona el tipo de producto"
+      >
+        <Button
+          type="button"
+          variant={productType === "SPECIFIC" ? "default" : "outline"}
+          aria-pressed={productType === "SPECIFIC"}
+          disabled={modelsLoading}
+          onClick={() => void onValueChange("SPECIFIC")}
+        >
+          <Package />
+          Productos
+        </Button>
+        <Button
+          type="button"
+          variant={productType === "GENERIC" ? "default" : "outline"}
+          aria-pressed={productType === "GENERIC"}
+          disabled={modelsLoading}
+          onClick={() => void onValueChange("GENERIC")}
+        >
+          <Package />
+          Genéricos
+        </Button>
+      </nav>
+    </FieldSet>
+  )
+}
+
 function buildRegisterEntryRequest(
   specificItems: SpecificEntryDraftItem[],
   genericItems: GenericEntryDraftItem[]
@@ -267,14 +354,14 @@ function buildRegisterEntryRequest(
   specificItems.forEach((item) => {
 
     let identifiers = specificItemsByModel.get(item.modelId)
-    
+
     if (!identifiers) {
       identifiers = new Map()
       specificItemsByModel.set(item.modelId, identifiers)
     }
 
     let units = identifiers.get(item.identifierId)
-    
+
     if (!units) {
       units = []
       identifiers.set(item.identifierId, units)
@@ -347,13 +434,12 @@ function PreparationArea({
               variant="secondary"
               role="status"
               aria-live="polite"
-              className={`h-7 gap-2 px-3 text-xs font-medium ${
-                isIdentifying
+              className={`h-7 gap-2 px-3 text-xs font-medium ${isIdentifying
                   ? "bg-blue-50 text-blue-700"
                   : hasProvider
                     ? "bg-emerald-50 text-emerald-700"
                     : "bg-muted text-muted-foreground"
-              }`}
+                }`}
             >
               {isIdentifying ? (
                 <LoaderCircle className="animate-spin" />
@@ -425,56 +511,47 @@ function PreparationArea({
 }
 
 export const EntryPage = () => {
-  const [identifyProduct, { isLoading: isIdentifying }] =
-    useIdentifyProductMutation()
-  const [identifyProductManual, { isLoading: isIdentifyingManual }] =
-    useIdentifyProductManualMutation()
+
+  const notifications = useNotifications()
+  const { handleError } = useGlobalError()
 
   const [providerId, setProviderId] = useState("")
-  const [pendingProviderId, setPendingProviderId] = useState<string | null>(
-    null
-  )
+  const [pendingProviderId, setPendingProviderId] = useState<string | null>(null)
   const [productType, setProductType] = useState<ProductType | null>(null)
   const [selectedModel, setSelectedModel] = useState<FlowModel | null>(null)
-  const [selectedIdentifier, setSelectedIdentifier] =
-    useState<IdentifierResponse | null>(null)
+  const [selectedIdentifier, setSelectedIdentifier] = useState<IdentifierResponse | null>(null)
   const [uniqueCode, setUniqueCode] = useState("")
   const [genericQuantity, setGenericQuantity] = useState(1)
-  const [specificItems, setSpecificItems] = useState<SpecificEntryDraftItem[]>(
-    []
-  )
+  const [specificItems, setSpecificItems] = useState<SpecificEntryDraftItem[]>([])
   const [genericItems, setGenericItems] = useState<GenericEntryDraftItem[]>([])
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+
   const identifyingRef = useRef(false)
   const specificItemsRef = useRef<SpecificEntryDraftItem[]>([])
   const genericItemsRef = useRef<GenericEntryDraftItem[]>([])
-  const notifications = useNotifications()
-  const { handleError } = useGlobalError()
 
   const {
     data: providers = [],
     isLoading: isLoadingProviders,
-    isError: isProvidersError,
+    isError: isProvidersError
   } = useGetProvidersQuery()
 
-  const [loadSpecificModels, specificModelsResult] =
-    useLazyGetTelecommunicationModelsSelectionQuery()
-  const [loadGenericItems, genericItemsResult] = useLazyGenericItemsQuery()
+  const [loadSpecificModels, specificModelsResult] = useLazyGetModelsSelectionQuery()
   const [loadIdentifiers, identifiersResult] = useLazyIdentifiersQuery()
-  const [registerEntry, { isLoading: isRegistering }] =
-    useRegisterEntryMutation()
+
+  const [identifyProduct, { isLoading: isIdentifying }] = useIdentifyProductMutation()
+  const [identifyProductManual, { isLoading: isIdentifyingManual }] = useIdentifyProductManualMutation()
+  const [registerEntry, { isLoading: isRegistering }] = useRegisterEntryMutation()
 
   const activeProviders = providers.filter((provider) => provider.active)
-  const selectedProvider = activeProviders.find(
-    (provider) => String(provider.id) === providerId
-  )
+  const selectedProvider = activeProviders.find((provider) => String(provider.id) === providerId)
   const selectedProviderId = selectedProvider?.id
   const selectedProviderName = selectedProvider?.name
   const hasProvider = selectedProviderId !== undefined
   const hasPendingItems = specificItems.length > 0 || genericItems.length > 0
+  const modelsLoading = specificModelsResult.isFetching
+
   const blocker = useBlocker(hasPendingItems)
-  const modelsLoading =
-    specificModelsResult.isFetching || genericItemsResult.isFetching
 
   const activeStep = (() => {
     if (!hasProvider) return 1
@@ -484,19 +561,13 @@ export const EntryPage = () => {
     return 5
   })()
 
-  const specificModelOptions: FlowModel[] = (
-    specificModelsResult.data ?? []
-  ).map((model) => ({ modelId: model.id, name: model.name }))
-
-  const genericModelOptions: FlowModel[] = (genericItemsResult.data ?? []).map(
-    (item: GenericItemResponse) => ({
-      modelId: item.modelId,
-      name: item.genericItemName,
-      genericItemId: item.genericItemId,
+  const modelOptions: FlowModel[] = (specificModelsResult.data ?? []).map(
+    (model) => ({
+      modelId: model.id,
+      name: model.name,
+      genericItemId: model.telecommunicationGenericItemId,
     })
   )
-  const modelOptions =
-    productType === "SPECIFIC" ? specificModelOptions : genericModelOptions
 
   const replaceSpecificItems = useCallback(
     (nextItems: SpecificEntryDraftItem[]) => {
@@ -570,7 +641,7 @@ export const EntryPage = () => {
           item.modelId === result.model.id &&
           item.identifierId === result.identifier.id &&
           item.telecommunicationGenericItemId ===
-            result.telecommunicationGenericItemId
+          result.telecommunicationGenericItemId
       )
       if (existingIndex >= 0) {
         const quantityToAdd = Math.max(1, result.quantity ?? 1)
@@ -661,12 +732,16 @@ export const EntryPage = () => {
   }
 
   function handleProviderChange(nextProviderId: string | null) {
+
     const normalizedProviderId = nextProviderId ?? ""
+    
     if (normalizedProviderId === providerId) return
+    
     if (hasPendingItems) {
       setPendingProviderId(normalizedProviderId)
       return
     }
+    
     applyProviderChange(normalizedProviderId)
   }
 
@@ -678,25 +753,25 @@ export const EntryPage = () => {
   }
 
   async function handleProductTypeChange(nextProductType: ProductType) {
+
     if (selectedProviderId === undefined) return
+    
     setProductType(nextProductType)
     setSelectedModel(null)
     setSelectedIdentifier(null)
     setUniqueCode("")
     setGenericQuantity(1)
+    
     try {
-      if (nextProductType === "SPECIFIC") {
-        await loadSpecificModels({
-          providerId: selectedProviderId,
-          modelType: "SPECIFIC",
-          operationType: "ENTRY",
-        }).unwrap()
-      } else {
-        await loadGenericItems().unwrap()
-      }
+      await loadSpecificModels({
+        providerId: selectedProviderId,
+        modelType: nextProductType,
+        operationType: "ENTRY",
+      }).unwrap()
     } catch (error) {
       handleError(error, "No se pudieron cargar los modelos disponibles.")
     }
+    
   }
 
   async function handleModelChange(model: FlowModel | null) {
@@ -888,83 +963,23 @@ export const EntryPage = () => {
             <Stepper value={activeStep} orientation="vertical">
               <StepperNav className="w-full">
                 <WorkflowStep number={1} title="Proveedor" last={!hasProvider}>
-                  <FieldSet>
-                    <legend className="sr-only">Selección de proveedor</legend>
-                    <Field>
-                      <FieldLabel htmlFor="entry-provider">
-                        Proveedor de lectura
-                      </FieldLabel>
-                      <Select
-                        value={providerId}
-                        onValueChange={handleProviderChange}
-                      >
-                        <SelectTrigger
-                          id="entry-provider"
-                          className="h-11 w-full"
-                          disabled={isLoadingProviders || isIdentifying}
-                          aria-label="Proveedor de lectura"
-                        >
-                          <Truck className="size-4 text-muted-foreground" />
-                          <SelectValue placeholder="Selecciona un proveedor">
-                            {selectedProvider?.name}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent align="start">
-                          {activeProviders.map((provider) => (
-                            <SelectItem
-                              key={provider.id}
-                              value={String(provider.id)}
-                            >
-                              <span className="font-medium">
-                                {provider.name}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </FieldSet>
+                  <ProviderSelector
+                    providers={activeProviders}
+                    value={providerId}
+                    selectedProviderName={selectedProvider?.name}
+                    isLoading={isLoadingProviders}
+                    isIdentifying={isIdentifying}
+                    onValueChange={handleProviderChange}
+                  />
                 </WorkflowStep>
-
                 <Collapsible open={hasProvider}>
                   <CollapsibleContent>
-                    <WorkflowStep number={2} title="Tipo de producto">
-                      <FieldSet>
-                        <legend className="sr-only">Tipo de producto</legend>
-                        <nav
-                          className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-                          aria-label="Selecciona el tipo de producto"
-                        >
-                          <Button
-                            type="button"
-                            variant={
-                              productType === "SPECIFIC" ? "default" : "outline"
-                            }
-                            aria-pressed={productType === "SPECIFIC"}
-                            disabled={modelsLoading}
-                            onClick={() =>
-                              void handleProductTypeChange("SPECIFIC")
-                            }
-                          >
-                            <Package />
-                            Productos
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={
-                              productType === "GENERIC" ? "default" : "outline"
-                            }
-                            aria-pressed={productType === "GENERIC"}
-                            disabled={modelsLoading}
-                            onClick={() =>
-                              void handleProductTypeChange("GENERIC")
-                            }
-                          >
-                            <Package />
-                            Genéricos
-                          </Button>
-                        </nav>
-                      </FieldSet>
+                    <WorkflowStep number={2} title="Tipo de producto" last={!productType}>
+                      <ProductTypeSelector
+                        productType={productType}
+                        modelsLoading={modelsLoading}
+                        onValueChange={handleProductTypeChange}
+                      />
                     </WorkflowStep>
                   </CollapsibleContent>
                 </Collapsible>
@@ -978,8 +993,10 @@ export const EntryPage = () => {
                           ? "Modelo específico"
                           : "Modelo genérico"
                       }
+
+                      last={!selectedModel}
                     >
-                      <FieldSet  className="w-full min-w-0">
+                      <FieldSet className="w-full min-w-0">
                         <legend className="sr-only">Selección de modelo</legend>
                         <Field>
                           <FieldLabel htmlFor="entry-model">
@@ -987,27 +1004,33 @@ export const EntryPage = () => {
                               ? "Selecciona un modelo específico del catálogo."
                               : "Selecciona un modelo genérico del catálogo."}
                           </FieldLabel>
-                          <ModelCombobox
-                            id="entry-model"
-                            models={modelOptions}
-                            value={selectedModel}
-                            onValueChange={handleModelChange}
-                            placeholder={
-                              modelsLoading
-                                ? "Cargando modelos..."
-                                : "Selecciona un modelo"
-                            }
-                            disabled={
-                              modelsLoading || modelOptions.length === 0
-                            }
-                          />
+                          {modelOptions.length > 0 || modelsLoading ? (
+                            <ModelCombobox
+                              id="entry-model"
+                              models={modelOptions}
+                              value={selectedModel}
+                              onValueChange={handleModelChange}
+                              placeholder={
+                                modelsLoading
+                                  ? "Cargando modelos..."
+                                  : "Selecciona un modelo"
+                              }
+                              disabled={modelsLoading}
+                            />
+                          ) : null}
                         </Field>
-                        {specificModelsResult.isError ||
-                        genericItemsResult.isError ? (
+                        {specificModelsResult.isError ? (
                           <Alert variant="destructive">
                             <Info />
                             <AlertDescription>
                               No se pudieron cargar los modelos disponibles.
+                            </AlertDescription>
+                          </Alert>
+                        ) : !modelsLoading && modelOptions.length === 0 ? (
+                          <Alert>
+                            <Info />
+                            <AlertDescription>
+                              No hay modelos {productType === "SPECIFIC" ? "específicos" : "genéricos"} disponibles para este proveedor.
                             </AlertDescription>
                           </Alert>
                         ) : null}
@@ -1018,7 +1041,7 @@ export const EntryPage = () => {
 
                 <Collapsible open={selectedModel !== null}>
                   <CollapsibleContent>
-                    <WorkflowStep number={4} title="Identificador asociado">
+                    <WorkflowStep number={4} title="Identificador asociado" last={!selectedIdentifier}>
                       <FieldSet>
                         <legend className="sr-only">
                           Selección de identificador asociado
@@ -1027,55 +1050,67 @@ export const EntryPage = () => {
                           <FieldLabel htmlFor="entry-identifier">
                             Selecciona un identificador asociado al modelo.
                           </FieldLabel>
-                          <Select
-                            value={
-                              selectedIdentifier
-                                ? String(selectedIdentifier.code)
-                                : ""
-                            }
-                            onValueChange={(value) => {
-                              const identifier = (
-                                identifiersResult.data ?? []
-                              ).find((item) => String(item.code) === value)
-                              setSelectedIdentifier(identifier ?? null)
-                              setUniqueCode("")
-                              setGenericQuantity(1)
-                            }}
-                          >
-                            <SelectTrigger
-                              id="entry-identifier"
-                              className="h-11 w-full"
-                              disabled={identifiersResult.isFetching}
+                          {(identifiersResult.data?.length ?? 0) > 0 ||
+                          identifiersResult.isFetching ? (
+                            <Select
+                              value={
+                                selectedIdentifier
+                                  ? String(selectedIdentifier.code)
+                                  : ""
+                              }
+                              onValueChange={(value) => {
+                                const identifier = (
+                                  identifiersResult.data ?? []
+                                ).find((item) => String(item.code) === value)
+                                setSelectedIdentifier(identifier ?? null)
+                                setUniqueCode("")
+                                setGenericQuantity(1)
+                              }}
                             >
-                              <SelectValue
-                                placeholder={
-                                  identifiersResult.isFetching
-                                    ? "Cargando identificadores..."
-                                    : "Selecciona un identificador"
-                                }
+                              <SelectTrigger
+                                id="entry-identifier"
+                                className="h-11 w-full"
+                                disabled={identifiersResult.isFetching}
                               >
-                                {selectedIdentifier?.code}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent align="start">
-                              {(identifiersResult.data ?? []).map(
-                                (identifier) => (
-                                  <SelectItem
-                                    key={identifier.id}
-                                    value={String(identifier.code)}
-                                  >
-                                    {identifier.code}
-                                  </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
+                                <SelectValue
+                                  placeholder={
+                                    identifiersResult.isFetching
+                                      ? "Cargando identificadores..."
+                                      : "Selecciona un identificador"
+                                  }
+                                >
+                                  {selectedIdentifier?.code}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent align="start">
+                                {(identifiersResult.data ?? []).map(
+                                  (identifier) => (
+                                    <SelectItem
+                                      key={identifier.id}
+                                      value={String(identifier.code)}
+                                    >
+                                      {identifier.code}
+                                    </SelectItem>
+                                  )
+                                )}
+                              </SelectContent>
+                            </Select>
+                          ) : null}
                         </Field>
                         {identifiersResult.isError ? (
                           <Alert variant="destructive">
                             <Info />
                             <AlertDescription>
                               No se pudieron cargar los identificadores del
+                              modelo.
+                            </AlertDescription>
+                          </Alert>
+                        ) : !identifiersResult.isFetching &&
+                          (identifiersResult.data?.length ?? 0) === 0 ? (
+                          <Alert>
+                            <Info />
+                            <AlertDescription>
+                              No hay identificadores disponibles para este
                               modelo.
                             </AlertDescription>
                           </Alert>
@@ -1089,8 +1124,7 @@ export const EntryPage = () => {
                   <CollapsibleContent>
                     <WorkflowStep
                       number={5}
-                      title={
-                        productType === "SPECIFIC"
+                      title={productType === "SPECIFIC"
                           ? "Identificador único de la unidad"
                           : "Cantidad"
                       }

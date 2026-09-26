@@ -2,7 +2,7 @@ import type { TypeAccount } from "@/features/interface/account/enum/type-account
 
 import type { AccountFilters, AccountStatusFilter } from "./types"
 
-export const ACCOUNT_PAGE_SIZE_OPTIONS = [5, 10, 25, 50]
+export const ACCOUNT_PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 export const EMPTY_ACCOUNT_FILTERS: AccountFilters = {
   name: "",

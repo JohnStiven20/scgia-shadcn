@@ -478,7 +478,7 @@ function SpecificItemsTable({
       data={model.items}
       columns={columns}
       getRowId={(item) => String(item.assignmentTelecommunicationItemId)}
-      pageSize={6}
+      pageSize={10}
       pageSizeOptions={[6, 10]}
       ariaLabel={`Unidades asignadas de ${model.modelName}`}
       emptyMessage="Este modelo no tiene unidades retornables."
@@ -585,7 +585,7 @@ function GenericItemsTable({
       data={model.items}
       columns={columns}
       getRowId={(item) => String(item.assignmentTelecommunicationGenericItemId)}
-      pageSize={6}
+      pageSize={10}
       pageSizeOptions={[6, 10]}
       ariaLabel={`Consumibles asignados de ${model.modelName}`}
       emptyMessage="Este modelo no tiene consumibles retornables."
@@ -721,10 +721,8 @@ export function ReturnPage() {
   }, [hasPreparedItems])
 
   const detailAccountMismatch = Boolean(
-    assignmentDetail &&
-      assignmentDetail.id === assignmentId &&
-      workerId !== null &&
-      assignmentDetail.accountId !== workerId
+    assignmentDetail && assignmentDetail.id === assignmentId &&
+    workerId !== null && assignmentDetail.workerId !== workerId
   )
 
   const specificModels = useMemo<ModelOption[]>(() => {
@@ -1176,13 +1174,18 @@ export function ReturnPage() {
               >
                 <UserRound className="text-muted-foreground" />
                 <SelectValue placeholder="Selecciona un trabajador">
-                  {selectedWorker?.username}
+                  {selectedWorker?.name}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent align="start">
                 {workers.map((worker) => (
                   <SelectItem key={worker.id} value={String(worker.id)}>
-                    {worker.username}
+                    <span className="flex min-w-0 flex-col">
+                      <span>{worker.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {worker.surname}
+                      </span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

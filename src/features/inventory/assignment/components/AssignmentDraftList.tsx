@@ -94,7 +94,6 @@ export function AssignmentDraftList({
 
   return (
     <Accordion
-      key={openGroups.join("|")}
       multiple
       defaultValue={openGroups}
       className="rounded-lg"

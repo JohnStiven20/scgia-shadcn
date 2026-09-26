@@ -53,7 +53,7 @@ export const assignmentApi = createApi({
       number
     >({
       query: (accountId) => ({
-        url: `/assignments/account/${accountId}`,
+        url: `/assignments/worker/${accountId}`,
         method: "GET",
       }),
       providesTags: (result, _error, accountId) => [

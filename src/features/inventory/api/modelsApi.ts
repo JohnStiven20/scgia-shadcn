@@ -65,7 +65,7 @@ export const modelsApi = createApi({
         })) ?? []),
       ],
     }),
-    getTelecommunicationModelsSelection: builder.query<
+    getModelsSelection: builder.query<
       TelecommunicationModelSelectionResponse[],
       TelecommunicationModelSelectionParams
     >({
@@ -203,8 +203,8 @@ export const {
   useGetProvidersQuery,
   useGetModelIdentifiersQuery,
   useLazyGetModelIdentifiersQuery,
-  useGetTelecommunicationModelsSelectionQuery,
-  useLazyGetTelecommunicationModelsSelectionQuery,
+  useGetModelsSelectionQuery,
+  useLazyGetModelsSelectionQuery,
   useGetSelectionModelIdentifiersQuery,
   useGetAvailableModelItemsQuery,
   useCreateModelMutation,

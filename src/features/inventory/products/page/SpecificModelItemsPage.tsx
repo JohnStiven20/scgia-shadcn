@@ -304,8 +304,8 @@ const itemColumns = itemColumnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Fecha" className="px-0" />
     ),
-    size: 180,
-    minSize: 160,
+    size: 220,
+    minSize: 150,
     enableSorting: false,
     enableGlobalFilter: false,
     cell: ({ row }) => (
@@ -314,16 +314,7 @@ const itemColumns = itemColumnHelper.columns([
       </time>
     ),
   }),
-  itemColumnHelper.display({
-    id: "open",
-    header: () => null,
-    size: 42,
-    minSize: 38,
-    enableSorting: false,
-    cell: () => (
-      <ChevronRight className="size-4 text-primary" aria-hidden="true" />
-    ),
-  }),
+
 ])
 
 function ModelItemsFilters({

@@ -13,7 +13,8 @@ export type SearchAccountLookupParams = {
 
 export type AccountLookupResponse = {
   id: number
-  username: string
+  name: string
+  surname: string
 }
 
 export type AssignWorkerToAccountParams = {

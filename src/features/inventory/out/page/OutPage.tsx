@@ -42,7 +42,7 @@ import type { IdentificationResponse } from "@/features/interface/identification
 import { useIdentifyProductMutation } from "@/features/inventory/api/identificationApi"
 import {
   useGetProvidersQuery,
-  useGetTelecommunicationModelsSelectionQuery,
+  useGetModelsSelectionQuery,
 } from "@/features/inventory/api/modelsApi"
 import {
   useRegisterExitMutation,
@@ -280,7 +280,7 @@ function PreparationArea() {
   const hasPendingItems = draft.length > 0
   const blocker = useBlocker(hasPendingItems && !isRegistering)
   const { data: genericModels = [] } =
-    useGetTelecommunicationModelsSelectionQuery(
+    useGetModelsSelectionQuery(
       {
         providerId: selectedProviderId ?? 0,
         modelType: "GENERIC",

@@ -43,7 +43,7 @@ import type { CreateVehicleRequest } from "@/features/interface/vehicle/request/
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
 import { FleetPageHeader } from "../../components/InventoryPageHeader"
 
-const PAGE_SIZE_OPTIONS = [8, 10, 20, 50]
+const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 const columnHelper = createColumnHelper<DataTableFeatures, Vehicle>()
 
@@ -701,7 +701,7 @@ export const VehiclesPage = () => {
         <DataTable
           columns={vehicleColumns}
           data={vehicles}
-          pageSize={8}
+          pageSize={10}
           pageSizeOptions={PAGE_SIZE_OPTIONS}
           initialColumnVisibility={{
             licensePlate: false,

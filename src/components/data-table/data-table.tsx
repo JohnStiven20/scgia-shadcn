@@ -294,7 +294,7 @@ export function DataTable<TData extends RowData>({
   data: initialData,
   getRowId,
   enableRowOrdering = false,
-  pageSize = 5,
+  pageSize = 10,
   ariaLabel = "Tabla de datos",
   emptyMessage = "No hay resultados.",
   onDataChange,

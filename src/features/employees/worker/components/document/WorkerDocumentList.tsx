@@ -86,7 +86,7 @@ export function WorkerDocumentList({
       columns={documentColumns}
       data={documents}
       isLoading={isLoading}
-      showPagination={false}
+      pageSize={10}
       getRowId={(document) => String(document.id)}
       onRowClick={(document) => onSelectDocument(document.id)}
       ariaLabel="Listado de documentos del trabajador"
