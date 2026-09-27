@@ -83,14 +83,17 @@ function AccountBadge({
   label,
   username,
 }: {
-  label: string
+  label?: string | null
   username: string
 }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
       <UserRound className="size-3.5 shrink-0" />
       <span className="truncate">
-        <strong>{label}:</strong> {username}
+
+         {
+          label ? <><strong>{label}: </strong>{username}</>: <strong>{username}</strong>
+         }
       </span>
     </span>
   )
@@ -111,7 +114,7 @@ function AccountsCell({ transaction }: { transaction: MovementTransaction }) {
 
   return (
     <div className="grid min-w-0 gap-1">
-      <AccountBadge label="Responsable" username={responsible} />
+      <AccountBadge  username={responsible} />
       {showSecondary && secondary ? (
         <AccountBadge label={secondary.label} username={secondary.username} />
       ) : null}
@@ -324,8 +327,8 @@ function createTraceabilityColumns(
       id: "accounts",
       header: "Responsable / Asignado",
       cell: ({ row }) => <AccountsCell transaction={row.original} />,
-      size: isMobile ? 340 : 220,
-      minSize: isMobile ? 280 : 180,
+      size: isMobile ? 0 : 0,
+      minSize: isMobile ? 0 : 0,
     }),
     columnHelper.accessor("warehouseName", {
       header: ({ column }) => (
