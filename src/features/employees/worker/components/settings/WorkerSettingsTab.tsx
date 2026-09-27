@@ -69,11 +69,11 @@ export function WorkerSettingsTab({
   })
   const accountOptions = useMemo(() => {
     const options = accounts.map((account) => ({
-      label: account.username,
+      label: account.surname,
       value: account.id,
       account: {
         id: account.id,
-        username: account.username,
+        username: account.surname,
         status: "Activa" as const,
       },
     }))

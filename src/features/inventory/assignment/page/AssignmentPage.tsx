@@ -78,11 +78,7 @@ import type {
 } from "../types/assignment.types"
 import {
   Stepper,
-  StepperIndicator,
-  StepperItem,
   StepperNav,
-  StepperSeparator,
-  StepperTitle,
 } from "@/components/reui/stepper"
 import { CollapsibleContent, Collapsible } from "@/components/ui/collapsible"
 import { FieldSet } from "@/components/ui/field"
@@ -362,13 +358,6 @@ function AssignmentPreparationArea({
       </Button>
     </article>
   )
-}
-
-type WorkflowStepProps = {
-  number: number
-  title: string
-  last?: boolean
-  children: React.ReactNode
 }
 
 
