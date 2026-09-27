@@ -67,10 +67,10 @@ export function TraceabilityEventDetails({
   event,
 }: TraceabilityEventDetailsProps) {
   const style = traceabilityEventStyles[event.inventoryMovementType]
-  const counterpart = event.toAccountUsername
-    ? { label: "Destino / asignado a", value: event.toAccountUsername }
-    : event.fromAccountUsername
-      ? { label: "Origen", value: event.fromAccountUsername }
+  const counterpart = event.targetDisplayName
+    ? { label: "Destino / asignado a", value: event.targetDisplayName }
+    : event.sourceDisplayName
+      ? { label: "Origen", value: event.sourceDisplayName }
       : null
   const warehouse =
     event.warehouseName ?? event.fromWarehouseName ?? "Sin almacén"

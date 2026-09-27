@@ -162,12 +162,12 @@ function getMovementDescription(
     case "EXIT":
       return "Registrado en una salida de inventario"
     case "ASSIGNMENT":
-      return event.toAccountUsername
-        ? `Asignado a ${event.toAccountUsername}`
+      return event.sourceDisplayName
+        ? `Asignado a ${event.sourceDisplayName}`
         : "Unidad asignada"
     case "UNASSIGNMENT":
-      return event.fromAccountUsername
-        ? `Desasignado de ${event.fromAccountUsername}`
+      return event.targetDisplayName
+        ? `Desasignado de ${event.targetDisplayName}`
         : "Unidad desasignada"
     case "RETURN":
       return "Devuelto al inventario"

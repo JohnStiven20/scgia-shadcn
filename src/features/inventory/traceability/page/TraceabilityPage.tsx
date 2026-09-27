@@ -101,10 +101,10 @@ function AccountBadge({
 
 function AccountsCell({ transaction }: { transaction: MovementTransaction }) {
   const responsible = transaction.performedByAccountUsername
-  const secondary = transaction.toAccountUsername
-    ? { label: "Asignado a", username: transaction.toAccountUsername }
-    : transaction.fromAccountUsername
-      ? { label: "Origen", username: transaction.fromAccountUsername }
+  const secondary = transaction.targetDisplayName
+    ? { label: "Asignado a", username: transaction.targetDisplayName }
+    : transaction.sourceDisplayName
+      ? { label: "Origen", username: transaction.sourceDisplayName }
       : null
   const showSecondary = Boolean(responsible && secondary?.username)
 
@@ -327,8 +327,8 @@ function createTraceabilityColumns(
       id: "accounts",
       header: "Responsable / Asignado",
       cell: ({ row }) => <AccountsCell transaction={row.original} />,
-      size: isMobile ? 0 : 0,
-      minSize: isMobile ? 0 : 0,
+      size: isMobile ? 0 : 220,
+      minSize: isMobile ? 0 : 180,
     }),
     columnHelper.accessor("warehouseName", {
       header: ({ column }) => (

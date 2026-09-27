@@ -54,8 +54,8 @@ export function deriveProductUnitDetail(
     latestEvent,
     registeredEvent,
     workerName:
-      latestEvent?.toAccountUsername ??
-      latestEvent?.fromAccountUsername ??
+      latestEvent?.sourceDisplayName ??
+      latestEvent?.targetDisplayName ??
       null,
     warehouseName: latestEvent?.fromWarehouseName ?? null,
     observation: latestEvent?.remarks ?? null,

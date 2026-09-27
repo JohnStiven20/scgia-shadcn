@@ -41,8 +41,8 @@ export interface MovementResourceGroup {
 export interface MovementTransaction {
   id: number
   performedByAccountUsername: string | null
-  toAccountUsername: string | null
-  fromAccountUsername: string | null
+  targetDisplayName: string | null
+  sourceDisplayName: string | null
   fromWarehouseName: string | null
   inventoryMovementType: InventoryMovementType
   movementDate: string
