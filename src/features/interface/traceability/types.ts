@@ -1,4 +1,10 @@
-export type InventoryMovementType = "ENTRY" | "ASSIGNMENT" | "RETURN" | "EXIT"
+export type InventoryMovementType =
+  | "ENTRY"
+  | "ASSIGNMENT"
+  | "RETURN"
+  | "EXIT"
+  | "INSTALL"
+  | "INSTALLED"
 
 export type ResourceType = "SPECIFIC" | "GENERIC"
 

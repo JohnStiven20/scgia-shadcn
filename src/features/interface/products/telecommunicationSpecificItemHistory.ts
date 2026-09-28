@@ -24,6 +24,7 @@ export interface TelecommunicationSpecificItemHistoryEvent {
     | "RETURN"
     | "TRANSFER"
     | "INSTALL"
+    | "INSTALLED"
   movementDate: string
   performedByAccountUsername: string | null
   targetDisplayName: string | null

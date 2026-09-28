@@ -113,6 +113,16 @@ const movementStyles: Record<string, MovementStyle> = {
       "border-cyan-100/80 bg-cyan-50/40 dark:border-cyan-950 dark:bg-cyan-950/20",
     lineClassName: "bg-cyan-200 dark:bg-cyan-900",
   },
+  INSTALLED: {
+    label: "Instalado",
+    icon: ArrowDownToLine,
+    textClassName: "text-cyan-600 dark:text-cyan-400",
+    nodeClassName:
+      "border-cyan-200 bg-cyan-50 text-cyan-600 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-400",
+    surfaceClassName:
+      "border-cyan-100/80 bg-cyan-50/40 dark:border-cyan-950 dark:bg-cyan-950/20",
+    lineClassName: "bg-cyan-200 dark:bg-cyan-900",
+  },
   UNASSIGNMENT: {
     label: "Desasignación",
     icon: X,
@@ -187,6 +197,8 @@ function getMovementDescription(
         ? `Asignado a ${event.sourceDisplayName}`
         : "Unidad asignada"
     case "INSTALL":
+      return "Unidad instalada"
+    case "INSTALLED":
       return "Unidad instalada"
     case "UNASSIGNMENT":
       return event.targetDisplayName
