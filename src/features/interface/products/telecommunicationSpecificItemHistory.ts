@@ -16,7 +16,14 @@ export interface TelecommunicationSpecificItemHistoryItem {
 export interface TelecommunicationSpecificItemHistoryEvent {
   movementTransactionId: number
   telecommunicationMovementId: number
-  movementType:"ENTRY" | "EXIT" | "ASSIGNMENT" | "UNASSIGNMENT" | "RETURN" | "TRANSFER"
+  movementType:
+    | "ENTRY"
+    | "EXIT"
+    | "ASSIGNMENT"
+    | "UNASSIGNMENT"
+    | "RETURN"
+    | "TRANSFER"
+    | "INSTALL"
   movementDate: string
   performedByAccountUsername: string | null
   targetDisplayName: string | null
