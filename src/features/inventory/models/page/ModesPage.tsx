@@ -250,17 +250,18 @@ function ModelsToolbar({
   canCreate,
   onCreate,
 }: ModelsToolbarProps) {
+
   const globalFilter = String(table.state.globalFilter ?? "")
   const getFilterValue = (columnId: string) =>
     String(table.getColumn(columnId)?.getFilterValue() ?? "ALL")
   const providerFilter = getFilterValue("provider")
-  const typeFilter = getFilterValue("telecommunicationItemType")
+  const typeFilter = getFilterValue("modelType")
   const statusFilter = getFilterValue("active")
 
   const applyFilter = (columnId: string, value: string) => {
-    table
-      .getColumn(columnId)
-      ?.setFilterValue(value === "ALL" ? undefined : value)
+    table.getColumn(columnId)?.setFilterValue(
+      value === "ALL" ? undefined : value
+    )
     table.setPageIndex(0)
   }
 
@@ -356,7 +357,7 @@ function ModelsToolbar({
           <Select
             value={typeFilter}
             onValueChange={(value) =>
-              value && applyFilter("telecommunicationItemType", value)
+              value && applyFilter("modelType", value)
             }
           >
             <SelectTrigger
