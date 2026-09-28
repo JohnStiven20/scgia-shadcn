@@ -2,6 +2,7 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   ClipboardCheck,
+  CircleHelp,
   RotateCcw,
   type LucideIcon,
 } from "lucide-react"
@@ -43,4 +44,20 @@ export const traceabilityEventStyles: Record<
     badgeClassName: "border-red-200 bg-red-50 text-red-700",
     iconClassName: "bg-red-100 text-red-700",
   },
+}
+
+export const fallbackTraceabilityEventStyle: TraceabilityEventStyle = {
+  label: "Movimiento",
+  icon: CircleHelp,
+  badgeClassName: "border-slate-200 bg-slate-50 text-slate-700",
+  iconClassName: "bg-slate-100 text-slate-700",
+}
+
+export function getTraceabilityEventStyle(
+  type: string | null | undefined
+): TraceabilityEventStyle {
+  return (
+    traceabilityEventStyles[type as InventoryMovementType] ??
+    fallbackTraceabilityEventStyle
+  )
 }

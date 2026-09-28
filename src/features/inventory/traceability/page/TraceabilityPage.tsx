@@ -37,7 +37,7 @@ import {
   type TraceabilityFilterValues,
   useTraceabilityPage,
 } from "../hooks/useTraceabilityPage"
-import { traceabilityEventStyles } from "../components/traceability-event-styles"
+import { getTraceabilityEventStyle } from "../components/traceability-event-styles"
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-ES", {
   day: "2-digit",
@@ -53,8 +53,7 @@ function formatMovementDate(value: string) {
 }
 
 function EventCell({ transaction }: { transaction: MovementTransaction }) {
-  
-  const style = traceabilityEventStyles[transaction.inventoryMovementType]
+  const style = getTraceabilityEventStyle(transaction.inventoryMovementType)
   const EventIcon = style.icon
 
   return (

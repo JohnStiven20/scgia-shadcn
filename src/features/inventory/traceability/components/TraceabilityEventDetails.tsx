@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { MovementTransaction } from "@/features/interface/traceability/types"
-import { traceabilityEventStyles } from "./traceability-event-styles"
+import { getTraceabilityEventStyle } from "./traceability-event-styles"
 import { TraceabilityImageGrid } from "./TraceabilityImageGrid"
 import { TraceabilityResourceSection } from "./TraceabilityResourceSection"
 
@@ -66,7 +66,7 @@ type TraceabilityEventDetailsProps = {
 export function TraceabilityEventDetails({
   event,
 }: TraceabilityEventDetailsProps) {
-  const style = traceabilityEventStyles[event.inventoryMovementType]
+  const style = getTraceabilityEventStyle(event.inventoryMovementType)
   const counterpart = event.targetDisplayName
     ? { label: "Destino / asignado a", value: event.targetDisplayName }
     : event.sourceDisplayName
