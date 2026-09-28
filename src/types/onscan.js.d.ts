@@ -8,6 +8,7 @@ declare module "onscan.js" {
     avgTimeByChar?: number
     suffixKeyCodes?: number[]
     ignoreIfFocusOn?: string | EventTarget
+    keyCodeMapper?: (event: KeyboardEvent) => string | null
     preventDefault?: boolean
     stopPropagation?: boolean
     captureEvents?: boolean
@@ -18,6 +19,7 @@ declare module "onscan.js" {
     attachTo(element: EventTarget, options: OnScanOptions): OnScan
     detachFrom(element: EventTarget): void
     isAttachedTo(element: EventTarget): boolean
+    decodeKeyEvent(event: KeyboardEvent): string
   }
 
   const onScan: OnScan
