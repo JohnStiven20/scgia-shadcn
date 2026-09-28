@@ -6,6 +6,7 @@ import {
   ImageIcon,
   RotateCcw,
   UserRound,
+  Wrench,
   X,
   type LucideIcon,
 } from "lucide-react"
@@ -49,6 +50,12 @@ const statusStyles = {
     label: "Retirado",
     className:
       "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
+  },
+   INSTALLED: {
+    label: "Instalado",
+    icon: Wrench,
+    className:
+      "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-400",
   },
 } as const
 
