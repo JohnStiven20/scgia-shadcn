@@ -2,6 +2,7 @@ import {
   ArrowDownToLine,
   ArrowRightLeft,
   ArrowUpToLine,
+  CircleHelp,
   ImageIcon,
   RotateCcw,
   UserRound,
@@ -51,17 +52,27 @@ const statusStyles = {
   },
 } as const
 
-const movementStyles: Record<
-  TelecommunicationSpecificItemHistoryEvent["movementType"],
-  {
-    label: string
-    icon: LucideIcon
-    textClassName: string
-    nodeClassName: string
-    surfaceClassName: string
-    lineClassName: string
-  }
-> = {
+type MovementStyle = {
+  label: string
+  icon: LucideIcon
+  textClassName: string
+  nodeClassName: string
+  surfaceClassName: string
+  lineClassName: string
+}
+
+const fallbackMovementStyle: MovementStyle = {
+  label: "Movimiento",
+  icon: CircleHelp,
+  textClassName: "text-slate-600 dark:text-slate-400",
+  nodeClassName:
+    "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400",
+  surfaceClassName:
+    "border-slate-100/80 bg-slate-50/40 dark:border-slate-900 dark:bg-slate-900/20",
+  lineClassName: "bg-slate-200 dark:bg-slate-800",
+}
+
+const movementStyles: Record<string, MovementStyle> = {
   ENTRY: {
     label: "Entrada",
     icon: ArrowDownToLine,
@@ -301,7 +312,8 @@ export function ProductUnitDetail({
           {history.length ? (
             <ol className="grid gap-1" aria-label="Historial de movimientos">
               {history.map((event, index) => {
-                const style = movementStyles[event.movementType]
+                const style =
+                  movementStyles[event.movementType] ?? fallbackMovementStyle
                 const MovementIcon = style.icon
 
                 return (
