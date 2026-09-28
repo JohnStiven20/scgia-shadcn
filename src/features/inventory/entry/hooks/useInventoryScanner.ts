@@ -30,6 +30,17 @@ export function useInventoryScanner({
       avgTimeByChar: 60,
       suffixKeyCodes: [9, 13],
       ignoreIfFocusOn: "input, textarea, select, [contenteditable='true']",
+      keyCodeMapper: (event) => {
+        if (
+          event.key === "-" ||
+          event.keyCode === 189 ||
+          event.keyCode === 109
+        ) {
+          return "-"
+        }
+
+        return onScan.decodeKeyEvent(event)
+      },
       onKeyDetect: (keyCode) => keyCode !== 116,
       preventDefault: true,
       stopPropagation: true,
