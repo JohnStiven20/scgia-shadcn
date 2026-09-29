@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   CircleHelp,
   RotateCcw,
+  Wrench,
   type LucideIcon,
 } from "lucide-react"
 
@@ -44,6 +45,18 @@ export const traceabilityEventStyles: Record<
     badgeClassName: "border-red-200 bg-red-50 text-red-700",
     iconClassName: "bg-red-100 text-red-700",
   },
+  INSTALL: {
+    label: "InstalaciÃ³n",
+    icon: Wrench,
+    badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
+    iconClassName: "bg-violet-100 text-violet-700",
+  },
+  INSTALLED: {
+    label: "Instalado",
+    icon: Wrench,
+    badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
+    iconClassName: "bg-violet-100 text-violet-700",
+  },
 }
 
 export const fallbackTraceabilityEventStyle: TraceabilityEventStyle = {
@@ -56,8 +69,14 @@ export const fallbackTraceabilityEventStyle: TraceabilityEventStyle = {
 export function getTraceabilityEventStyle(
   type: string | null | undefined
 ): TraceabilityEventStyle {
+  const normalizedType = type?.trim().toUpperCase()
+
+  if (normalizedType?.includes("INSTALL")) {
+    return traceabilityEventStyles.INSTALLED
+  }
+
   return (
-    traceabilityEventStyles[type as InventoryMovementType] ??
+    traceabilityEventStyles[normalizedType as InventoryMovementType] ??
     fallbackTraceabilityEventStyle
   )
 }

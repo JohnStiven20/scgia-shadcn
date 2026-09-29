@@ -2,9 +2,11 @@ import {
   ArrowDownToLine,
   ArrowRightLeft,
   ArrowUpToLine,
+  CircleHelp,
   ImageIcon,
   RotateCcw,
   UserRound,
+  Wrench,
   X,
   type LucideIcon,
 } from "lucide-react"
@@ -47,21 +49,35 @@ const statusStyles = {
   RETIRED: {
     label: "Retirado",
     className:
-      "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
+      "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400",
+  },
+   INSTALLED: {
+    label: "Instalado",
+    icon: Wrench,
+    className:
+      "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-400",
   },
 } as const
 
-const movementStyles: Record<
-  TelecommunicationSpecificItemHistoryEvent["movementType"],
-  {
-    label: string
-    icon: LucideIcon
-    textClassName: string
-    nodeClassName: string
-    surfaceClassName: string
-    lineClassName: string
-  }
-> = {
+type MovementStyle = {
+  label: string
+  icon: LucideIcon
+  textClassName: string
+  nodeClassName: string
+  surfaceClassName: string
+  lineClassName: string
+}
+
+const fallbackMovementStyle: MovementStyle = {
+  label: "Movimiento",
+  icon: CircleHelp,
+  textClassName: "text-slate-600 dark:text-slate-400",
+  nodeClassName:"border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400",
+  surfaceClassName:"border-slate-100/80 bg-slate-50/40 dark:border-slate-900 dark:bg-slate-900/20",
+  lineClassName: "bg-slate-200 dark:bg-slate-800",
+}
+
+const movementStyles: Record<string, MovementStyle> = {
   ENTRY: {
     label: "Entrada",
     icon: ArrowDownToLine,
@@ -75,12 +91,12 @@ const movementStyles: Record<
   EXIT: {
     label: "Salida",
     icon: ArrowUpToLine,
-    textClassName: "text-orange-600 dark:text-orange-400",
+    textClassName: "text-red-600 dark:text-red-400",
     nodeClassName:
-      "border-orange-200 bg-orange-50 text-orange-600 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-400",
+      "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400",
     surfaceClassName:
-      "border-orange-100/80 bg-orange-50/40 dark:border-orange-950 dark:bg-orange-950/20",
-    lineClassName: "bg-orange-200 dark:bg-orange-900",
+      "border-red-100/80 bg-red-50/40 dark:border-red-950 dark:bg-red-950/20",
+    lineClassName: "bg-red-200 dark:bg-red-900",
   },
   ASSIGNMENT: {
     label: "Asignación",
@@ -91,6 +107,24 @@ const movementStyles: Record<
     surfaceClassName:
       "border-blue-100/80 bg-blue-50/40 dark:border-blue-950 dark:bg-blue-950/20",
     lineClassName: "bg-blue-200 dark:bg-blue-900",
+  },
+  INSTALLATION: {
+    label: "Instalación",
+    icon: ArrowDownToLine,
+    textClassName: "text-cyan-600 dark:text-cyan-400",
+    nodeClassName:"border-cyan-200 bg-cyan-50 text-cyan-600 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-400",
+    surfaceClassName:"border-cyan-100/80 bg-cyan-50/40 dark:border-cyan-950 dark:bg-cyan-950/20",
+    lineClassName: "bg-cyan-200 dark:bg-cyan-900",
+  },
+  INSTALLED: {
+    label: "Instalado",
+    icon: ArrowDownToLine,
+    textClassName: "text-cyan-600 dark:text-cyan-400",
+    nodeClassName:
+      "border-cyan-200 bg-cyan-50 text-cyan-600 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-400",
+    surfaceClassName:
+      "border-cyan-100/80 bg-cyan-50/40 dark:border-cyan-950 dark:bg-cyan-950/20",
+    lineClassName: "bg-cyan-200 dark:bg-cyan-900",
   },
   UNASSIGNMENT: {
     label: "Desasignación",
@@ -106,20 +140,16 @@ const movementStyles: Record<
     label: "Devolución",
     icon: RotateCcw,
     textClassName: "text-emerald-600 dark:text-emerald-400",
-    nodeClassName:
-      "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400",
-    surfaceClassName:
-      "border-emerald-100/80 bg-emerald-50/40 dark:border-emerald-950 dark:bg-emerald-950/20",
+    nodeClassName:"border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400",
+    surfaceClassName:"border-emerald-100/80 bg-emerald-50/40 dark:border-emerald-950 dark:bg-emerald-950/20",
     lineClassName: "bg-emerald-200 dark:bg-emerald-900",
   },
   TRANSFER: {
     label: "Transferencia",
     icon: ArrowRightLeft,
     textClassName: "text-amber-600 dark:text-amber-400",
-    nodeClassName:
-      "border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400",
-    surfaceClassName:
-      "border-amber-100/80 bg-amber-50/40 dark:border-amber-950 dark:bg-amber-950/20",
+    nodeClassName:"border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400",
+    surfaceClassName:"border-amber-100/80 bg-amber-50/40 dark:border-amber-950 dark:bg-amber-950/20",
     lineClassName: "bg-amber-200 dark:bg-amber-900",
   },
 }
@@ -165,6 +195,10 @@ function getMovementDescription(
       return event.sourceDisplayName
         ? `Asignado a ${event.sourceDisplayName}`
         : "Unidad asignada"
+    case "INSTALL":
+      return "Unidad instalada"
+    case "INSTALLED":
+      return "Unidad instalada"
     case "UNASSIGNMENT":
       return event.targetDisplayName
         ? `Desasignado de ${event.targetDisplayName}`
@@ -289,7 +323,8 @@ export function ProductUnitDetail({
           {history.length ? (
             <ol className="grid gap-1" aria-label="Historial de movimientos">
               {history.map((event, index) => {
-                const style = movementStyles[event.movementType]
+                const style =
+                  movementStyles[event.movementType] ?? fallbackMovementStyle
                 const MovementIcon = style.icon
 
                 return (

@@ -1,5 +1,9 @@
 export type TelecommunicationItemStatus =
-  "AVAILABLE" | "ASSIGNED" | "IN_REPAIR" | "RETIRED"
+  | "AVAILABLE"
+  | "ASSIGNED"
+  | "IN_REPAIR"
+  | "RETIRED"
+  | "INSTALLED"
 
 export interface TelecommunicationSpecificItemInventoryResponse {
   id: number

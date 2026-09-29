@@ -6,6 +6,7 @@ import {
   Archive,
   CheckCircle2,
   CircleAlert,
+  CircleHelp,
   Filter,
   RotateCcw,
   Search,
@@ -104,11 +105,16 @@ const statusStyles: Record<
     className:
       "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400",
   },
+  INSTALLED: {
+    label: "Instalado",
+    icon: Wrench,
+    className:
+      "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-400",
+  },
   RETIRED: {
     label: "Retirado",
     icon: Archive,
-    className:
-      "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
+    className:"border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400",
   },
 }
 
@@ -146,17 +152,28 @@ function formatCreatedAt(value: string) {
   return Number.isNaN(date.getTime()) ? value : dateTimeFormatter.format(date)
 }
 
-function StatusBadge({ status }: { status: TelecommunicationItemStatus }) {
-  const style = statusStyles[status]
-  const StatusIcon = style.icon
+function StatusBadge({
+  status,
+}: {
+  status: TelecommunicationItemStatus | null | undefined
+}) {
+  const style = status ? statusStyles[status] : undefined
+  const resolvedStyle =
+    style ?? {
+      label: "Sin estado",
+      icon: CircleHelp,
+      className:
+        "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
+    }
+  const StatusIcon = resolvedStyle.icon
 
   return (
     <Badge
       variant="outline"
-      className={`h-6 gap-1.5 px-2.5 text-xs [&>svg]:size-3! ${style.className}`}
+      className={`h-6 gap-1.5 px-2.5 text-xs [&>svg]:size-3! ${resolvedStyle.className}`}
     >
       <StatusIcon aria-hidden="true" />
-      {style.label}
+      {resolvedStyle.label}
     </Badge>
   )
 }
