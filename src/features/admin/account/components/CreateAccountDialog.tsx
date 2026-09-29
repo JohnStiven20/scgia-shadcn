@@ -53,8 +53,8 @@ export function CreateAccountDialog({
       nextErrors.username = "El usuario es obligatorio."
     }
 
-    if (values.password.length < 6) {
-      nextErrors.password = "La contrasena debe tener al menos 6 caracteres."
+    if (!values.password.trim()) {
+      nextErrors.password = "La contrasena es obligatoria."
     }
 
     setErrors(nextErrors)
