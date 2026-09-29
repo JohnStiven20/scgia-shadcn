@@ -67,6 +67,7 @@ export function TraceabilityEventDetails({
   event,
 }: TraceabilityEventDetailsProps) {
   const style = getTraceabilityEventStyle(event.inventoryMovementType)
+  const isInstallation = event.inventoryMovementType === "INSTALLATION"
   const counterpart = event.targetDisplayName
     ? { label: "Destino / asignado a", value: event.targetDisplayName }
     : event.sourceDisplayName
@@ -103,6 +104,30 @@ export function TraceabilityEventDetails({
         <DetailRow label="Almacén" value={warehouse} />
         <DetailRow label="Contenido" value={getContentSummary(event)} />
         <DetailRow label="Modelos" value={models} />
+        {isInstallation ? (
+          <>
+            <DetailRow
+              label="Número de orden"
+              value={event.orderNumber ?? "No disponible"}
+            />
+            <DetailRow
+              label="Número fijo"
+              value={event.fixedNumber ?? "No disponible"}
+            />
+            <DetailRow
+              label="Dirección"
+              value={event.address ?? "No disponible"}
+            />
+            <DetailRow
+              label="Latitud"
+              value={event.latitude ?? "No disponible"}
+            />
+            <DetailRow
+              label="Longitud"
+              value={event.longitude ?? "No disponible"}
+            />
+          </>
+        ) : null}
       </dl>
 
       {event.eventImages?.length ? (

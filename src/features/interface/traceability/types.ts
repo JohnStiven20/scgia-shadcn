@@ -4,6 +4,7 @@ export type InventoryMovementType =
   | "RETURN"
   | "EXIT"
   | "INSTALL"
+  | "INSTALLATION"
   | "INSTALLED"
 
 export type ResourceType = "SPECIFIC" | "GENERIC"
@@ -58,6 +59,11 @@ export interface MovementTransaction {
   modelNames: string[]
   eventImages: TraceabilityImage[]
   detailsMovements: MovementResourceGroup[]
+  orderNumber?: string | null
+  fixedNumber?: string | null
+  address?: string | null
+  latitude?: number | null
+  longitude?: number | null
 }
 
 export interface TraceabilityFilterRequest {

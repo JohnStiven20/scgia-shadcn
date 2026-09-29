@@ -46,7 +46,13 @@ export const traceabilityEventStyles: Record<
     iconClassName: "bg-red-100 text-red-700",
   },
   INSTALL: {
-    label: "InstalaciÃ³n",
+    label: "Instalación",
+    icon: Wrench,
+    badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
+    iconClassName: "bg-violet-100 text-violet-700",
+  },
+  INSTALLATION: {
+    label: "Instalación",
     icon: Wrench,
     badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
     iconClassName: "bg-violet-100 text-violet-700",
@@ -70,13 +76,16 @@ export function getTraceabilityEventStyle(
   type: string | null | undefined
 ): TraceabilityEventStyle {
   const normalizedType = type?.trim().toUpperCase()
+  const knownStyle =
+    traceabilityEventStyles[normalizedType as InventoryMovementType]
+
+  if (knownStyle) {
+    return knownStyle
+  }
 
   if (normalizedType?.includes("INSTALL")) {
     return traceabilityEventStyles.INSTALLED
   }
 
-  return (
-    traceabilityEventStyles[normalizedType as InventoryMovementType] ??
-    fallbackTraceabilityEventStyle
-  )
+  return fallbackTraceabilityEventStyle
 }
