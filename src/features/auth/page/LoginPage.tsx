@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   LockKeyhole,
-  ShieldCheck,
   UserRound,
 } from "lucide-react"
 import { useDispatch } from "react-redux"
@@ -17,7 +16,12 @@ import { useNotifications } from "@/components/notifications/NotificationsProvid
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import type { AppDispatch } from "@/store/store"
@@ -115,6 +119,7 @@ export function LoginPage() {
     <main className="fixed inset-0 z-0 overflow-y-auto bg-[#edf2f7] p-3 text-slate-950 lg:overflow-hidden">
       <section className="grid min-h-full overflow-hidden rounded-lg border border-slate-200 bg-background shadow-[0_18px_55px_rgba(15,23,42,0.12)] lg:h-full lg:min-h-0 lg:grid-cols-[minmax(390px,0.72fr)_minmax(0,1.28fr)]">
         <section className="flex min-h-full flex-col bg-white px-5 py-5 sm:px-10 lg:min-h-0 lg:px-12">
+          
           <header className="flex shrink-0 items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="grid size-10 place-items-center rounded-lg bg-[#020617] text-white shadow-sm">
@@ -127,27 +132,17 @@ export function LoginPage() {
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="hidden sm:inline-flex">
-              Acceso seguro
-            </Badge>
           </header>
 
           <div className="flex min-h-0 flex-1 items-center justify-center py-6 lg:py-0">
             <form
-              className="grid w-full max-w-[420px] gap-5"
+              className="grid w-full max-w-105 gap-5"
               onSubmit={(event) => void handleSubmit(event)}
             >
               <div className="grid gap-2">
-                <div className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                  <ShieldCheck className="size-3.5" />
-                  Plataforma privada
-                </div>
-                <h1 className="text-3xl font-semibold tracking-tight">
+                <h1 className="text-3xl font-semibold text-center tracking-tight">
                   Acceso al sistema
                 </h1>
-                <p className="max-w-sm text-sm leading-6 text-muted-foreground">
-                  Accede con tu usuario para continuar en el panel de gestion.
-                </p>
               </div>
 
               {formError ? (
@@ -160,18 +155,20 @@ export function LoginPage() {
               <div className="grid gap-3">
                 <div className="grid gap-1.5">
                   <Label htmlFor="username">Usuario</Label>
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
+                  <InputGroup className="h-10 rounded-lg bg-white">
+                    <InputGroupAddon>
+                      <UserRound className="size-4" />
+                    </InputGroupAddon>
+                    <InputGroupInput
                       id="username"
                       autoComplete="username"
                       value={username}
                       disabled={isSubmitting}
                       placeholder="admin"
-                      className="h-11 rounded-lg bg-white pl-10 text-sm"
+                      className="text-sm mx-1"
                       onChange={(event) => setUsername(event.target.value)}
                     />
-                  </div>
+                  </InputGroup>
                 </div>
 
                 <div className="grid gap-1.5">
@@ -179,33 +176,34 @@ export function LoginPage() {
                     <Label htmlFor="password">Contrasena</Label>
                     <span className="text-xs text-muted-foreground">SCGIA</span>
                   </div>
-                  <div className="relative">
-                    <LockKeyhole className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
+                  <InputGroup className="h-10 rounded-lg bg-white">
+                    <InputGroupAddon>
+                      <LockKeyhole className="size-4" />
+                    </InputGroupAddon>
+                    <InputGroupInput
                       id="password"
                       type={showPassword ? "text" : "password"}
                       autoComplete="current-password"
                       value={password}
                       disabled={isSubmitting}
                       placeholder="Introduce tu contrasena"
-                      className="h-11 rounded-lg bg-white pr-10 pl-10 text-sm"
+                      className="text-sm mx-1"
                       onChange={(event) => setPassword(event.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={
-                        showPassword
-                          ? "Ocultar contrasena"
-                          : "Mostrar contrasena"
-                      }
-                      className="absolute top-1/2 right-2 -translate-y-1/2"
-                      onClick={() => setShowPassword((current) => !current)}
-                    >
-                      {showPassword ? <EyeOff /> : <Eye />}
-                    </Button>
-                  </div>
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        size="icon-sm"
+                        aria-label={
+                          showPassword
+                            ? "Ocultar contrasena"
+                            : "Mostrar contrasena"
+                        }
+                        onClick={() => setShowPassword((current) => !current)}
+                      >
+                        {showPassword ? <EyeOff /> : <Eye />}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
                 </div>
               </div>
 
