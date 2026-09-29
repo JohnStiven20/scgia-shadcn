@@ -14,7 +14,6 @@ import { useNavigate } from "react-router-dom"
 import heroImage from "@/assets/login-hero-scgia.png"
 import { useNotifications } from "@/components/notifications/NotificationsProvider"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
