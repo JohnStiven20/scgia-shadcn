@@ -3,9 +3,10 @@ export type InventoryMovementType =
   | "ASSIGNMENT"
   | "RETURN"
   | "EXIT"
-  | "INSTALL"
   | "INSTALLATION"
-  | "INSTALLED"
+  | "TRANSFER"
+
+
 
 export type ResourceType = "SPECIFIC" | "GENERIC"
 
