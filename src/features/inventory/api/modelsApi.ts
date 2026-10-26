@@ -43,10 +43,7 @@ export const modelsApi = createApi({
       query: () => ({
         url: "/provider",
         method: "GET",
-        params: { page: 0, size: 100, sort: "name,asc" },
       }),
-      transformResponse: (response: PageResponse<ProviderResponse>) =>
-        response.content ?? [],
       providesTags: [{ type: "Provider", id: "LIST" }],
     }),
     getModelIdentifiers: builder.query<

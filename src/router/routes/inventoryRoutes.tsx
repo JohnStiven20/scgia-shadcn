@@ -10,13 +10,14 @@ import { AssignmentPage } from "@/features/inventory/assignment/page/AssignmentP
 import { ReturnPage } from "@/features/inventory/return/page/ReturnPage"
 import { ProductsPage } from "@/features/inventory/products/page/ProductsPage"
 import { SpecificModelItemsPage } from "@/features/inventory/products/page/SpecificModelItemsPage"
+import { WorkorderPage } from "../../features/inventory/workorders/page/WorkorderPage"
+import { WorkOrderOperatorSelectionPage } from "../../features/inventory/workorders/page/ProviderWorkOrder"
+import { WorkOrderDetailPage } from "@/features/inventory/workorder/page/WorkOrderDetailPage"
 import {
   anyInventoryPermission,
-  inventoryPermissionCodes,
   INVENTORY_PERMISSIONS,
 } from "@/features/inventory/permissions"
 
-const inventoryModuleRule = anyInventoryPermission(...inventoryPermissionCodes)
 const inventoryEntryRule = anyInventoryPermission(
   INVENTORY_PERMISSIONS.ENTRY_CREATE
 )
@@ -41,11 +42,7 @@ const inventoryTraceabilityRule = anyInventoryPermission(
 
 export const inventoryRoutes: RouteObject = {
   path: "inventory",
-  element: (
-    <PermissionRoute rule={inventoryModuleRule}>
-      <InventoryLayout />
-    </PermissionRoute>
-  ),
+  element: <InventoryLayout />,
   children: [
     { index: true, element: <InventoryIndexRedirect /> },
     {
@@ -79,6 +76,18 @@ export const inventoryRoutes: RouteObject = {
           <SpecificModelItemsPage />
         </PermissionRoute>
       ),
+    },
+    {
+      path: "work-orders",
+      element: <WorkorderPage />,
+    },
+    {
+      path: "work-orders/new",
+      element: <WorkOrderOperatorSelectionPage />,
+    },
+    {
+      path: "work-orders/:workOrderId",
+      element: <WorkOrderDetailPage />,
     },
     {
       path: "entry",

@@ -265,6 +265,9 @@ function ProviderSelector({
   isIdentifying,
   onValueChange,
 }: ProviderSelectorProps) {
+
+   console.log(providers)
+
   return (
     <FieldSet>
       <legend className="sr-only">Selección de proveedor</legend>
@@ -283,6 +286,7 @@ function ProviderSelector({
             </SelectValue>
           </SelectTrigger>
           <SelectContent align="start">
+
             {providers.map((provider) => (
               <SelectItem key={provider.id} value={String(provider.id)}>
                 <span className="font-medium">{provider.name}</span>
@@ -544,6 +548,8 @@ export const EntryPage = () => {
   const [registerEntry, { isLoading: isRegistering }] = useRegisterEntryMutation()
 
   const activeProviders = providers.filter((provider) => provider.active)
+
+
   const selectedProvider = activeProviders.find((provider) => String(provider.id) === providerId)
   const selectedProviderId = selectedProvider?.id
   const selectedProviderName = selectedProvider?.name

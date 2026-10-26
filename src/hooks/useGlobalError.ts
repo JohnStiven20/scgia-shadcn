@@ -108,7 +108,10 @@ function isSerializedError(error: unknown): error is SerializedLikeError {
   return Boolean(error && typeof error === "object" && "message" in error)
 }
 
-function buildErrorMessage(error: unknown, fallbackMessage: string): string {
+export function getBackendErrorMessage(
+  error: unknown,
+  fallbackMessage: string
+): string {
   if (error instanceof AxiosError) {
     const status = error.response?.status
     const backendMessage = getBackendMessage(error.response?.data)
@@ -173,7 +176,7 @@ export const useGlobalError = () => {
       }
     }
 
-    const message = buildErrorMessage(error, fallbackMessage)
+    const message = getBackendErrorMessage(error, fallbackMessage)
     notify(message, "error")
   }
 

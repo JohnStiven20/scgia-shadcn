@@ -34,5 +34,5 @@ export function InventoryIndexRedirect() {
     return <Navigate to="/inventory/out" replace />
   }
 
-  return <Navigate to="/403" replace />
+  return <Navigate to="/inventory/work-orders" replace />
 }

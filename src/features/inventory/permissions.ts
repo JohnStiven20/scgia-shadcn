@@ -11,6 +11,7 @@ export const INVENTORY_PERMISSIONS = {
   MODEL_DELETE: "inventory.model.delete",
   PRODUCT_VIEW: "inventory.product.view",
   TRACEABILITY_VIEW: "inventory.traceability.view",
+  WORK_ORDER_VIEW: "inventory.work-order.view",
 } as const
 
 export const inventoryPermissionCodes = Object.values(INVENTORY_PERMISSIONS)

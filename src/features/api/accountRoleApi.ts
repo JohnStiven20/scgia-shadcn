@@ -9,7 +9,7 @@ export const accountRoleApi = createApi({
   baseQuery: baseQueryWithAuth,
   tagTypes: ["AccountRole"],
   endpoints: (builder) => ({
-    findAccountRolesByAccountId: builder.query<AccountRoleResponse[], number>({
+    findAccountRolesByAccountId: builder.query<AccountRoleResponse[], number>( {
       query: (accountId) => ({
         url: "/account-role/by-account",
         method: "GET",

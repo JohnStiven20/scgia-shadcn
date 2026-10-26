@@ -22,6 +22,7 @@ import { assignmentApi } from "@/features/inventory/assignment/api/assignmentApi
 import { getSpecificModelInventorySummary } from "@/features/inventory/api/products.service"
 import { specificModelItemsApi } from "@/features/inventory/api/specificModelItemsApi"
 import { getTelecommunicationSpecificItemHistory } from "@/features/inventory/api/telecommunicationSpecificItemHistoryApi"
+import { workOrderApi } from "../features/inventory/workorders/api/workOrderApi"
 import { absenceTypeApi } from "@/features/absences/api/absenceTypeApi"
 import { absenceRequestApi } from "@/features/absences/api/absenceRequestApi"
 import { accountApi } from "@/features/admin/account/api/accountApi"
@@ -30,6 +31,7 @@ import { authorizationCatalogApi } from "@/features/admin/roles/api/authorizatio
 import { accountRoleApi } from "@/features/api/accountRoleApi"
 import { accountSettingApi } from "@/features/api/accountSettingApi"
 import { rolePermissionApi } from "@/features/api/rolePermissionApi"
+import { providerInventory } from "@/features/inventory/api/provider.inventory.ts"
 
 export const store = configureStore({
   reducer: {
@@ -38,6 +40,7 @@ export const store = configureStore({
     [commonApi.reducerPath]: commonApi.reducer,
     [employeesApi.reducerPath]: employeesApi.reducer,
     [workerTypeApi.reducerPath]: workerTypeApi.reducer,
+
     [brandApi.reducerPath]: brandApi.reducer,
     [vehicleApi.reducerPath]: vehicleApi.reducer,
     [vehicleDocumentApi.reducerPath]: vehicleDocumentApi.reducer,
@@ -57,6 +60,7 @@ export const store = configureStore({
     [specificModelItemsApi.reducerPath]: specificModelItemsApi.reducer,
     [getTelecommunicationSpecificItemHistory.reducerPath]:
       getTelecommunicationSpecificItemHistory.reducer,
+    [workOrderApi.reducerPath]: workOrderApi.reducer,
     [absenceTypeApi.reducerPath]: absenceTypeApi.reducer,
     [absenceRequestApi.reducerPath]: absenceRequestApi.reducer,
     [accountApi.reducerPath]: accountApi.reducer,
@@ -65,9 +69,11 @@ export const store = configureStore({
     [accountRoleApi.reducerPath]: accountRoleApi.reducer,
     [accountSettingApi.reducerPath]: accountSettingApi.reducer,
     [rolePermissionApi.reducerPath]: rolePermissionApi.reducer,
+    [providerInventory.reducerPath]: providerInventory.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
+      .concat(providerInventory.middleware)
       .concat(authApi.middleware)
       .concat(commonApi.middleware)
       .concat(employeesApi.middleware)
@@ -89,6 +95,7 @@ export const store = configureStore({
       .concat(getSpecificModelInventorySummary.middleware)
       .concat(specificModelItemsApi.middleware)
       .concat(getTelecommunicationSpecificItemHistory.middleware)
+      .concat(workOrderApi.middleware)
       .concat(absenceTypeApi.middleware)
       .concat(absenceRequestApi.middleware)
       .concat(accountApi.middleware)

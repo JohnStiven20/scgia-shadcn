@@ -23,18 +23,7 @@ export const authorizedNavigationItems: AuthorizedNavigationItem[] = [
   {
     title: "Inventario",
     href: "/inventory",
-    rule: anyOf(
-      "inventory.entry.create",
-      "inventory.assignment.create",
-      "inventory.return.create",
-      "inventory.exit.create",
-      "inventory.model.view",
-      "inventory.model.create",
-      "inventory.model.update",
-      "inventory.model.delete",
-      "inventory.product.view",
-      "inventory.traceability.view"
-    ),
+    rule: anyOf(),
   },
   {
     title: "Trabajadores",

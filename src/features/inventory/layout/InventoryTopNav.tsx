@@ -12,6 +12,7 @@ import {
   ArrowUpToLine,
   Boxes,
   ChevronDown,
+  ClipboardList,
   CornerUpLeft,
   History,
   PackageSearch,
@@ -104,6 +105,13 @@ export function InventoryTopNav() {
             Trazabilidad
           </Button>
         ) : null}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/inventory/work-orders/new")}
+        >
+          <ClipboardList />
+          Ordenes de trabajo
+        </Button>
       </nav>
     </TopBar>
   )
