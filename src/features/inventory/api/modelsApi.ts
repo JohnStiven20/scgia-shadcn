@@ -1,6 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react"
 import { baseQueryWithAuth } from "../../../api/rtkBaseQuery"
-import type { PageResponse } from "../../../types/api/page-response"
 import type {
   CreateIdentifierRequest,
   CreateModelRequest,

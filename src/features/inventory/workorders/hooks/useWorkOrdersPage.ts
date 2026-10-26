@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
 
-// import type { WorkOrderStatus } from "src/features/interface/work-orders/types"
 import {
   useGetWorkOrdersQuery,
   type WorkOrderSort,
@@ -44,11 +43,14 @@ function formatDateParam(date: Date | undefined) {
   return `${year}-${month}-${day}`
 }
 
-export function useWorkOrdersPage(   {  provider }: WorkPageProps) {
+export function useWorkOrdersPage(   {  provider  }: WorkPageProps) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSizeState] = useState(
     WORK_ORDER_PAGE_SIZE_OPTIONS[0]
   )
+
+  console.log(provider)
+
   const [filters, setFilters] = useState<WorkOrderFilterValues>(
     getDefaultWorkOrderFilters
   )
