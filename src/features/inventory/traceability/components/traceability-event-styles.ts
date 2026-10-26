@@ -45,20 +45,14 @@ export const traceabilityEventStyles: Record<
     badgeClassName: "border-red-200 bg-red-50 text-red-700",
     iconClassName: "bg-red-100 text-red-700",
   },
-  INSTALL: {
-    label: "Instalación",
-    icon: Wrench,
-    badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
-    iconClassName: "bg-violet-100 text-violet-700",
-  },
   INSTALLATION: {
     label: "Instalación",
     icon: Wrench,
     badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
     iconClassName: "bg-violet-100 text-violet-700",
   },
-  INSTALLED: {
-    label: "Instalado",
+  TRANSFER: {
+    label: "Instalación",
     icon: Wrench,
     badgeClassName: "border-violet-200 bg-violet-50 text-violet-700",
     iconClassName: "bg-violet-100 text-violet-700",
@@ -84,7 +78,7 @@ export function getTraceabilityEventStyle(
   }
 
   if (normalizedType?.includes("INSTALL")) {
-    return traceabilityEventStyles.INSTALLED
+    return traceabilityEventStyles.INSTALLATION
   }
 
   return fallbackTraceabilityEventStyle

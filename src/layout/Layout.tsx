@@ -15,7 +15,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
@@ -27,6 +27,8 @@ import {
   getAccessibleNavigationItems,
   type AuthorizedNavigationItem,
 } from "@/features/auth/utils/authorized-navigation"
+import inventoryIcon from "@/assets/icon-jpj-4.svg";
+
 
 type WorkspaceMenu = {
   title: string
@@ -72,9 +74,25 @@ export const AppLayout = () => {
     <SidebarProvider>
       <ScrollToTop />
       <Sidebar collapsible="icon" variant="floating">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" className="hover:bg-transparent">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <img
+                    src={inventoryIcon}
+                    alt="Logo de Almacén JPJ"
+                  />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">Almacén JPJ</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Espacio de trabajo</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {workspaceMenus.map((menu) => (

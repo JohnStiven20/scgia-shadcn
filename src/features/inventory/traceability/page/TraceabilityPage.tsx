@@ -38,6 +38,7 @@ import {
   useTraceabilityPage,
 } from "../hooks/useTraceabilityPage"
 import { getTraceabilityEventStyle } from "../components/traceability-event-styles"
+import { ComboboxMultiple } from "@/components/combobox/combobox-multiple"
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-ES", {
   day: "2-digit",
@@ -214,7 +215,8 @@ function TraceabilityFilters({
   onApply,
   onReset,
 }: TraceabilityFiltersProps) {
-  const [draft, setDraft] = useState(values)
+
+  const [filterForm, setFilterForm] = useState(values)
 
   return (
     <section aria-label="Filtros de trazabilidad">
@@ -222,26 +224,26 @@ function TraceabilityFilters({
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
         onSubmit={(event) => {
           event.preventDefault()
-          onApply(draft)
+          onApply(filterForm)
         }}
       >
         <DatePicker
           id="traceability-start-date"
           label="Fecha inicial"
-          value={draft.startDate}
-          maxDate={draft.endDate}
+          value={filterForm.startDate}
+          maxDate={filterForm.endDate}
           onChange={(startDate) =>
-            setDraft((current) => ({ ...current, startDate }))
+            setFilterForm((current) => ({ ...current, startDate }))
           }
         />
 
         <DatePicker
           id="traceability-end-date"
           label="Fecha final"
-          value={draft.endDate}
-          minDate={draft.startDate}
+          value={filterForm.endDate}
+          minDate={filterForm.startDate}
           onChange={(endDate) =>
-            setDraft((current) => ({ ...current, endDate }))
+            setFilterForm((current) => ({ ...current, endDate }))
           }
         />
 
@@ -253,9 +255,9 @@ function TraceabilityFilters({
             id="traceability-responsible"
             name="performedByAccountUsername"
             placeholder="Nombre del responsable"
-            value={draft.performedByAccountUsername}
+            value={filterForm.performedByAccountUsername}
             onChange={(event) =>
-              setDraft((current) => ({
+              setFilterForm((current) => ({
                 ...current,
                 performedByAccountUsername: event.target.value,
               }))
@@ -269,15 +271,34 @@ function TraceabilityFilters({
             id="traceability-warehouse"
             name="fromWarehouseName"
             placeholder="Nombre del almacén"
-            value={draft.fromWarehouseName}
+            value={filterForm.fromWarehouseName}
             onChange={(event) =>
-              setDraft((current) => ({
+              setFilterForm((current) => ({
                 ...current,
                 fromWarehouseName: event.target.value,
               }))
             }
           />
         </Field>
+
+        <Field>
+          <FieldLabel htmlFor="traceability-event-types">
+            Tipos de evento
+          </FieldLabel>
+          <ComboboxMultiple
+            id="traceability-event-types"
+            valor={filterForm.eventTypes}
+            onValueChange={(value) => {
+              setFilterForm((current)  => ({
+                ...current,
+                eventTypes: value
+              }))
+            }}
+            >
+
+          </ComboboxMultiple>
+        </Field>
+
 
         <div className="flex flex-wrap justify-end gap-3 sm:col-span-2 lg:col-span-4">
           <Button type="submit">
@@ -288,7 +309,7 @@ function TraceabilityFilters({
             type="button"
             variant="outline"
             onClick={() => {
-              setDraft(onReset())
+              setFilterForm(onReset())
             }}
           >
             <RotateCcw />
@@ -369,10 +390,8 @@ export function TraceabilityPage() {
     () => createTraceabilityColumns(isMobile, selectedEventId === null),
     [isMobile, selectedEventId]
   )
-  const { rows, isLoading, isFetching, isError, filters, pagination } =
-    useTraceabilityPage()
-  const selectedEvent =
-    rows.find((event) => event.id === selectedEventId) ?? null
+  const { rows, isLoading, isFetching, isError, filters, pagination } = useTraceabilityPage()
+  const selectedEvent = rows.find((event) => event.id === selectedEventId) ?? null
 
   const emptyMessage = isLoading
     ? "Cargando movimientos..."

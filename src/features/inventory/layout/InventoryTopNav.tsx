@@ -24,6 +24,7 @@ import { INVENTORY_PERMISSIONS } from "../permissions"
 export function InventoryTopNav() {
   
   const navigate = useNavigate()
+  
   const { hasPermission } = useAuthAccess()
 
   const canCreateEntry = hasPermission(INVENTORY_PERMISSIONS.ENTRY_CREATE)

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 
 import { useSearchTraceabilityEventsQuery } from "../api/traceabilityApi"
+import type { InventoryMovementType } from "@/features/interface/traceability/types"
 
 export const TRACEABILITY_PAGE_SIZE_OPTIONS = [10, 25, 50]
 
@@ -9,9 +10,11 @@ export type TraceabilityFilterValues = {
   endDate: Date
   performedByAccountUsername: string
   fromWarehouseName: string
+  eventTypes: InventoryMovementType[]
 }
 
 function formatApiDate(date: Date, endOfDay = false) {
+
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, "0")
   const day = String(date.getDate()).padStart(2, "0")
@@ -23,6 +26,7 @@ function formatApiDate(date: Date, endOfDay = false) {
 function getDefaultFilters(): TraceabilityFilterValues {
   const endDate = new Date()
   const startDate = new Date(endDate)
+
   startDate.setDate(startDate.getDate() - 7)
 
   return {
@@ -30,6 +34,7 @@ function getDefaultFilters(): TraceabilityFilterValues {
     endDate,
     performedByAccountUsername: "",
     fromWarehouseName: "",
+    eventTypes: [],
   }
 }
 
@@ -41,8 +46,12 @@ export function useTraceabilityPage() {
   const [filters, setFilters] =
     useState<TraceabilityFilterValues>(getDefaultFilters)
 
-  const request = useMemo(
-    () => ({
+  const request = useMemo(() => {
+
+    const performedByAccountUsername = filters.performedByAccountUsername.trim()
+    const fromWarehouseName = filters.fromWarehouseName.trim()
+
+    return {
       pageNumber: page - 1,
       pageSize,
       sortBy: "movementDate",
@@ -50,19 +59,14 @@ export function useTraceabilityPage() {
       object: {
         startDate: formatApiDate(filters.startDate),
         endDate: formatApiDate(filters.endDate, true),
-        ...(filters.performedByAccountUsername.trim()
-          ? {
-              performedByAccountUsername:
-                filters.performedByAccountUsername.trim(),
-            }
-          : {}),
-        ...(filters.fromWarehouseName.trim()
-          ? { fromWarehouseName: filters.fromWarehouseName.trim() }
-          : {}),
+        ...(performedByAccountUsername && { performedByAccountUsername }),
+        ...(fromWarehouseName && { fromWarehouseName }),
+        ...(filters.eventTypes.length > 0 && {
+          inventoryMovementTypes: filters.eventTypes,
+        }),
       },
-    }),
-    [filters, page, pageSize]
-  )
+    }
+  }, [filters, page, pageSize])
 
   const { data, isLoading, isFetching, isError } =
     useSearchTraceabilityEventsQuery(request, {
