@@ -32,6 +32,7 @@ import { accountRoleApi } from "@/features/api/accountRoleApi"
 import { accountSettingApi } from "@/features/api/accountSettingApi"
 import { rolePermissionApi } from "@/features/api/rolePermissionApi"
 import { providerInventory } from "@/features/inventory/api/provider.inventory.ts"
+import { orangeProductionApi } from "../features/inventory/production/api/productionOrangeApi"
 
 export const store = configureStore({
   reducer: {
@@ -70,10 +71,12 @@ export const store = configureStore({
     [accountSettingApi.reducerPath]: accountSettingApi.reducer,
     [rolePermissionApi.reducerPath]: rolePermissionApi.reducer,
     [providerInventory.reducerPath]: providerInventory.reducer,
+    [orangeProductionApi.reducerPath]: orangeProductionApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(providerInventory.middleware)
+      .concat(orangeProductionApi.middleware)
       .concat(authApi.middleware)
       .concat(commonApi.middleware)
       .concat(employeesApi.middleware)

@@ -13,6 +13,8 @@ import { SpecificModelItemsPage } from "@/features/inventory/products/page/Speci
 import { WorkorderPage } from "../../features/inventory/workorders/page/WorkorderPage"
 import { WorkOrderOperatorSelectionPage } from "../../features/inventory/workorders/page/ProviderWorkOrder"
 import { WorkOrderDetailPage } from "@/features/inventory/workorder/page/WorkOrderDetailPage"
+import { ProductionPage } from "@/features/inventory/production/page/ProductionPage"
+import { OrangeWorkersProduction } from "@/features/inventory/production/provider/orange/worker/OrangeWorkersProduction"
 import {
   anyInventoryPermission,
   INVENTORY_PERMISSIONS,
@@ -38,6 +40,9 @@ const inventoryProductViewRule = anyInventoryPermission(
 )
 const inventoryTraceabilityRule = anyInventoryPermission(
   INVENTORY_PERMISSIONS.TRACEABILITY_VIEW
+)
+const inventoryProductionRule = anyInventoryPermission(
+  INVENTORY_PERMISSIONS.PRODUCTION_VIEW
 )
 
 export const inventoryRoutes: RouteObject = {
@@ -88,6 +93,22 @@ export const inventoryRoutes: RouteObject = {
     {
       path: "work-orders/:workOrderId",
       element: <WorkOrderDetailPage />,
+    },
+    {
+      path: "production",
+      element: (
+        <PermissionRoute rule={inventoryProductionRule}>
+          <ProductionPage />
+        </PermissionRoute>
+      ),
+    },
+    {
+      path: "production/orange/workers/:workerId",
+      element: (
+        <PermissionRoute rule={inventoryProductionRule}>
+          <OrangeWorkersProduction />
+        </PermissionRoute>
+      ),
     },
     {
       path: "entry",

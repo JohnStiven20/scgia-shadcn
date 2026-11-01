@@ -10,6 +10,7 @@ export const INVENTORY_PERMISSIONS = {
   MODEL_UPDATE: "inventory.model.update",
   MODEL_DELETE: "inventory.model.delete",
   PRODUCT_VIEW: "inventory.product.view",
+  PRODUCTION_VIEW: "inventory.production.view",
   TRACEABILITY_VIEW: "inventory.traceability.view",
   WORK_ORDER_VIEW: "inventory.work-order.view",
 } as const
