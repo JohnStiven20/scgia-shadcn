@@ -63,7 +63,9 @@ const authSlice = createSlice({
       }
 
       localStorage.removeItem("token")
+      localStorage.removeItem("refreshToken")
       sessionStorage.removeItem("token")
+      sessionStorage.removeItem("refreshToken")
     },
     setCurrentAccount(state, action: PayloadAction<CurrentAccountResponse>) {
       state.currentAccount = action.payload
@@ -85,7 +87,9 @@ const authSlice = createSlice({
 
       if (typeof window !== "undefined") {
         localStorage.removeItem("token")
+        localStorage.removeItem("refreshToken")
         sessionStorage.removeItem("token")
+        sessionStorage.removeItem("refreshToken")
       }
     },
   },

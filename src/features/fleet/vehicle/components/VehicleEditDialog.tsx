@@ -272,12 +272,19 @@ export function VehicleEditDialog({
               label="Color del vehículo"
               helper="Indica el color exterior principal del vehículo."
             >
-              <Input
-                placeholder="Ej. Blanco"
-                value={form.color}
-                disabled={loading}
-                onChange={(event) => updateField("color", event.target.value)}
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  aria-label="Seleccionar color del vehiculo"
+                  className="size-8 cursor-pointer rounded-md border border-input bg-background p-0.5"
+                  value={/^#[0-9a-fA-F]{6}$/.test(form.color) ? form.color : "#ffffff"}
+                  disabled={loading}
+                  onChange={(event) => updateField("color", event.target.value)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {form.color || "Sin definir"}
+                </span>
+              </div>
             </VehicleField>
 
             <label className="flex items-center gap-2 rounded-md border bg-input/10 px-3 py-2 text-xs font-medium sm:col-span-2">

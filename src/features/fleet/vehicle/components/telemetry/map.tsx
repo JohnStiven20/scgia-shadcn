@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react"
-import { Car, MapPin, Navigation } from "lucide-react"
+
+import { useEffect, useRef, useState } from "react"
+import { MapPin, Navigation } from "lucide-react"
 
 import {
   Map,
@@ -16,14 +17,25 @@ export function VehicleMapSurface({
   latitude,
   longitude,
   heading,
+  followRequest,
+  zoomRequest,
   heightClassName,
 }: {
   latitude: number
   longitude: number
   heading: number
+  followRequest: number
+  zoomRequest: number
   heightClassName: string
 }) {
   const mapRef = useRef<MapRef | null>(null)
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM)
+  const [mapMode, setMapMode] = useState<"map" | "satellite">("map")
+
+  const markerScale = Math.min(
+    1,
+    Math.max(0.45, 0.45 + ((zoom - 5) / 10) * 0.55)
+  )
 
   useEffect(() => {
     mapRef.current?.easeTo({
@@ -33,6 +45,26 @@ export function VehicleMapSurface({
     })
   }, [latitude, longitude])
 
+  useEffect(() => {
+    if (!followRequest || !mapRef.current) return
+
+    mapRef.current.easeTo({
+      center: [longitude, latitude],
+      duration: 700,
+      zoom: Math.max(mapRef.current.getZoom(), DEFAULT_ZOOM),
+    })
+  }, [followRequest, latitude, longitude])
+
+  useEffect(() => {
+    if (!zoomRequest || !mapRef.current) return
+
+    mapRef.current.easeTo({
+      center: [longitude, latitude],
+      duration: 700,
+      zoom: 17,
+    })
+  }, [zoomRequest, latitude, longitude])
+
   return (
     <div
       className={cn(
@@ -40,23 +72,77 @@ export function VehicleMapSurface({
         heightClassName
       )}
     >
-      <Map
-        ref={mapRef}
-        center={[longitude, latitude]}
-        zoom={DEFAULT_ZOOM}
-        dragRotate={false}
-      >
-        <MapMarker longitude={longitude} latitude={latitude} rotation={heading}>
-          <MarkerContent>
-            <div className="grid size-12 place-items-center rounded-full bg-blue-600 text-white shadow-lg ring-8 shadow-blue-500/30 ring-blue-500/20">
-              <Car className="size-5" />
-            </div>
-          </MarkerContent>
-        </MapMarker>
-        <MapControls position="top-right" showCompass showFullscreen />
-      </Map>
+      <div className="relative size-full">
+        <Map
+          ref={mapRef}
+          center={[longitude, latitude]}
+          zoom={DEFAULT_ZOOM}
+          dragRotate={false}
+          styles={mapMode === "satellite" ? { light: satelliteStyle, dark: satelliteStyle } : undefined}
+          onViewportChange={({ zoom: nextZoom }) => setZoom(nextZoom)}
+        >
+          <MapMarker longitude={longitude} latitude={latitude} rotation={heading}>
+            <MarkerContent>
+              <div className="relative">
+                <div
+                  className="size-4 rounded-full bg-blue-600 shadow-lg ring-2 shadow-blue-500/30 ring-white transition-transform duration-100"
+                  style={{ transform: `scale(${markerScale})` }}
+                />
+              </div>
+            </MarkerContent>
+          </MapMarker>
+          <MapControls position="top-right" showCompass showFullscreen />
+        </Map>
+        <div className="absolute top-3 left-3 z-10 flex rounded-md border bg-white/95 p-1 shadow-md backdrop-blur">
+          <button
+            type="button"
+            className={cn(
+              "rounded px-3 py-1.5 text-xs font-semibold transition-colors",
+              mapMode === "map"
+                ? "bg-slate-900 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+            )}
+            onClick={() => setMapMode("map")}
+          >
+            Mapa
+          </button>
+          <button
+            type="button"
+            className={cn(
+              "rounded px-3 py-1.5 text-xs font-semibold transition-colors",
+              mapMode === "satellite"
+                ? "bg-slate-900 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+            )}
+            onClick={() => setMapMode("satellite")}
+          >
+            Satélite
+          </button>
+        </div>
+      </div>
     </div>
   )
+}
+
+const satelliteStyle = {
+  version: 8 as const,
+  sources: {
+    esriWorldImagery: {
+      type: "raster" as const,
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      attribution: "© Esri",
+    },
+  },
+  layers: [
+    {
+      id: "esri-world-imagery",
+      type: "raster" as const,
+      source: "esriWorldImagery",
+    },
+  ],
 }
 
 export function LocationStrip({

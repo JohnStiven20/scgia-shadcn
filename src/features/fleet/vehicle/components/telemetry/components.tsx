@@ -21,7 +21,7 @@ export function TelemetryMetricCard({
   title: string
   value: string
   unit?: string
-  footer: ReactNode
+  footer?: ReactNode
 }) {
   return (
     <Card className="min-h-28 rounded-lg border-border/80 py-3 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(3)] sm:min-h-32 sm:py-4 sm:[--card-spacing:--spacing(4)]">
@@ -44,7 +44,7 @@ export function TelemetryMetricCard({
             </span>
           ) : null}
         </div>
-        <div className="mt-auto min-w-0 overflow-hidden">{footer}</div>
+        {footer ? <div className="mt-auto min-w-0 overflow-hidden">{footer}</div> :  <></>}
       </CardContent>
     </Card>
   )

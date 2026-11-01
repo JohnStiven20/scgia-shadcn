@@ -80,16 +80,6 @@ export function deriveAlerts(
     })
   }
 
-  if ((telemetry.fuelLevel ?? 100) < 15) {
-    fallback.push({
-      id: "low-fuel",
-      title: "Nivel de combustible bajo",
-      description: `${formatNumber(telemetry.fuelLevel)}%`,
-      severity: "WARNING",
-      relativeTime: formatRelativeTime(telemetry.recordedAt, now),
-    })
-  }
-
   if ((telemetry.speed ?? 0) > 95) {
     fallback.push({
       id: "speed-peak",

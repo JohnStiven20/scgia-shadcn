@@ -1,19 +1,13 @@
-import type { ReactNode } from "react"
 import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import {
-  CalendarDays,
-  Gauge,
   Pencil,
-  Smartphone,
   Trash2,
-  UserRound,
 } from "lucide-react"
 
 import vehicleImage from "@/assets/furgoneta.png"
 import { ConfirmDeleteDialog } from "@/components/general"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,7 +17,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardHeader } from "@/components/ui/card"
 import { useAuthAccess } from "@/features/auth/hooks/useAuthAccess"
 import {
   useDeleteVehicleMutation,
@@ -32,6 +26,7 @@ import {
 } from "@/features/fleet/api/apiVehicle"
 import { VehicleEditDialog } from "@/features/fleet/vehicle/components/VehicleEditDialog"
 import { VehicleTabs } from "@/features/fleet/vehicle/components/VehicleTabs"
+import { VehicleLicensePlate } from "@/features/fleet/vehicle/components/VehicleLicensePlate"
 import type { UpdateVehicleRequest } from "@/features/interface/vehicle/request/update-vehicle-request"
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
 
@@ -64,14 +59,10 @@ function VehicleDetailsCard({
   onDelete: () => void
   onEdit: () => void
 }) {
-  const driverName = [vehicle.workerName, vehicle.workerSurname]
-    .filter(Boolean)
-    .join(" ")
-
   return (
     <article aria-labelledby="vehicle-details-title">
       <Card className="border-border/80 py-3 [--card-spacing:--spacing(3)]">
-        <CardHeader className="grid gap-3 border-b pb-4 lg:grid-cols-[9rem_1fr_auto] lg:items-start">
+        <CardHeader className="grid gap-3 border-none pb-0 lg:grid-cols-[9rem_1fr_auto] lg:items-start">
           <AspectRatio
             ratio={4 / 3}
             className="w-full max-w-36 overflow-hidden rounded-md bg-muted"
@@ -87,26 +78,14 @@ function VehicleDetailsCard({
               id="vehicle-details-title"
               className="text-xl font-bold break-words"
             >
-              {vehicle.internalCode}
+              {vehicle.brandName} {vehicle.modelName}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {vehicle.brandName} {vehicle.modelName} - Ano no disponible
+              Código interno: {vehicle.internalCode || "Sin código interno"}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className="h-auto gap-0 overflow-hidden rounded-md p-0 text-xs font-normal"
-                aria-label={`Matricula: ${vehicle.licensePlate || "Sin dato"}`}
-              >
-                <span className="flex min-h-8 w-7 flex-col items-center justify-center bg-blue-600 text-white">
-                  <span className="size-1.5 rounded-full bg-yellow-400" />
-                  <span className="leading-none font-bold">E</span>
-                </span>
-                <span className="px-2 text-base text-foreground">
-                  {vehicle.licensePlate || "-"}
-                </span>
-              </Badge>
-              <span className="text-muted-foreground">
+              <VehicleLicensePlate value={vehicle.licensePlate} />
+              <span className="text-sm font-medium text-slate-700">
                 VIN: {vehicle.vin || "Sin dato"}
               </span>
             </div>
@@ -133,60 +112,13 @@ function VehicleDetailsCard({
             </div>
           ) : null}
         </CardHeader>
-        <CardContent>
-          <dl className="grid gap-x-8 gap-y-0 sm:grid-cols-2">
-            <VehicleDetailItem
-              icon={<UserRound />}
-              label="Conductor"
-              value={driverName || "Sin asignar"}
-            />
-            <VehicleDetailItem
-              icon={<Gauge />}
-              label="Kilometraje actual"
-              value={
-                vehicle.currentOdometer == null
-                  ? "Sin dato"
-                  : `${vehicle.currentOdometer.toLocaleString("es-ES")} km`
-              }
-            />
-            <VehicleDetailItem
-              icon={<Smartphone />}
-              label="Dispositivo"
-              value={vehicle.telemetryDeviceIdentifier || "Sin vincular"}
-            />
-            <VehicleDetailItem
-              icon={<CalendarDays />}
-              label="Primera matriculacion"
-              value={vehicle.firstRegistrationDate || "Sin dato"}
-            />
-          </dl>
-        </CardContent>
       </Card>
     </article>
   )
 }
 
-function VehicleDetailItem({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex gap-2 border-b py-3 last:border-b-0 sm:nth-[n+3]:border-b-0">
-      <span className="text-muted-foreground [&>svg]:size-5">{icon}</span>
-      <div className="min-w-0">
-        <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="truncate text-sm font-semibold">{value}</dd>
-      </div>
-    </div>
-  )
-}
-
 export const VehiclePage = () => {
+  
   const navigate = useNavigate()
   const { id } = useParams()
   const { hasPermission } = useAuthAccess()
@@ -256,7 +188,7 @@ export const VehiclePage = () => {
   }
 
   return (
-    <section className="flex flex-col gap-4" aria-label="Detalle del vehiculo">
+    <section className="flex flex-col gap-5" aria-label="Detalle del vehiculo">
       <VehicleBreadcrumb />
       <h1 className="text-2xl font-semibold">Detalle del vehiculo</h1>
 

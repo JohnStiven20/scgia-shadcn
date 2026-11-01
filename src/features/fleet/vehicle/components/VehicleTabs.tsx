@@ -1,13 +1,15 @@
 import type { ReactNode } from "react"
+import { useEffect, useState } from "react"
 import {
   Car,
+  Check,
   ClipboardList,
   FileText,
   Gauge,
   History,
-  Info,
   Settings,
   SlidersHorizontal,
+  X,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -42,8 +44,27 @@ export function VehicleTabs({
   canViewTelemetryHistory,
   vehicle,
 }: VehicleTabsProps) {
+  const availableTabs = [
+    "datos",
+    ...(canViewLiveTelemetry ? ["telemetria"] : []),
+    ...(canViewTelemetryHistory ? ["historial-telemetria"] : []),
+    ...(canViewExpirations ? ["documentos"] : []),
+    ...(canViewSettings ? ["ajustes"] : []),
+  ]
+  const [selectedTab, setSelectedTab] = useState("datos")
+
+  useEffect(() => {
+    if (!availableTabs.includes(selectedTab)) {
+      setSelectedTab("datos")
+    }
+  }, [availableTabs, selectedTab])
+
+  function handleTabChange(value: string) {
+    setSelectedTab(value)
+  }
+
   return (
-    <Tabs defaultValue="datos" className="gap-4">
+    <Tabs value={selectedTab} onValueChange={handleTabChange} className="gap-4">
       <VehicleTabsList
         canViewExpirations={canViewExpirations}
         canViewLiveTelemetry={canViewLiveTelemetry}
@@ -98,7 +119,7 @@ function VehicleTabsList({
   canViewTelemetryHistory: boolean
 }) {
   return (
-    <TabsList className="h-10 w-full justify-start overflow-x-auto sm:h-8">
+    <TabsList className="!h-12 w-full justify-start overflow-x-auto sm:!h-10 md:!h-10 lg:!h-8">
       <VehicleTabsTrigger value="datos" icon={<Car />}>
         Datos del vehiculo
       </VehicleTabsTrigger>
@@ -137,7 +158,7 @@ function VehicleTabsTrigger({
 }) {
   return (
     <TabsTrigger
-      className="gap-2 px-3 py-1 text-sm sm:px-2 sm:py-0 sm:text-xs"
+      className="!h-full gap-2 px-3 py-2 text-sm sm:px-3 sm:py-1.5 md:px-3 md:py-1.5 lg:px-2 lg:py-0 lg:text-xs"
       value={value}
     >
       <span className="text-muted-foreground [&>svg]:size-4 sm:[&>svg]:size-3.5">
@@ -169,18 +190,9 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
             icon={<ClipboardList />}
             title="Identificacion"
             rows={[
-              ["Codigo interno", valueOrFallback(vehicle.internalCode)],
               ["Matricula", valueOrFallback(vehicle.licensePlate)],
               ["VIN", valueOrFallback(vehicle.vin)],
-              [
-                "Kilometraje inicial",
-                formatKilometers(vehicle.initialOdometer),
-              ],
-              ["Odometro actual", formatKilometers(vehicle.currentOdometer)],
-              [
-                "Primera matriculacion",
-                valueOrFallback(vehicle.firstRegistrationDate),
-              ],
+              ["Codigo interno", valueOrFallback(vehicle.internalCode)],
               [
                 "Dispositivo telematico",
                 valueOrFallback(
@@ -189,15 +201,6 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
                 ),
               ],
             ]}
-            footer={
-              <div className="mt-3 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                <Info className="mt-0.5 size-4 shrink-0" />
-                <span>
-                  El kilometraje mostrado corresponde al ultimo valor disponible
-                  en el sistema.
-                </span>
-              </div>
-            }
           />
 
           <VehicleInfoSection
@@ -207,16 +210,11 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
               ["Marca", valueOrFallback(vehicle.brandName)],
               ["Modelo", valueOrFallback(vehicle.modelName)],
               ["Tipo", "Furgoneta"],
-              ["Combustible", "Combustion"],
+              ["Combustible", "Combustión"],
               [
-                "Disponibilidad",
-                <AvailabilityBadge
-                  key="availability"
-                  available={vehicle.available}
-                />,
+                "Color",
+                <ColorValue key="color" value={vehicle.color} />,
               ],
-              ["Categoria operativa", "Transporte ligero"],
-              ["Color", valueOrFallback(vehicle.color, "Sin definir")],
             ]}
           />
 
@@ -224,14 +222,11 @@ function VehicleDataTab({ vehicle }: { vehicle: Vehicle }) {
             icon={<Settings />}
             title="Gestion y operacion"
             rows={[
-              ["Estado", <StatusBadge key="status" status={vehicle.status} />],
-              ["Empleado asignado", workerName || "Sin asignar"],
-              ["Proveedor", "Sin proveedor"],
               [
-                "Almacen",
-                valueOrFallback(vehicle.warehouseName, "Sin almacen"),
+                "Estado de uso",
+                <UsageStatusBadge key="usage-status" available={vehicle.available} />,
               ],
-              ["Centro de coste", "Sin definir"],
+              ["Empleado asignado", workerName || "Sin asignar"],
               ["Asignado desde", "Sin registro"],
             ]}
           />
@@ -276,52 +271,39 @@ function VehicleInfoSection({
   )
 }
 
-function AvailabilityBadge({ available }: { available: boolean }) {
+function ColorValue({ value }: { value?: string | null }) {
+  const color = value?.trim() || "#ffffff"
+  const label = value?.trim() || "Sin definir"
+
   return (
-    <Badge
-      variant="outline"
-      className={
-        available
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-zinc-200 bg-zinc-50 text-zinc-700"
-      }
-    >
-      {available ? "Disponible" : "No disponible"}
-    </Badge>
+    <span className="inline-flex min-w-0 items-center justify-end gap-2">
+      <span
+        aria-hidden="true"
+        className="size-4 shrink-0 rounded-full border border-slate-300 shadow-inner"
+        style={{ backgroundColor: color }}
+      />
+      <span className="truncate">{label}</span>
+    </span>
   )
 }
 
-function StatusBadge({ status }: { status: Vehicle["status"] }) {
-  const label = getStatusLabel(status)
-  const isAvailable = status === "AVAILABLE"
-
+function UsageStatusBadge({ available }: { available: boolean }) {
+  const StatusIcon = available ? Check : X
   return (
     <Badge
       variant="outline"
-      className={
-        isAvailable
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-amber-200 bg-amber-50 text-amber-700"
-      }
+      className="h-5 rounded-full px-1.5 text-[0.65rem] font-normal text-muted-foreground"
     >
-      {label}
+      <span
+        className={`flex size-2.5 items-center justify-center rounded-full text-white ${
+          available ? "bg-emerald-500" : "bg-red-500"
+        }`}
+      >
+        <StatusIcon className="size-1.5" strokeWidth={2} />
+      </span>
+      {available ? "Activo" : "Inactivo"}
     </Badge>
   )
-}
-
-function getStatusLabel(status: Vehicle["status"]) {
-  const labels: Record<Vehicle["status"], string> = {
-    AVAILABLE: "Disponible",
-    ASSIGNED: "Asignado",
-    IN_MAINTENANCE: "En mantenimiento",
-    OUT_OF_SERVICE: "Fuera de servicio",
-  }
-
-  return labels[status]
-}
-
-function formatKilometers(value?: number | null) {
-  return value == null ? "Sin registro" : `${value.toLocaleString("es-ES")} km`
 }
 
 function valueOrFallback(value?: string | null, fallback = "Sin registro") {

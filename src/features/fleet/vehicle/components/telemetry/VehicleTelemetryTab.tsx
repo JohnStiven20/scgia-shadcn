@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from "react"
+import { useEffect, useState } from "react"
 import { CarFront, Clock3 } from "lucide-react"
 
 import {
@@ -16,24 +16,14 @@ import {
 import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
 
 import { useVehicleTelemetry } from "../../hooks/useVehicleTelemetry"
-import {
-  DEFAULT_LATITUDE,
-  DEFAULT_LONGITUDE,
-  MINI_HISTORY_POINTS,
-} from "./constants"
-import { SpeedChartCard } from "./charts"
+import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "./constants"
 import { LiveBadge } from "./components"
-import { deriveAlerts, historyReducer } from "./mappers"
-import { LocationStrip, VehicleMapSurface } from "./map"
+import { VehicleMapSurface } from "./map"
 import {
-  AlertsSection,
-  DeviceStatusSection,
   MapSection,
   MetricsSection,
 } from "./sections"
 import {
-  clampPercent,
-  formatCoordinates,
   formatClock,
   formatRelativeTime,
   getCompassDirection,
@@ -48,22 +38,18 @@ type VehicleTelemetryTabProps = {
 }
 
 export function VehicleTelemetryTab({ vehicle }: VehicleTelemetryTabProps) {
-  const { telemetry, connected, connecting, error, lastUpdatedAt } =
-    useVehicleTelemetry(vehicle.id)
-  const [history, pushHistorySample] = useReducer(historyReducer, [])
+
+  const { telemetry, connected, connecting, lastUpdatedAt } = useVehicleTelemetry(vehicle.id)
+  
   const [now, setNow] = useState(() => Date.now())
   const [mapExpanded, setMapExpanded] = useState(false)
+  const [followRequest, setFollowRequest] = useState(0)
+  const [zoomRequest, setZoomRequest] = useState(0)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
-
-  useEffect(() => {
-    if (telemetry?.recordedAt) {
-      pushHistorySample(telemetry)
-    }
-  }, [telemetry])
 
   const mapLatitude = telemetry?.latitude ?? DEFAULT_LATITUDE
   const mapLongitude = telemetry?.longitude ?? DEFAULT_LONGITUDE
@@ -71,11 +57,7 @@ export function VehicleTelemetryTab({ vehicle }: VehicleTelemetryTabProps) {
   const direction = getCompassDirection(telemetry?.heading)
   const gpsQuality = getGpsLevel(telemetry?.gpsSignal, connected)
   const connectionChip = getConnectionChip(telemetry, connected, connecting)
-  const engineRunning =
-    telemetry?.engineRunning ??
-    telemetry?.ignition ??
-    metricValue(telemetry?.rpm) > 0
-  const temperatureValue = metricValue(telemetry?.engineTemperature)
+  const engineRunning =telemetry?.engineRunning ?? telemetry?.ignition ?? metricValue(telemetry?.rpm) > 0
   const currentOdometer = telemetry?.odometer ?? vehicle.currentOdometer ?? null
   const locationLabel = telemetry?.address ?? "Ubicacion GPS en tiempo real"
   const mapChipLabel = connected
@@ -83,14 +65,6 @@ export function VehicleTelemetryTab({ vehicle }: VehicleTelemetryTabProps) {
     : connecting
       ? "Sincronizando GPS"
       : "GPS sin enlace"
-  const alerts = deriveAlerts(telemetry, now)
-  const miniHistory = history.slice(-MINI_HISTORY_POINTS)
-  const speedDomainMax = Math.max(120, ...history.map((point) => point.speed))
-  const batteryProgress = clampPercent(
-    (metricValue(telemetry?.batteryVoltage) / 16) * 100
-  )
-  const temperatureProgress = clampPercent((temperatureValue / 120) * 100)
-  const chartData = useMemo(() => history, [history])
 
   return (
     <div className="grid gap-4">
@@ -104,39 +78,25 @@ export function VehicleTelemetryTab({ vehicle }: VehicleTelemetryTabProps) {
 
       <MetricsSection
         telemetry={telemetry}
-        miniHistory={miniHistory}
         gpsQuality={gpsQuality}
-        temperatureValue={temperatureValue}
-        batteryProgress={batteryProgress}
-        temperatureProgress={temperatureProgress}
+        currentOdometer={currentOdometer}
+        engineRunning={engineRunning}
+        connecting={connecting}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_30rem]">
-        <MapSection
-          latitude={mapLatitude}
-          longitude={mapLongitude}
-          heading={heading}
-          direction={direction}
-          locationLabel={locationLabel}
-          telemetry={telemetry}
-          onExpand={() => setMapExpanded(true)}
-        />
-        <div className="grid content-start gap-4">
-          <DeviceStatusSection
-            telemetry={telemetry}
-            vehicle={vehicle}
-            connected={connected}
-            connecting={connecting}
-            gpsQuality={gpsQuality}
-            engineRunning={engineRunning}
-            currentOdometer={currentOdometer}
-            error={error}
-          />
-          <AlertsSection alerts={alerts} />
-        </div>
-      </div>
-
-      <SpeedChartCard data={chartData} speedDomainMax={speedDomainMax} />
+      <MapSection
+        latitude={mapLatitude}
+        longitude={mapLongitude}
+        heading={heading}
+        direction={direction}
+        locationLabel={locationLabel}
+        telemetry={telemetry}
+        followRequest={followRequest}
+        onFollow={() => setFollowRequest((request) => request + 1)}
+        zoomRequest={zoomRequest}
+        onZoomToVehicle={() => setZoomRequest((request) => request + 1)}
+        onExpand={() => setMapExpanded(true)}
+      />
 
       <Dialog open={mapExpanded} onOpenChange={setMapExpanded}>
         <DialogContent className="h-[min(92vh,920px)] w-[min(94vw,1440px)] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] p-0">
@@ -154,18 +114,9 @@ export function VehicleTelemetryTab({ vehicle }: VehicleTelemetryTabProps) {
               latitude={mapLatitude}
               longitude={mapLongitude}
               heading={heading}
+              followRequest={followRequest}
+              zoomRequest={zoomRequest}
               heightClassName="h-full"
-            />
-          </div>
-          <div className="border-t p-3">
-            <LocationStrip
-              title={locationLabel}
-              coordinates={formatCoordinates(
-                telemetry?.latitude,
-                telemetry?.longitude
-              )}
-              direction={direction}
-              heading={heading}
             />
           </div>
         </DialogContent>

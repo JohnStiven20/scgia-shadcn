@@ -1,6 +1,5 @@
 import {
   Activity,
-  BatteryCharging,
   Bell,
   Clock,
   Expand,
@@ -9,81 +8,64 @@ import {
   LocateFixed,
   MapPin,
   Pause,
+  Plus,
   RadioTower,
-  Settings,
   Thermometer,
   Timer,
   Wifi,
-  Zap,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import type { Vehicle } from "@/features/interface/vehicle/type/vehicle-base"
-
-import { MiniLine } from "./charts"
 import {
   AlertListItem,
-  GpsBars,
-  MetricProgress,
   TelemetryMetricCard,
 } from "./components"
-import { LocationStrip, VehicleMapSurface } from "./map"
-import type { GpsLevel, PresentableAlert, TelemetrySample } from "./types"
+import { VehicleMapSurface } from "./map"
+import type { GpsLevel, PresentableAlert } from "./types"
 import {
   formatCoordinates,
   formatEngineActiveTime,
   formatNumber,
-  metricValue,
 } from "./utils"
 import type { VehicleTelemetryCurrentResponse } from "../../interface/types/vehicleTelemetry"
 
 export function MetricsSection({
   telemetry,
-  miniHistory,
   gpsQuality,
-  temperatureValue,
-  batteryProgress,
-  temperatureProgress,
+  currentOdometer,
+  engineRunning,
+  connecting,
 }: {
   telemetry: VehicleTelemetryCurrentResponse | null
-  miniHistory: TelemetrySample[]
   gpsQuality: GpsLevel
-  temperatureValue: number
-  batteryProgress: number
-  temperatureProgress: number
+  currentOdometer: number | null
+  engineRunning: boolean
+  connecting: boolean
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <TelemetryMetricCard
         title="Velocidad"
         value={formatNumber(telemetry?.speed)}
         unit="km/h"
         icon={Gauge}
         iconClassName="text-slate-900"
-        footer={<MiniLine data={miniHistory} dataKey="speed" color="#2563eb" />}
+        footer={null}
       />
       <TelemetryMetricCard
         title="Combustible"
         value={formatNumber(telemetry?.fuelLevel)}
-        unit="%"
+        unit="L"
         icon={Fuel}
         iconClassName="text-slate-900"
-        footer={
-          <MetricProgress
-            value={metricValue(telemetry?.fuelLevel)}
-            className="bg-emerald-500"
-            label={`${formatNumber(telemetry?.fuelLevel)}% disponible`}
-          />
-        }
       />
       <TelemetryMetricCard
         title="RPM"
         value={formatNumber(telemetry?.rpm)}
         icon={Timer}
         iconClassName="text-slate-900"
-        footer={<MiniLine data={miniHistory} dataKey="rpm" color="#2563eb" />}
       />
       <TelemetryMetricCard
         title="Temp motor"
@@ -91,40 +73,44 @@ export function MetricsSection({
         unit="C"
         icon={Thermometer}
         iconClassName="text-slate-900"
-        footer={
-          <MetricProgress
-            value={temperatureProgress}
-            className={temperatureValue > 105 ? "bg-red-500" : "bg-emerald-500"}
-            label={
-              temperatureValue > 105 ? "Fuera de rango" : "Rango operativo"
-            }
-          />
-        }
       />
       <TelemetryMetricCard
         title="GPS"
         value={gpsQuality.label}
         icon={Wifi}
         iconClassName="text-emerald-600"
-        footer={<GpsBars bars={gpsQuality.bars} />}
       />
       <TelemetryMetricCard
-        title="Bateria"
-        value={formatNumber(telemetry?.batteryVoltage, 1)}
+        title="Voltaje batería vehículo"
+        value={formatNumber(telemetry?.externalVoltage, 1)}
         unit="V"
-        icon={BatteryCharging}
+        icon={Gauge}
         iconClassName="text-slate-900"
-        footer={
-          <MetricProgress
-            value={batteryProgress}
-            className="bg-emerald-500"
-            label={
-              metricValue(telemetry?.batteryVoltage) >= 13.5
-                ? "Carga estable"
-                : "Carga baja"
-            }
-          />
-        }
+      />
+      <TelemetryMetricCard
+        title="Odometro"
+        value={formatNumber(currentOdometer)}
+        unit="km"
+        icon={Gauge}
+        iconClassName="text-slate-900"
+      />
+      <TelemetryMetricCard
+        title="Operador GSM"
+        value={telemetry?.activeGsmOperator ?? "-"}
+        icon={RadioTower}
+        iconClassName="text-slate-900"
+      />
+      <TelemetryMetricCard
+        title="Motor"
+        value={connecting ? "Conectando" : engineRunning ? "Encendido" : "Apagado"}
+        icon={Activity}
+        iconClassName={engineRunning ? "text-emerald-600" : "text-slate-500"}
+      />
+      <TelemetryMetricCard
+        title="Tiempo activo"
+        value={formatEngineActiveTime(telemetry?.engineHours)}
+        icon={Clock}
+        iconClassName="text-slate-900"
       />
     </div>
   )
@@ -137,6 +123,10 @@ export function MapSection({
   direction,
   locationLabel,
   telemetry,
+  onFollow,
+  followRequest,
+  onZoomToVehicle,
+  zoomRequest,
   onExpand,
 }: {
   latitude: number
@@ -145,6 +135,10 @@ export function MapSection({
   direction: string
   locationLabel: string
   telemetry: VehicleTelemetryCurrentResponse | null
+  onFollow: () => void
+  followRequest: number
+  onZoomToVehicle: () => void
+  zoomRequest: number
   onExpand: () => void
 }) {
   return (
@@ -156,15 +150,23 @@ export function MapSection({
           </div>
           <div className="min-w-0">
             <CardTitle>Ubicacion actual</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ubicacion GPS en tiempo real
-            </p>
           </div>
         </div>
         <div className="flex min-w-0 gap-1 sm:justify-end">
-          <Button type="button" variant="outline" size="sm">
+          <Button type="button" variant="outline" size="sm" onClick={onFollow}>
             <LocateFixed />
-            Seguir vehiculo
+            Centrar vehiculo
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onZoomToVehicle}
+            aria-label="Vista cercana del vehiculo"
+            title="Vista cercana del vehiculo"
+          >
+            <Plus />
+            Vista cercana
           </Button>
           <Button
             type="button"
@@ -178,25 +180,14 @@ export function MapSection({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative">
-          <VehicleMapSurface
-            latitude={latitude}
-            longitude={longitude}
-            heading={heading}
-            heightClassName="h-[360px] md:h-[430px] xl:h-[480px]"
-          />
-          <div className="absolute bottom-3 left-3 w-[min(24rem,calc(100%-1.5rem))]">
-            <LocationStrip
-              title={formatCoordinates(
-                telemetry?.latitude,
-                telemetry?.longitude
-              )}
-              coordinates={locationLabel}
-              direction={direction}
-              heading={heading}
-            />
-          </div>
-        </div>
+        <VehicleMapSurface
+          latitude={latitude}
+          longitude={longitude}
+          heading={heading}
+          followRequest={followRequest}
+          zoomRequest={zoomRequest}
+          heightClassName="h-[360px] md:h-[430px] xl:h-[480px]"
+        />
       </CardContent>
     </Card>
   )
@@ -237,122 +228,3 @@ export function AlertsSection({ alerts }: { alerts: PresentableAlert[] }) {
   )
 }
 
-export function DeviceStatusSection({
-  telemetry,
-  vehicle,
-  connected,
-  connecting,
-  gpsQuality,
-  engineRunning,
-  currentOdometer,
-  error,
-}: {
-  telemetry: VehicleTelemetryCurrentResponse | null
-  vehicle: Vehicle
-  connected: boolean
-  connecting: boolean
-  gpsQuality: GpsLevel
-  engineRunning: boolean
-  currentOdometer: number | null
-  error: string | null
-}) {
-  return (
-    <Card className="border-border/80 py-4 shadow-sm shadow-slate-100/70 [--card-spacing:--spacing(4)]">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <Settings className="size-5 text-slate-900" />
-          <CardTitle>Estado del vehiculo</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="divide-y">
-          <StatusRow
-            icon={Activity}
-            label="Motor"
-            value={
-              engineRunning
-                ? "Encendido"
-                : connecting
-                  ? "Conectando"
-                  : "Apagado"
-            }
-            iconClassName={
-              engineRunning ? "text-emerald-600" : "text-slate-500"
-            }
-            dotClassName={engineRunning ? "bg-emerald-500" : "bg-slate-400"}
-          />
-          <StatusRow
-            icon={RadioTower}
-            label="Senal GPS"
-            value={connected ? gpsQuality.label : "Sin cobertura"}
-            iconClassName={gpsQuality.iconClassName}
-            dotClassName={connected ? "bg-emerald-500" : "bg-slate-400"}
-          />
-          <StatusRow
-            icon={Gauge}
-            label="Odometro"
-            value={
-              currentOdometer !== null
-                ? `${formatNumber(currentOdometer)} km`
-                : "Sin dato"
-            }
-            iconClassName="text-slate-500"
-          />
-          <StatusRow
-            icon={Clock}
-            label="Tiempo activo"
-            value={formatEngineActiveTime(telemetry?.engineHours)}
-            iconClassName="text-slate-500"
-          />
-          <StatusRow
-            icon={Zap}
-            label="Fuente"
-            value={
-              telemetry?.source ??
-              telemetry?.deviceIdentifier ??
-              vehicle.telemetryDeviceIdentifier ??
-              "Sin dispositivo"
-            }
-            iconClassName="text-blue-600"
-          />
-        </div>
-        {error ? (
-          <p className="mt-3 border-t pt-3 text-xs text-red-600">{error}</p>
-        ) : null}
-      </CardContent>
-    </Card>
-  )
-}
-
-function StatusRow({
-  icon: Icon,
-  iconClassName,
-  label,
-  value,
-  dotClassName,
-}: {
-  icon: typeof Activity
-  iconClassName: string
-  label: string
-  value: string
-  dotClassName?: string
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 py-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <Icon className={cn("size-5 shrink-0", iconClassName)} />
-        <span className="min-w-0 text-sm text-muted-foreground">{label}</span>
-      </div>
-      <div className="flex min-w-0 items-center gap-3 text-right">
-        {dotClassName ? (
-          <span
-            className={cn("size-2.5 shrink-0 rounded-full", dotClassName)}
-          />
-        ) : null}
-        <span className="truncate text-sm font-semibold text-slate-900">
-          {value}
-        </span>
-      </div>
-    </div>
-  )
-}

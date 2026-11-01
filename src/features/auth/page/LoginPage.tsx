@@ -27,6 +27,7 @@ import type { AppDispatch } from "@/store/store"
 import { authApi, useLazyMeQuery, useLoginMutation } from "../api/authApi"
 import { clearAuth, setAuthSession } from "../store/authSlice"
 import { getFirstAccessibleRoute } from "../utils/authorized-navigation"
+import { storeAuthTokens } from "../utils/auth-tokens"
 
 type ApiErrorData = {
   message?: unknown
@@ -88,15 +89,14 @@ export function LoginPage() {
         username: normalizedUsername,
         password,
       }).unwrap()
-      const nextToken = loginResponse.token ?? loginResponse.accessToken ?? null
+      const nextToken = loginResponse.accessToken
 
       if (!nextToken) {
         throw new Error("No se recibio un token de autenticacion")
       }
 
       dispatch(authApi.util.resetApiState())
-      localStorage.setItem("token", nextToken)
-      sessionStorage.removeItem("token")
+      storeAuthTokens(loginResponse)
 
       const currentAccount = await loadCurrentAccount().unwrap()
       dispatch(setAuthSession({ token: nextToken, currentAccount }))

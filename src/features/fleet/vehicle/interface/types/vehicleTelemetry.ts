@@ -11,6 +11,20 @@ export type VehicleTelemetryAlert = {
   timestamp?: string | null
 }
 
+/** Payload AVL enviado por el dispositivo Fmc0003. */
+export interface Fmc0003AvlRecord {
+  timestamp: string
+  priority: number
+  longitude: number
+  latitude: number
+  altitude: number
+  angle: number
+  satellites: number
+  speed: number
+  eventId: number
+  ioElements: Record<number, unknown>
+}
+
 export type VehicleTelemetryCurrentResponse = {
   vehicleId: number
   deviceIdentifier: string
@@ -21,6 +35,8 @@ export type VehicleTelemetryCurrentResponse = {
   rpm: number | null
   engineTemperature: number | null
   batteryVoltage: number | null
+  externalVoltage?: number | null
+  activeGsmOperator?: string | null
   latitude: number | null
   longitude: number | null
   ignition: boolean | null
@@ -32,4 +48,11 @@ export type VehicleTelemetryCurrentResponse = {
   source?: string | null
   address?: string | null
   alerts?: VehicleTelemetryAlert[] | null
+  timestamp?: string
+  priority?: number
+  altitude?: number
+  angle?: number
+  satellites?: number
+  eventId?: number
+  ioElements?: Record<number, unknown>
 }

@@ -51,16 +51,32 @@ export function formatRelativeTime(
   }
 
   const diffSeconds = Math.max(0, Math.floor((now - timestamp) / 1000))
-  if (diffSeconds < 60) {
-    return `hace ${diffSeconds} s`
+  const seconds = diffSeconds % 60
+  const totalMinutes = Math.floor(diffSeconds / 60)
+  const minutes = totalMinutes % 60
+  const totalHours = Math.floor(totalMinutes / 60)
+  const hours = totalHours % 24
+  const totalDays = Math.floor(totalHours / 24)
+  const days = totalDays % 7
+  const weeks = Math.floor(totalDays / 7)
+
+  if (weeks > 0) {
+    return `hace ${weeks} sem${days ? ` ${days} d` : ""}`
   }
 
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  if (diffMinutes < 60) {
-    return `hace ${diffMinutes} min`
+  if (totalDays > 0) {
+    return `hace ${totalDays} d${hours ? ` ${hours} h` : ""}`
   }
 
-  return `hace ${Math.floor(diffMinutes / 60)} h`
+  if (totalHours > 0) {
+    return `hace ${totalHours} h${minutes ? ` ${minutes} min` : ""}${seconds ? ` ${seconds} s` : ""}`
+  }
+
+  if (totalMinutes > 0) {
+    return `hace ${totalMinutes} min${seconds ? ` ${seconds} s` : ""}`
+  }
+
+  return `hace ${seconds} s`
 }
 
 export function formatCoordinates(
@@ -111,16 +127,22 @@ export function getGpsLevel(
   connected?: boolean
 ): GpsLevel {
   if (signal !== null && signal !== undefined && !Number.isNaN(signal)) {
-    if (signal >= 75) {
-      return { label: "Excelente", bars: 4, iconClassName: "text-emerald-600" }
+    if (signal <= 0) {
+      return { label: "Sin señal", bars: 0, iconClassName: "text-red-600" }
     }
-    if (signal >= 50) {
-      return { label: "Buena", bars: 3, iconClassName: "text-blue-600" }
+    if (signal === 1) {
+      return { label: "Muy baja", bars: 1, iconClassName: "text-red-600" }
     }
-    if (signal >= 25) {
-      return { label: "Media", bars: 2, iconClassName: "text-amber-600" }
+    if (signal === 2) {
+      return { label: "Baja", bars: 2, iconClassName: "text-amber-600" }
     }
-    return { label: "Debil", bars: 1, iconClassName: "text-red-600" }
+    if (signal === 3) {
+      return { label: "Media", bars: 3, iconClassName: "text-amber-600" }
+    }
+    if (signal === 4) {
+      return { label: "Buena", bars: 4, iconClassName: "text-blue-600" }
+    }
+    return { label: "Excelente", bars: 4, iconClassName: "text-emerald-600" }
   }
 
   if (connected) {

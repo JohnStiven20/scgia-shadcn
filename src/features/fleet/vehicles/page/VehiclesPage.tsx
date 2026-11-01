@@ -72,9 +72,9 @@ function VehicleStatusBadge({ available }: { available: boolean }) {
 }
 
 const vehicleColumns = columnHelper.columns([
-  columnHelper.accessor("internalCode", {
+  columnHelper.accessor("licensePlate", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Vehículo" />
+      <DataTableColumnHeader column={column} title="Matrícula" />
     ),
     size: 245,
     minSize: 210,
@@ -94,13 +94,13 @@ const vehicleColumns = columnHelper.columns([
         <div className="min-w-0">
           <p className="truncate font-medium">{row.original.licensePlate}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {row.original.internalCode}
+            {row.original.internalCode || "Sin código interno"}
           </p>
         </div>
       </div>
     ),
   }),
-  columnHelper.accessor("licensePlate", {
+  columnHelper.accessor("internalCode", {
     header: () => null,
     cell: () => null,
     size: 0,
@@ -161,22 +161,32 @@ const vehicleColumns = columnHelper.columns([
     filterFn: "equals",
     cell: ({ row }) => getWorkerName(row.original) || "Sin asignar",
   }),
-  columnHelper.accessor((vehicle) => vehicle.warehouseName ?? "", {
-    id: "warehouse",
+  columnHelper.accessor("telemetryDeviceIdentifier", {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Ubicación" />
+      <DataTableColumnHeader column={column} title="Dispositivo" />
     ),
-    size: 150,
-    minSize: 50,
-    cell: ({ row }) => row.original.warehouseName || "Sin ubicación",
+    size: 145,
+    minSize: 115,
+    cell: ({ row }) =>
+      row.original.telemetryDeviceIdentifier ? (
+        <span className="font-medium">Vinculado</span>
+      ) : (
+        <span className="text-muted-foreground">Sin vincular</span>
+      ),
   }),
   columnHelper.display({
-    id: "lastConnection",
-    header: "Última conexión",
-    size: 155,
-    minSize: 130,
-    enableSorting: false,
-    cell: () => <span className="text-muted-foreground">Sin datos</span>,
+    id: "documentation",
+    header: "Documentación",
+    size: 145,
+    minSize: 120,
+    cell: () => (
+      <Badge
+        variant="outline"
+        className="rounded-full border-amber-200 bg-amber-50 text-amber-700"
+      >
+        Necesita renovarse
+      </Badge>
+    ),
   }),
 ])
 
@@ -704,7 +714,6 @@ export const VehiclesPage = () => {
           pageSize={10}
           pageSizeOptions={PAGE_SIZE_OPTIONS}
           initialColumnVisibility={{
-            licensePlate: false,
             vin: false,
             available: false,
           }}
