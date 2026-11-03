@@ -13,7 +13,6 @@ import { useGetOrangeWorkerTaskProductionQuery } from "@/features/inventory/prod
 
 type OrangeWorkerProductionState = {
   providerId?: number
-  providerName?: string
   workerId?: number
   workerName?: string
   startDate?: string
