@@ -52,6 +52,7 @@ export function ReturnEvidenceUploader({
         accept="image/*"
         multiple
         hidden
+        disabled
         onChange={(event) => {
           const files = Array.from(event.currentTarget.files ?? [])
           if (files.length > 0) onAdd(files)
@@ -62,10 +63,12 @@ export function ReturnEvidenceUploader({
         type="button"
         variant="outline"
         className="w-full sm:w-auto"
+        disabled
+        title="La carga de fotos estará disponible próximamente."
         onClick={() => inputRef.current?.click()}
       >
         <ImagePlus />
-        Añadir fotos
+        Añadir fotos (próximamente)
       </Button>
     </section>
   )

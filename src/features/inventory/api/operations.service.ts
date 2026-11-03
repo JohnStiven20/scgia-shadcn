@@ -144,7 +144,7 @@ export const operationsApi = createApi({
     }),
     registerReturn: builder.mutation<
       void,
-      MultipartOperation<ReturnTelecommunicationsItemsRequest>
+      MultipartOperation<ReturnTelecommunicationsItemsRequest[]>
     >({
       query: (operation) => ({
         url: `${OPERATION_BASE_URL}/return`,

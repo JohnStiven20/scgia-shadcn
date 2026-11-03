@@ -8,7 +8,6 @@ import {
   Minus,
   Package,
   Plus,
-  RefreshCcw,
   RotateCcw,
   Save,
   ScanLine,
@@ -65,6 +64,7 @@ import {
   type MultipartOperation,
   type ReturnTelecommunicationsItemsRequest,
 } from "@/features/inventory/api/operations.service"
+import { useIdentifyAssignedItemMutation } from "@/features/inventory/api/identificationApi"
 import {
   assignmentApi,
   useGetAssignableWorkersQuery,
@@ -78,9 +78,12 @@ import type {
   AssignmentSpecificModelResponse,
   AssignmentSummaryResponse,
 } from "@/features/inventory/assignment/types/assignment-api.types"
+import { useGetProviderQuery } from "@/features/inventory/api/provider.inventory"
+import type { IdentifyTelecommunicationItemResponse } from "@/features/interface/identification/types"
 import { InventoryPageHeader } from "@/features/inventory/components"
 import { useGlobalError } from "@/hooks"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useInventoryScanner } from "@/features/inventory/entry/hooks/useInventoryScanner"
 import {
   Stepper,
   StepperIndicator,
@@ -110,9 +113,7 @@ type ModelOption =
       model: AssignmentGenericModelResponse
     }
 
-type PendingContextChange =
-  | { kind: "worker"; id: number | null }
-  | { kind: "assignment"; id: number | null }
+type PendingContextChange = { kind: "worker"; id: number | null }
 
 type ConfirmationDialogProps = {
   open: boolean
@@ -181,37 +182,54 @@ function collectEvidence(
 }
 
 function buildReturnOperation(
-  assignmentId: number,
   draft: ReturnDraft
-): MultipartOperation<ReturnTelecommunicationsItemsRequest> {
+): MultipartOperation<ReturnTelecommunicationsItemsRequest[]> {
   const attachments: MultipartAttachment[] = []
+  const requests = new Map<number, ReturnTelecommunicationsItemsRequest>()
 
-  return {
-    request: {
+  const getRequest = (assignmentId: number) => {
+    const existing = requests.get(assignmentId)
+    if (existing) return existing
+
+    const next: ReturnTelecommunicationsItemsRequest = {
       assigmentId: assignmentId,
       imageKeys: [],
-      specificItems: draft.specificItems.map((item) => ({
-        assignmentTelecommunicationItemId:
-          item.assignmentTelecommunicationItemId,
-        telecommunicationItemId: item.telecommunicationItemId,
-        imageKeys: collectEvidence(
-          `return-specific-${item.telecommunicationItemId}`,
-          item.evidence,
-          attachments
-        ),
-      })),
-      genericItems: draft.genericItems.map((item) => ({
-        assignmentTelecommunicationGenericItemId:
-          item.assignmentTelecommunicationGenericItemId,
-        telecommunicationGenericItemId: item.telecommunicationGenericItemId,
-        quantity: item.quantity,
-        imageKeys: collectEvidence(
-          `return-generic-${item.telecommunicationGenericItemId}`,
-          item.evidence,
-          attachments
-        ),
-      })),
-    },
+      specificItems: [],
+      genericItems: [],
+    }
+    requests.set(assignmentId, next)
+    return next
+  }
+
+  draft.specificItems.forEach((item) => {
+    getRequest(item.assignmentId).specificItems.push({
+      assignmentTelecommunicationItemId:
+        item.assignmentTelecommunicationItemId,
+      telecommunicationItemId: item.telecommunicationItemId,
+      imageKeys: collectEvidence(
+        `return-${item.assignmentId}-specific-${item.telecommunicationItemId}`,
+        item.evidence,
+        attachments
+      ),
+    })
+  })
+
+  draft.genericItems.forEach((item) => {
+    getRequest(item.assignmentId).genericItems.push({
+      assignmentTelecommunicationGenericItemId:
+        item.assignmentTelecommunicationGenericItemId,
+      telecommunicationGenericItemId: item.telecommunicationGenericItemId,
+      quantity: item.quantity,
+      imageKeys: collectEvidence(
+        `return-${item.assignmentId}-generic-${item.telecommunicationGenericItemId}`,
+        item.evidence,
+        attachments
+      ),
+    })
+  })
+
+  return {
+    request: Array.from(requests.values()),
     attachments,
   }
 }
@@ -597,6 +615,7 @@ function GenericItemsTable({
 }
 
 export function ReturnPage() {
+  const [providerId, setProviderId] = useState("")
   const [workerId, setWorkerId] = useState<number | null>(null)
   const [assignmentId, setAssignmentId] = useState<number | null>(null)
   const [category, setCategory] = useState<ReturnCategory | null>(null)
@@ -614,9 +633,16 @@ export function ReturnPage() {
   const draftRef = useRef(draft)
   const evidenceUrlsRef = useRef(new Set<string>())
   const registeringRef = useRef(false)
+  const identifyingRef = useRef(false)
   const notifications = useNotifications()
   const { handleError } = useGlobalError()
   const dispatch = useDispatch()
+
+  const {
+    data: providers = [],
+    isLoading: isLoadingProviders,
+    isError: isProvidersError,
+  } = useGetProviderQuery()
 
   const {
     data: workers = [],
@@ -644,10 +670,22 @@ export function ReturnPage() {
   })
   const [registerReturn, { isLoading: isRegistering }] =
     useRegisterReturnMutation()
+  const [identifyAssignedItem, { isLoading: isIdentifying }] =
+    useIdentifyAssignedItemMutation()
+
+  const activeProviders = providers.filter((provider) => provider.active)
+  const selectedProviderId = providerId ? Number(providerId) : undefined
+  const selectedProvider = activeProviders.find(
+    (provider) => String(provider.id) === providerId
+  )
 
   const hasPreparedItems =
     draft.specificItems.length > 0 || draft.genericItems.length > 0
   const blocker = useBlocker(hasPreparedItems)
+  const scannerEnabled =
+    selectedProviderId !== undefined &&
+    !isIdentifying &&
+    !isRegistering
 
   const replaceDraft = useCallback((nextDraft: ReturnDraft) => {
     draftRef.current = nextDraft
@@ -760,9 +798,6 @@ export function ReturnPage() {
   const categoryModels = category === "SPECIFIC" ? specificModels : genericModels
   const activeModel =
     categoryModels.find((option) => option.key === activeModelKey) ?? null
-  const selectedAssignment = assignments.find(
-    (assignment) => assignment.id === assignmentId
-  )
   const selectedWorker = workers.find((worker) => worker.id === workerId)
 
   const preparedSpecificIds = useMemo(
@@ -791,6 +826,15 @@ export function ReturnPage() {
     resetDownstream()
   }
 
+  function handleProviderChange(nextProviderId: string) {
+    if (nextProviderId === providerId) return
+
+    setProviderId(nextProviderId)
+    setWorkerId(null)
+    setAssignmentId(null)
+    resetDownstream()
+  }
+
   function applyAssignment(nextAssignmentId: number | null) {
     setAssignmentId(nextAssignmentId)
     resetDownstream()
@@ -811,11 +855,6 @@ export function ReturnPage() {
   function requestAssignmentChange(nextAssignmentId: number | null) {
     if (nextAssignmentId === assignmentId) return
 
-    if (hasPreparedItems) {
-      setPendingContext({ kind: "assignment", id: nextAssignmentId })
-      return
-    }
-
     applyAssignment(nextAssignmentId)
   }
 
@@ -823,11 +862,7 @@ export function ReturnPage() {
     if (!pendingContext) return
 
     clearDraft()
-    if (pendingContext.kind === "worker") {
-      applyWorker(pendingContext.id)
-    } else {
-      applyAssignment(pendingContext.id)
-    }
+    applyWorker(pendingContext.id)
     setPendingContext(null)
   }
 
@@ -892,6 +927,7 @@ export function ReturnPage() {
       (source): ReturnSpecificDraftItem => ({
         draftId: `return-specific-${source.assignmentTelecommunicationItemId}`,
         kind: "SPECIFIC",
+        assignmentId,
         assignmentTelecommunicationItemId:
           source.assignmentTelecommunicationItemId,
         telecommunicationItemId: source.telecommunicationItemId,
@@ -974,6 +1010,7 @@ export function ReturnPage() {
         nextGenericItems.push({
           draftId: `return-generic-${source.assignmentTelecommunicationGenericItemId}`,
           kind: "GENERIC",
+          assignmentId,
           assignmentTelecommunicationGenericItemId:
             source.assignmentTelecommunicationGenericItemId,
           telecommunicationGenericItemId:
@@ -1097,15 +1134,122 @@ export function ReturnPage() {
     }))
   }
 
+  function addIdentifiedReturnItem(
+    result: IdentifyTelecommunicationItemResponse
+  ) {
+    const scannedWorker = workers.find((worker) => worker.id === result.workerId)
+    if (!scannedWorker) {
+      notifications.error(
+        "El trabajador del producto escaneado no está disponible en la lista."
+      )
+      return
+    }
+
+    if (workerId !== null && workerId !== result.workerId && hasPreparedItems) {
+      notifications.error(
+        "No puedes mezclar productos de trabajadores distintos en el mismo retorno."
+      )
+      return
+    }
+
+    if (!result.uniqueCode || result.status !== "ASSIGNED") {
+      notifications.error(
+        "El producto escaneado no está asignado o no contiene un código válido."
+      )
+      return
+    }
+
+    const duplicate = draftRef.current.specificItems.some(
+      (item) =>
+        item.assignmentTelecommunicationItemId ===
+        result.assignmentTelecommunicationItemId
+    )
+    if (duplicate) {
+      notifications.notify(
+        `El producto ${result.uniqueCode} ya está en la preparación.`,
+        "warning"
+      )
+      return
+    }
+
+    setWorkerId(result.workerId)
+    setAssignmentId(result.assignmentId)
+    resetDownstream()
+    updateDraft((current) => ({
+      ...current,
+      specificItems: [
+        ...current.specificItems,
+        {
+          draftId: `return-specific-${result.assignmentTelecommunicationItemId}`,
+          kind: "SPECIFIC",
+          assignmentId: result.assignmentId,
+          assignmentTelecommunicationItemId:
+            result.assignmentTelecommunicationItemId,
+          telecommunicationItemId: result.telecommunicationItemId,
+          modelId: result.modelId,
+          modelName: result.modelName,
+          identifierCode: result.indetificationCode,
+          uniqueCode: result.uniqueCode,
+          uniqueCodeType: result.uniqueCodeType,
+          status: result.status,
+          evidence: [],
+        },
+      ],
+    }))
+    notifications.success(`${result.modelName} añadido al retorno.`)
+  }
+
+  async function handleScanCode(rawCode: string) {
+    const normalizedCode = rawCode.trim()
+
+    if (selectedProviderId === undefined) {
+      notifications.error("Selecciona un proveedor antes de utilizar el escáner.")
+      return
+    }
+
+    if (!normalizedCode) {
+      notifications.error("El código escaneado está vacío.")
+      return
+    }
+
+    if (identifyingRef.current || registeringRef.current) {
+      notifications.notify(
+        "Espera a que termine la operación actual.",
+        "warning"
+      )
+      return
+    }
+
+    identifyingRef.current = true
+    try {
+      const result = await identifyAssignedItem({
+        operationType: "RETURN",
+        providerId: selectedProviderId,
+        rawCode: normalizedCode,
+      }).unwrap()
+
+      addIdentifiedReturnItem(result)
+    } catch (error) {
+      handleError(error, "No se pudo identificar el producto asignado.")
+    } finally {
+      identifyingRef.current = false
+    }
+  }
+
+  useInventoryScanner({
+    onScanCode: handleScanCode,
+    enabled: scannerEnabled,
+  })
+
   async function handleRegisterReturn() {
-    if (assignmentId === null || !hasPreparedItems || registeringRef.current) {
+    if (!hasPreparedItems || registeringRef.current) {
       return
     }
 
     registeringRef.current = true
     try {
       await registerReturn(
-        buildReturnOperation(assignmentId, draftRef.current)
+        buildReturnOperation(draftRef.current)
       ).unwrap()
       revokeDraftEvidence(draftRef.current)
       replaceDraft(initialDraft)
@@ -1131,20 +1275,30 @@ export function ReturnPage() {
 
   const desktop = useMediaQuery("(min-width: 1024px)")
   const activeStep =
-    workerId === null
+    providerId === ""
       ? 1
-      : assignmentId === null
+      : workerId === null
         ? 2
-        : category === null
+        : assignmentId === null
           ? 3
-          : 4
+          : category === null
+            ? 4
+            : 5
 
   const workflowPanel = (
     <article className="h-fit rounded-xl border bg-card p-3 lg:rounded-none lg:border-0 sm:p-4">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold">Preparar retorno</h2>
-        <Badge variant="outline" className="text-primary">
-          <ScanLine /> Escaneo no necesario
+        <Badge
+          variant={scannerEnabled ? "outline" : "secondary"}
+          className={scannerEnabled ? "text-primary" : undefined}
+        >
+          <ScanLine />
+          {isIdentifying
+            ? "Identificando..."
+            : scannerEnabled
+              ? "Escáner listo"
+              : "Selecciona proveedor"}
         </Badge>
       </header>
 
@@ -1152,6 +1306,44 @@ export function ReturnPage() {
         <StepperNav className="w-full">
           <WorkflowStep
             number={1}
+            title="Proveedor"
+            open
+            last={providerId === ""}
+          >
+            <Select
+              value={providerId}
+              onValueChange={handleProviderChange}
+            >
+              <SelectTrigger
+                className="w-full"
+                disabled={
+                  isLoadingProviders || isRegistering || hasPreparedItems
+                }
+              >
+                <Package className="text-muted-foreground" />
+                <SelectValue placeholder="Selecciona un proveedor">
+                  {selectedProvider?.name}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="start">
+                {activeProviders.map((provider) => (
+                  <SelectItem key={provider.id} value={String(provider.id)}>
+                    {provider.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {isProvidersError ? (
+              <Alert variant="destructive" className="mt-2">
+                <Info />
+                <AlertTitle>No se pudieron cargar los proveedores.</AlertTitle>
+              </Alert>
+            ) : null}
+          </WorkflowStep>
+
+          <WorkflowStep
+            number={2}
             title="Trabajador"
             open
             last={workerId === null}
@@ -1170,7 +1362,9 @@ export function ReturnPage() {
             >
               <SelectTrigger
                 className="w-full"
-                disabled={isLoadingWorkers || isRegistering}
+                disabled={
+                  isLoadingWorkers || isRegistering || providerId === ""
+                }
               >
                 <UserRound className="text-muted-foreground" />
                 <SelectValue placeholder="Selecciona un trabajador">
@@ -1199,12 +1393,12 @@ export function ReturnPage() {
             ) : null}
           </WorkflowStep>
 
-          {workerId !== null ? (
+          {providerId !== "" && workerId !== null ? (
             <WorkflowStep
-              number={2}
+              number={3}
               title="Asignaciones"
               open
-              last={assignmentId === null}
+              last={false}
             >
               {isLoadingAssignments ? (
                 <div className="space-y-2">
@@ -1225,60 +1419,31 @@ export function ReturnPage() {
                 </Alert>
               ) : (
                 <>
-                  <Collapsible open={assignmentId === null}>
-                    <CollapsibleContent>
-                      {assignments.length > 0 ? (
-                        <ScrollArea className="h-64 pr-3">
-                          <div className="space-y-2">
-                            {assignments.map((assignment) => (
-                              <AssignmentCard
-                                key={assignment.id}
-                                assignment={assignment}
-                                onSelect={() =>
-                                  requestAssignmentChange(assignment.id)
-                                }
-                              />
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      ) : (
-                        <Alert>
-                          <Info />
-                          <AlertTitle>Sin asignaciones pendientes.</AlertTitle>
-                          <AlertDescription>
-                            Este trabajador no tiene productos asignados para
-                            devolver.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  <Collapsible open={assignmentId !== null}>
-                    <CollapsibleContent>
-                      {selectedAssignment ? (
-                        <div className="space-y-2">
+                  {assignments.length > 0 ? (
+                    <ScrollArea className="h-64 pr-3">
+                      <div className="space-y-2">
+                        {assignments.map((assignment) => (
                           <AssignmentCard
-                            assignment={selectedAssignment}
-                            selected
+                            key={assignment.id}
+                            assignment={assignment}
+                            selected={assignment.id === assignmentId}
+                            onSelect={() =>
+                              requestAssignmentChange(assignment.id)
+                            }
                           />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={isRegistering}
-                            onClick={() => requestAssignmentChange(null)}
-                          >
-                            <RefreshCcw /> Cambiar asignación
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <LoaderCircle className="animate-spin" />
-                          Actualizando asignación...
-                        </div>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <Alert>
+                      <Info />
+                      <AlertTitle>Sin asignaciones pendientes.</AlertTitle>
+                      <AlertDescription>
+                        Este trabajador no tiene productos asignados para
+                        devolver.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </>
               )}
 
@@ -1292,7 +1457,7 @@ export function ReturnPage() {
 
           {assignmentId !== null ? (
             <WorkflowStep
-              number={3}
+              number={4}
               title="Categoría"
               open
               last={category === null}
@@ -1341,13 +1506,11 @@ export function ReturnPage() {
                     type="button"
                     variant={category === "GENERIC" ? "default" : "outline"}
                     className="w-full"
-                    disabled={genericModels.length === 0}
+                    disabled
+                    title="La gestión de consumibles estará disponible próximamente."
                     onClick={() => selectCategory("GENERIC")}
                   >
-                    <Package /> Consumibles ({genericModels.reduce(
-                      (total, option) => total + option.model.quantity,
-                      0
-                    )})
+                    <Package /> Consumibles (próximamente)
                   </Button>
                 </div>
               )}
@@ -1360,7 +1523,7 @@ export function ReturnPage() {
           !isDetailError &&
           !detailAccountMismatch ? (
             <WorkflowStep
-              number={4}
+              number={5}
               title={
                 category === "SPECIFIC"
                   ? "Selección de productos"
@@ -1536,7 +1699,7 @@ export function ReturnPage() {
       <Button
         type="button"
         className="mt-4 w-full"
-        disabled={isRegistering || assignmentId === null || !hasPreparedItems}
+        disabled={isRegistering || !hasPreparedItems}
         onClick={() => void handleRegisterReturn()}
       >
         {isRegistering ? (
@@ -1592,7 +1755,7 @@ export function ReturnPage() {
       <ConfirmationDialog
         open={pendingContext !== null}
         title="Cambiar el contexto del retorno"
-        description="Para cambiar de trabajador o asignación es necesario limpiar los elementos preparados."
+        description="Para cambiar de trabajador es necesario limpiar los elementos preparados."
         confirmLabel="Limpiar y cambiar"
         onCancel={() => setPendingContext(null)}
         onConfirm={confirmContextChange}

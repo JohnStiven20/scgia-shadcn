@@ -9,6 +9,7 @@ export interface ReturnLocalEvidence {
 export interface ReturnSpecificDraftItem {
   draftId: string
   kind: "SPECIFIC"
+  assignmentId: number
   assignmentTelecommunicationItemId: number
   telecommunicationItemId: number
   modelId: number
@@ -23,6 +24,7 @@ export interface ReturnSpecificDraftItem {
 export interface ReturnGenericDraftItem {
   draftId: string
   kind: "GENERIC"
+  assignmentId: number
   assignmentTelecommunicationGenericItemId: number
   telecommunicationGenericItemId: number
   modelId: number

@@ -53,3 +53,17 @@ export interface IdentificationResponse {
   telecommunicationGenericItemId: number | null
 }
 
+export interface IdentifyTelecommunicationItemResponse {
+  workerId: number
+  assignmentId: number
+  assignmentTelecommunicationItemId: number
+  telecommunicationItemId: number
+  identifierId: number | null
+  indetificationCode: string | null
+  uniqueCode: string | null
+  uniqueCodeType: IdentificationUniqueCodeType | null
+  modelId: number
+  modelName: string
+  status: IdentificationItemStatus | null
+}
+

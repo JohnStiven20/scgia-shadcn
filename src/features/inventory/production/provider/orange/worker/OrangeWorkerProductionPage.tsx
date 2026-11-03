@@ -38,7 +38,7 @@ export function OrangeWorkerProductionPage() {
   const state = (location.state as OrangeWorkerProductionState | null) ?? {}
   const initialDates = getInitialDates()
   const providerId = state.providerId ?? 4
- 
+
   const workerId = Number(workerIdParam ?? state.workerId ?? 23)
   const workerName = state.workerName || "Trabajador 23"
   const [dateRange, setDateRange] = useState(() => ({
