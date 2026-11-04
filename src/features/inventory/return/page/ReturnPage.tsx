@@ -826,10 +826,11 @@ export function ReturnPage() {
     resetDownstream()
   }
 
-  function handleProviderChange(nextProviderId: string) {
-    if (nextProviderId === providerId) return
+  function handleProviderChange(nextProviderId: string | null) {
+    const nextId = nextProviderId ?? ""
+    if (nextId === providerId) return
 
-    setProviderId(nextProviderId)
+    setProviderId(nextId)
     setWorkerId(null)
     setAssignmentId(null)
     resetDownstream()
@@ -923,11 +924,14 @@ export function ReturnPage() {
       return
     }
 
+    const currentAssignmentId = assignmentId
+    if (currentAssignmentId === null) return
+
     const nextItems = selectedItems.map(
       (source): ReturnSpecificDraftItem => ({
         draftId: `return-specific-${source.assignmentTelecommunicationItemId}`,
         kind: "SPECIFIC",
-        assignmentId,
+        assignmentId: currentAssignmentId,
         assignmentTelecommunicationItemId:
           source.assignmentTelecommunicationItemId,
         telecommunicationItemId: source.telecommunicationItemId,
@@ -981,6 +985,9 @@ export function ReturnPage() {
       }
     }
 
+    const currentAssignmentId = assignmentId
+    if (currentAssignmentId === null) return
+
     updateDraft((current) => {
       const nextGenericItems = [...current.genericItems]
 
@@ -1007,10 +1014,11 @@ export function ReturnPage() {
           continue
         }
 
+
         nextGenericItems.push({
           draftId: `return-generic-${source.assignmentTelecommunicationGenericItemId}`,
           kind: "GENERIC",
-          assignmentId,
+          assignmentId: currentAssignmentId,
           assignmentTelecommunicationGenericItemId:
             source.assignmentTelecommunicationGenericItemId,
           telecommunicationGenericItemId:
@@ -1159,6 +1167,7 @@ export function ReturnPage() {
       return
     }
 
+    const uniqueCode = result.uniqueCode
     const duplicate = draftRef.current.specificItems.some(
       (item) =>
         item.assignmentTelecommunicationItemId ===
@@ -1166,7 +1175,7 @@ export function ReturnPage() {
     )
     if (duplicate) {
       notifications.notify(
-        `El producto ${result.uniqueCode} ya está en la preparación.`,
+        `El producto ${uniqueCode} ya está en la preparación.`,
         "warning"
       )
       return
@@ -1189,7 +1198,7 @@ export function ReturnPage() {
           modelId: result.modelId,
           modelName: result.modelName,
           identifierCode: result.indetificationCode,
-          uniqueCode: result.uniqueCode,
+          uniqueCode,
           uniqueCodeType: result.uniqueCodeType,
           status: result.status,
           evidence: [],
