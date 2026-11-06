@@ -3,6 +3,7 @@ import type { PermissionRule } from "@/features/auth/utils/permission.utils"
 export const INVENTORY_PERMISSIONS = {
   ENTRY_CREATE: "inventory.entry.create",
   ASSIGNMENT_CREATE: "inventory.assignment.create",
+  ASSIGNED_MATERIAL_VIEW: "inventory.assigned-material.view",
   RETURN_CREATE: "inventory.return.create",
   EXIT_CREATE: "inventory.exit.create",
   MODEL_VIEW: "inventory.model.view",

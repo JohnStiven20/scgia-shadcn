@@ -26,6 +26,10 @@ export function InventoryIndexRedirect() {
     return <Navigate to="/inventory/assignment" replace />
   }
 
+  if (hasPermission(INVENTORY_PERMISSIONS.ASSIGNED_MATERIAL_VIEW)) {
+    return <Navigate to="/inventory/assigned-material" replace />
+  }
+
   if (hasPermission(INVENTORY_PERMISSIONS.RETURN_CREATE)) {
     return <Navigate to="/inventory/return" replace />
   }

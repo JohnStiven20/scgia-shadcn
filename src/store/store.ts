@@ -33,6 +33,7 @@ import { accountSettingApi } from "@/features/api/accountSettingApi"
 import { rolePermissionApi } from "@/features/api/rolePermissionApi"
 import { providerInventory } from "@/features/inventory/api/provider.inventory.ts"
 import { orangeProductionApi } from "../features/inventory/production/api/productionOrangeApi"
+import { assignedMaterialApi } from "@/features/inventory/assigned-material/api/AssignedMaterialApi"
 
 export const store = configureStore({
   reducer: {
@@ -72,11 +73,13 @@ export const store = configureStore({
     [rolePermissionApi.reducerPath]: rolePermissionApi.reducer,
     [providerInventory.reducerPath]: providerInventory.reducer,
     [orangeProductionApi.reducerPath]: orangeProductionApi.reducer,
+    [assignedMaterialApi.reducerPath]: assignedMaterialApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(providerInventory.middleware)
       .concat(orangeProductionApi.middleware)
+      .concat(assignedMaterialApi.middleware)
       .concat(authApi.middleware)
       .concat(commonApi.middleware)
       .concat(employeesApi.middleware)

@@ -16,6 +16,7 @@ import {
   CornerUpLeft,
   History,
   PackageSearch,
+  PackageCheck,
   BarChart3,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
@@ -41,6 +42,9 @@ export function InventoryTopNav() {
   )
   const canViewProduction = hasPermission(
     INVENTORY_PERMISSIONS.PRODUCTION_VIEW
+  )
+  const canViewAssignedMaterial = hasPermission(
+    INVENTORY_PERMISSIONS.ASSIGNED_MATERIAL_VIEW
   )
   const canViewOperations =
     canCreateEntry || canCreateExit || canCreateReturn || canCreateAssignment
@@ -99,6 +103,15 @@ export function InventoryTopNav() {
           >
             <PackageSearch />
             Productos
+          </Button>
+        ) : null}
+        {canViewAssignedMaterial ? (
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/inventory/assigned-material")}
+          >
+            <PackageCheck />
+            Material asignado
           </Button>
         ) : null}
         {canViewTraceability ? (

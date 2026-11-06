@@ -14,6 +14,8 @@ import { WorkorderPage } from "../../features/inventory/workorders/page/Workorde
 import { WorkOrderOperatorSelectionPage } from "../../features/inventory/workorders/page/ProviderWorkOrder"
 import { WorkOrderDetailPage } from "@/features/inventory/workorder/page/WorkOrderDetailPage"
 import { ProductionPage } from "@/features/inventory/production/page/ProductionPage"
+import { AssignedMaterialPage } from "@/features/inventory/assigned-material/page/AssignedMaterialPage"
+import { WorkerAssignedMaterialPage } from "@/features/inventory/assigned-material/worker/page/WorkerAssignedMaterialPage"
 import { OrangeWorkersProduction } from "@/features/inventory/production/provider/orange/worker/OrangeWorkersProduction"
 import {
   anyInventoryPermission,
@@ -43,6 +45,9 @@ const inventoryTraceabilityRule = anyInventoryPermission(
 )
 const inventoryProductionRule = anyInventoryPermission(
   INVENTORY_PERMISSIONS.PRODUCTION_VIEW
+)
+const inventoryAssignedMaterialRule = anyInventoryPermission(
+  INVENTORY_PERMISSIONS.ASSIGNED_MATERIAL_VIEW
 )
 
 export const inventoryRoutes: RouteObject = {
@@ -99,6 +104,22 @@ export const inventoryRoutes: RouteObject = {
       element: (
         <PermissionRoute rule={inventoryProductionRule}>
           <ProductionPage />
+        </PermissionRoute>
+      ),
+    },
+    {
+      path: "assigned-material",
+      element: (
+        <PermissionRoute rule={inventoryAssignedMaterialRule}>
+          <AssignedMaterialPage />
+        </PermissionRoute>
+      ),
+    },
+    {
+      path: "assigned-material/workers/:workerId",
+      element: (
+        <PermissionRoute rule={inventoryAssignedMaterialRule}>
+          <WorkerAssignedMaterialPage />
         </PermissionRoute>
       ),
     },
