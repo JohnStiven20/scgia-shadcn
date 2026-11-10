@@ -1,4 +1,4 @@
 
 const configuredApiBaseUrl  = import.meta.env.VITE_API_URL
 
-export const API_BASE_URL = configuredApiBaseUrl 
+export const API_BASE_URL = configuredApiBaseUrl
