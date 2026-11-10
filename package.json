@@ -35,6 +35,7 @@
     "cn": "^0.2.5",
     "date-fns": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
+    "keycloak-js": "^26.2.5",
     "lucide-react": "^1.41.0",
     "maplibre-gl": "^6.9.0",
     "onscan.js": "^1.5.2",

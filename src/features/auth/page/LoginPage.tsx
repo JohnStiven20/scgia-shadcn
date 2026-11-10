@@ -60,12 +60,12 @@ function getApiErrorMessage(error: unknown) {
 }
 
 export function LoginPage() {
+
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const notifications = useNotifications()
   const [login, { isLoading, error }] = useLoginMutation()
-  const [loadCurrentAccount, { isFetching: isLoadingAccount }] =
-    useLazyMeQuery()
+  const [loadCurrentAccount, { isFetching: isLoadingAccount }] = useLazyMeQuery()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -239,7 +239,7 @@ export function LoginPage() {
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#030712]/10" />
+          <div className="absolute inset-0 bg-linear-to-l from-transparent via-transparent to-[#030712]/10" />
         </aside>
       </section>
     </main>
