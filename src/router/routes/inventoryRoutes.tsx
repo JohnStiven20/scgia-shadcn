@@ -10,9 +10,9 @@ import { AssignmentPage } from "@/features/inventory/assignment/page/AssignmentP
 import { ReturnPage } from "@/features/inventory/return/page/ReturnPage"
 import { ProductsPage } from "@/features/inventory/products/page/ProductsPage"
 import { SpecificModelItemsPage } from "@/features/inventory/products/page/SpecificModelItemsPage"
-import { WorkorderPage } from "../../features/inventory/workorders/page/WorkorderPage"
+import { WorkOrderListPage } from "@/features/inventory/workorder/movistar/list/page/WorkOrderListPage"
 import { WorkOrderOperatorSelectionPage } from "../../features/inventory/workorders/page/ProviderWorkOrder"
-import { WorkOrderDetailPage } from "@/features/inventory/workorder/page/WorkOrderDetailPage"
+import { WorkOrderDetailPage } from "@/features/inventory/workorder/movistar/detail/page/WorkOrderDetailPage"
 import { ProductionPage } from "@/features/inventory/production/page/ProductionPage"
 import { AssignedMaterialPage } from "@/features/inventory/assigned-material/page/AssignedMaterialPage"
 import { WorkerAssignedMaterialPage } from "@/features/inventory/assigned-material/worker/page/WorkerAssignedMaterialPage"
@@ -89,7 +89,7 @@ export const inventoryRoutes: RouteObject = {
     },
     {
       path: "work-orders",
-      element: <WorkorderPage />,
+      element: <WorkOrderListPage />,
     },
     {
       path: "work-orders/new",

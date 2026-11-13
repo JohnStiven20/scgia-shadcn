@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge"
 import type { WorkOrderStatus } from "@/features/interface/work-orders/types"
-import { CheckCircle2, Clock3, PauseCircle } from "lucide-react"
+import { Ban, CheckCircle2, Clock3, PauseCircle, Timer } from "lucide-react"
 
 // import { Badge } from "src/components/ui/badge"
 // import type { WorkOrderStatus } from "src/features/interface/work-orders/types"
 
 const statusConfig: Record<
-  WorkOrderStatus,
+  string,
   {
     label: string
     className: string
@@ -31,10 +31,26 @@ const statusConfig: Record<
     className:
       "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400",
   },
+  PENDING: {
+    label: "Pendiente",
+    icon: Timer,
+    className:
+      "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-400",
+  },
+  CANCELLED: {
+    label: "Cancelada",
+    icon: Ban,
+    className:
+      "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400",
+  },
 }
 
-export function WorkOrderStatusBadge({ status }: { status: WorkOrderStatus }) {
-  const config = statusConfig[status]
+export function WorkOrderStatusBadge({ status }: { status: WorkOrderStatus | string }) {
+  const config = statusConfig[status] ?? {
+    label: "Sin estado",
+    icon: PauseCircle,
+    className: "border-slate-200 bg-slate-50 text-slate-700",
+  }
   const StatusIcon = config.icon
 
   return (

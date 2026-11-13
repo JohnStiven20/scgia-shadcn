@@ -34,6 +34,9 @@ import { rolePermissionApi } from "@/features/api/rolePermissionApi"
 import { providerInventory } from "@/features/inventory/api/provider.inventory.ts"
 import { orangeProductionApi } from "../features/inventory/production/api/productionOrangeApi"
 import { assignedMaterialApi } from "@/features/inventory/assigned-material/api/AssignedMaterialApi"
+import { movistarWorkOrderApi } from "@/features/inventory/workorder/movistar/list/api/workOrderListApi"
+import { movistarWorkOrderDetailApi } from "@/features/inventory/workorder/movistar/detail/api/workOrderDetailApi"
+import { webWorkOrderApi } from "@/features/inventory/workorder/api/webWorkOrderApi"
 
 export const store = configureStore({
   reducer: {
@@ -74,12 +77,18 @@ export const store = configureStore({
     [providerInventory.reducerPath]: providerInventory.reducer,
     [orangeProductionApi.reducerPath]: orangeProductionApi.reducer,
     [assignedMaterialApi.reducerPath]: assignedMaterialApi.reducer,
+    [movistarWorkOrderApi.reducerPath]: movistarWorkOrderApi.reducer,
+    [movistarWorkOrderDetailApi.reducerPath]: movistarWorkOrderDetailApi.reducer,
+    [webWorkOrderApi.reducerPath]: webWorkOrderApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(providerInventory.middleware)
       .concat(orangeProductionApi.middleware)
       .concat(assignedMaterialApi.middleware)
+      .concat(movistarWorkOrderApi.middleware)
+      .concat(movistarWorkOrderDetailApi.middleware)
+      .concat(webWorkOrderApi.middleware)
       .concat(authApi.middleware)
       .concat(commonApi.middleware)
       .concat(employeesApi.middleware)

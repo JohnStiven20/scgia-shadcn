@@ -3,7 +3,9 @@ export interface WorkOrderSpecificItemLineResponse {
   telecommunicationItemId: number
   modelName: string
   uniqueCode: string
+  typeUnicode: string
   identifierCode: string
+  status: string
 }
 
 export type WorkOrderStatus = "PROGRESSING" | "BLOCKED" | "FINISHED"
