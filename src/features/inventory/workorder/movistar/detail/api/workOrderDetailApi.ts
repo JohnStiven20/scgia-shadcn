@@ -6,6 +6,7 @@ import type {
 
 interface GetMovistarWorkOrderDetailParams {
   workerId: number
+  workOrderId: number
 }
 
 export const movistarWorkOrderDetailApi = createApi({
@@ -18,11 +19,12 @@ export const movistarWorkOrderDetailApi = createApi({
       WorkOrderDetailResponse,
       GetMovistarWorkOrderDetailParams
     >({
-      query: ({ workerId }) => ({
+      query: ({ workerId, workOrderId }) => ({
         url: "/web/inventory/movistar/work-order/details",
         method: "GET",
         params: {
           workerId,
+          workOrderId,
         },
       }),
 

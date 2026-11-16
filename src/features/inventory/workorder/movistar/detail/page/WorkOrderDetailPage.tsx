@@ -21,7 +21,7 @@ export function WorkOrderDetailPage() {
   const numericId = Number(workOrderId)
   const workerId = state.workOrder?.workerId
   const detailQuery = useGetMovistarWorkOrderDetailQuery(
-    { workerId: workerId ?? 0 },
+    { workerId: workerId ?? 0, workOrderId: Number(workOrderId) || 0 },
     { skip: workerId == null }
   )
   const workOrder = state.workOrder
